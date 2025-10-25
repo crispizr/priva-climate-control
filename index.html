@@ -230,7 +230,8 @@
   <script>
     // ⚠️ REMPLACEZ CETTE URL PAR VOTRE URL CSV GOOGLE SHEETS
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQwJjy2KpJJ5X--C87zVuPjykAg9Fyc79zIxpdk1Dt0FvrxYw1Onfzt5wSHOVagvLry9uyyohzeN3h4/pub?gid=0&single=true&output=csv';
-    const PROXY = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(SHEET_URL);
+    const PROXY = 'https://corsproxy.io/?' + encodeURIComponent(SHEET_URL);
+
     
     let climateChart, airChart, allData = [];
     let esp32IP = localStorage.getItem('esp32IP') || '';
