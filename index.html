@@ -55,6 +55,10 @@
     .input-group { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
     .input-group label { flex: 1; }
     .input-group input { padding: 8px; background: #0f1117; border: 1px solid #2d3142; border-radius: 5px; color: white; width: 120px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #2d3142; }
+    th { background: #0f1117; font-size: 12px; text-transform: uppercase; }
+    tbody tr:hover { background: #0f1117; }
     @media (max-width: 768px) { .grid-2, .grid-4 { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -71,6 +75,9 @@
         </div>
         <div class="status-item">
           <span>🤖 Mode: <strong id="modeDisplay">--</strong></span>
+        </div>
+        <div class="status-item">
+          <span>📡 <strong id="dataCount">0</strong> mesures</span>
         </div>
       </div>
     </div>
@@ -185,9 +192,47 @@
         <button class="btn btn-success" style="width:100%" onclick="saveSettings()">💾 Enregistrer sur ESP32</button>
       </div>
     </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📈 Température & Humidité</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="climateChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📊 Qualité Air</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="airChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📋 Données Récentes</div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Temp</th><th>Humid</th><th>CO2</th><th>DC</th></tr>
+        </thead>
+        <tbody id="dataTable">
+          <tr><td colspan="5" style="text-align:center">Chargement...</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <script>
+    // ⚠️ REMPLACEZ CETTE URL PAR VOTRE URL CSV GOOGLE SHEETS
+    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQwJjy2KpJJ5X--C87zVuPjykAg9Fyc79zIxpdk1Dt0FvrxYw1Onfzt5wSHOVagvLry9uyyohzeN3h4/pub?gid=0&single=true&output=csv';
+    const PROXY = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(SHEET_URL);
+    
+    let climateChart, airChart, allData = [];
     let esp32IP = localStorage.getItem('esp32IP') || '';
     let updateInterval;
     
@@ -195,6 +240,92 @@
     if (esp32IP) {
       document.getElementById('esp32IP').value = esp32IP;
       startAutoUpdate();
+    }
+
+    function init() {
+      setupCharts();
+      loadData();
+      setInterval(loadData, 10000);
+    }
+
+    function setupCharts() {
+      const opts = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#f8f9fa' } } },
+        scales: {
+          x: { ticks: { color: '#9ca3af' }, grid: { color: '#2d3142' } },
+          y: { ticks: { color: '#9ca3af' }, grid: { color: '#2d3142' } }
+        }
+      };
+
+      climateChart = new Chart(document.getElementById('climateChart'), {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            { label: 'Température', data: [], borderColor: '#ef4444', tension: 0.4, borderWidth: 3 },
+            { label: 'Humidité', data: [], borderColor: '#3b82f6', tension: 0.4, borderWidth: 3 }
+          ]
+        },
+        options: opts
+      });
+
+      airChart = new Chart(document.getElementById('airChart'), {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{ label: 'CO2', data: [], borderColor: '#10b981', tension: 0.4, borderWidth: 3, fill: true }]
+        },
+        options: opts
+      });
+    }
+
+    async function loadData() {
+      try {
+        const res = await fetch(PROXY);
+        const csv = await res.text();
+        const rows = csv.trim().split('\n').map(r => r.split(',').map(c => c.trim()));
+        allData = rows.slice(1);
+        
+        if (allData.length > 0) {
+          updateCharts();
+          updateTable();
+          document.getElementById('dataCount').textContent = allData.length;
+        }
+      } catch (err) {
+        console.error('Erreur chargement Google Sheets:', err);
+      }
+    }
+
+    function updateCharts() {
+      const data = allData.slice(-50);
+      const labels = data.map(r => r[0]);
+      const temps = data.map(r => parseFloat(r[1]));
+      const humids = data.map(r => parseFloat(r[2]));
+      const gases = data.map(r => parseFloat(r[3]));
+
+      climateChart.data.labels = labels;
+      climateChart.data.datasets[0].data = temps;
+      climateChart.data.datasets[1].data = humids;
+      climateChart.update('none');
+
+      airChart.data.labels = labels;
+      airChart.data.datasets[0].data = gases;
+      airChart.update('none');
+    }
+
+    function updateTable() {
+      const tbody = document.getElementById('dataTable');
+      tbody.innerHTML = allData.slice(-10).reverse().map(r => `
+        <tr>
+          <td>${r[0]}</td>
+          <td>${r[1]}°C</td>
+          <td>${r[2]}%</td>
+          <td>${r[3]} ppm</td>
+          <td>${r[4]}V</td>
+        </tr>
+      `).join('');
     }
 
     function saveESP32IP() {
@@ -210,8 +341,8 @@
 
     function startAutoUpdate() {
       if (updateInterval) clearInterval(updateInterval);
-      updateESP32Data(); // Premier appel immédiat
-      updateInterval = setInterval(updateESP32Data, 3000); // Mise à jour toutes les 3s
+      updateESP32Data();
+      updateInterval = setInterval(updateESP32Data, 3000);
     }
 
     async function testConnection() {
@@ -241,16 +372,13 @@
         const response = await fetch(`http://${esp32IP}/status`, {mode: 'cors'});
         const data = await response.json();
         
-        // Mise à jour des capteurs
         document.getElementById('tempValue').textContent = data.temperature.toFixed(1);
         document.getElementById('humidValue').textContent = data.humidity.toFixed(1);
         document.getElementById('gasValue').textContent = data.gas.toFixed(0);
         document.getElementById('dcValue').textContent = data.dc.toFixed(2);
         
-        // Mise à jour du mode
         document.getElementById('modeDisplay').textContent = data.mode.toUpperCase();
         
-        // Mise à jour des états des appareils
         updateDeviceUI('pompe', data.devices.pompe);
         updateDeviceUI('brumisateur', data.devices.brumisateur);
         updateDeviceUI('ventilateur', data.devices.ventilateur);
@@ -258,7 +386,6 @@
         updateDeviceUI('eclairage', data.devices.eclairage);
         updateDeviceUI('electrovanne', data.devices.electrovanne);
         
-        // Mise à jour des paramètres
         if (data.settings) {
           document.getElementById('tempMin').value = data.settings.tempMin;
           document.getElementById('tempMax').value = data.settings.tempMax;
@@ -270,17 +397,11 @@
           updateSlider('humidMax', data.settings.humMax, '%');
         }
         
-        // Statut de connexion
         document.getElementById('connectionStatus').style.background = '#00a651';
         document.getElementById('connectionText').textContent = 'Connecté';
         
-        // Mise à jour des statuts
-        updateStatus('temp', data.temperature, data.settings);
-        updateStatus('humid', data.humidity, data.settings);
-        updateStatus('gas', data.gas);
-        
       } catch (error) {
-        console.error('Erreur:', error);
+        console.error('Erreur ESP32:', error);
         document.getElementById('connectionStatus').style.background = '#e63946';
         document.getElementById('connectionText').textContent = 'Déconnecté';
       }
@@ -296,38 +417,6 @@
       } else {
         card.classList.remove('active');
         status.textContent = device === 'electrovanne' ? 'Fermée' : 'Arrêté';
-      }
-    }
-
-    function updateStatus(type, val, settings) {
-      const el = document.getElementById(type + 'Status');
-      
-      if (type === 'gas') {
-        const maxGas = 800;
-        el.textContent = val > maxGas ? 'Élevé' : 'Bon';
-        el.className = 'status-badge ' + (val > maxGas ? 'critical' : 'optimal');
-      } else if (type === 'temp' && settings) {
-        if (val < settings.tempMin) {
-          el.textContent = 'Bas';
-          el.className = 'status-badge warning';
-        } else if (val > settings.tempMax) {
-          el.textContent = 'Élevé';
-          el.className = 'status-badge critical';
-        } else {
-          el.textContent = 'Optimal';
-          el.className = 'status-badge optimal';
-        }
-      } else if (type === 'humid' && settings) {
-        if (val < settings.humMin) {
-          el.textContent = 'Bas';
-          el.className = 'status-badge warning';
-        } else if (val > settings.humMax) {
-          el.textContent = 'Élevé';
-          el.className = 'status-badge critical';
-        } else {
-          el.textContent = 'Optimal';
-          el.className = 'status-badge optimal';
-        }
       }
     }
 
@@ -396,7 +485,6 @@
         });
         
         if (response.ok) {
-          // Mise à jour visuelle
           ['pompe', 'brumisateur', 'ventilateur', 'chauffage', 'eclairage', 'electrovanne'].forEach(device => {
             updateDeviceUI(device, false);
           });
@@ -453,6 +541,8 @@
       
       setTimeout(() => alert.remove(), 5000);
     }
+
+    init();
   </script>
 </body>
 </html>
