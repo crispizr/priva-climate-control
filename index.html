@@ -3,24 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PRIVA Platform - IoT Multi-Modules</title>
+  <title>PRIVA Platform Multi-Modules</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0e27; color: #f8f9fa; }
+    body { font-family: Arial, sans-serif; background: #0f1117; color: #f8f9fa; }
     
     /* Header */
-    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
     .header-content { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
     .logo { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
-    .logo h1 { color: white; font-size: 28px; font-weight: 700; }
-    .logo-icon { font-size: 36px; }
+    .logo h1 { color: white; font-size: 26px; font-weight: 700; }
+    .status-bar { display: flex; gap: 15px; flex-wrap: wrap; }
+    .status-item { background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 20px; display: flex; align-items: center; gap: 8px; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; animation: pulse 2s infinite; }
+    .status-dot.connected { background: #00a651; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     
-    /* Navigation Tabs */
-    .tabs { display: flex; gap: 10px; flex-wrap: wrap; }
-    .tab-btn { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); padding: 12px 24px; border-radius: 10px; color: white; cursor: pointer; transition: all 0.3s; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    /* Tabs */
+    .tabs { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+    .tab-btn { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); padding: 12px 24px; border-radius: 10px; color: white; cursor: pointer; transition: all 0.3s; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; border: none; }
     .tab-btn:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
-    .tab-btn.active { background: linear-gradient(135deg, #00a651, #00d164); border-color: #00a651; box-shadow: 0 4px 15px rgba(0,166,81,0.4); }
-    .tab-icon { font-size: 20px; }
+    .tab-btn.active { background: linear-gradient(135deg, #00a651, #00d164); box-shadow: 0 4px 15px rgba(0,166,81,0.4); }
     
     /* Container */
     .container { max-width: 1400px; margin: 30px auto; padding: 0 20px; }
@@ -28,58 +32,69 @@
     /* Modules */
     .module { display: none; animation: fadeIn 0.5s; }
     .module.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    /* Common styles from old dashboard */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 25px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px; }
+    .card { background: #1a1d29; border-radius: 15px; padding: 25px; border: 1px solid #2d3142; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #2d3142; }
+    .card-title { font-size: 18px; font-weight: 600; }
     
-    /* Cards */
-    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 30px; }
-    .card { background: linear-gradient(135deg, #1e2139, #252841); border-radius: 15px; padding: 25px; border: 1px solid #3d4167; transition: transform 0.3s, box-shadow 0.3s; }
-    .card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-    .card-icon { font-size: 48px; margin-bottom: 15px; }
-    .card-title { font-size: 20px; font-weight: 600; margin-bottom: 10px; color: #fff; }
-    .card-value { font-size: 36px; font-weight: 700; color: #667eea; }
-    .card-unit { font-size: 18px; color: rgba(255,255,255,0.6); margin-left: 5px; }
-    .card-status { margin-top: 15px; padding: 8px 16px; border-radius: 20px; display: inline-block; font-size: 14px; font-weight: 600; }
-    .status-ok { background: rgba(0,166,81,0.2); color: #00d164; }
-    .status-warning { background: rgba(247,127,0,0.2); color: #ffb347; }
-    .status-danger { background: rgba(230,57,70,0.2); color: #ff6b6b; }
+    .sensor-card { background: linear-gradient(135deg, #1a1d29, #252836); border-radius: 15px; padding: 25px; text-align: center; border: 1px solid #2d3142; transition: transform 0.3s; }
+    .sensor-card:hover { transform: translateY(-5px); }
+    .sensor-icon { font-size: 40px; margin-bottom: 15px; }
+    .sensor-value { font-size: 36px; font-weight: 700; color: white; }
+    .sensor-unit { font-size: 18px; color: rgba(248,249,250,0.6); }
     
-    /* Control Panel */
-    .control-panel { background: linear-gradient(135deg, #1e2139, #252841); border-radius: 15px; padding: 30px; border: 1px solid #3d4167; margin-bottom: 30px; }
-    .control-title { font-size: 22px; font-weight: 600; margin-bottom: 25px; color: #667eea; display: flex; align-items: center; gap: 10px; }
-    .device-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
-    .device-btn { background: #0f1117; border: 2px solid #3d4167; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.3s; }
-    .device-btn:hover { border-color: #667eea; transform: scale(1.05); }
-    .device-btn.active { background: linear-gradient(135deg, #667eea, #764ba2); border-color: #667eea; box-shadow: 0 5px 20px rgba(102,126,234,0.4); }
-    .device-btn-icon { font-size: 32px; margin-bottom: 10px; }
-    .device-btn-label { font-size: 14px; font-weight: 600; }
-    .device-btn-status { font-size: 12px; margin-top: 5px; opacity: 0.7; }
+    .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .status-badge.optimal { background: rgba(0,166,81,0.2); color: #00a651; }
+    .status-badge.warning { background: rgba(247,127,0,0.2); color: #f77f00; }
+    .status-badge.critical { background: rgba(230,57,70,0.2); color: #e63946; }
     
-    /* Alert */
-    .alert { padding: 15px 20px; border-radius: 10px; margin-bottom: 15px; display: flex; align-items: center; gap: 12px; animation: slideIn 0.3s; }
+    .device-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+    .device-card { background: #0f1117; border: 2px solid #2d3142; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.3s; }
+    .device-card:hover { border-color: #667eea; }
+    .device-card.active { background: linear-gradient(135deg, #667eea, #764ba2); border-color: #667eea; }
+    .device-icon { font-size: 32px; margin-bottom: 10px; }
+    
+    .btn { padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; margin: 5px; }
+    .btn-primary { background: #0066cc; color: white; }
+    .btn-success { background: #00a651; color: white; }
+    .btn-danger { background: #e63946; color: white; }
+    .btn:hover { transform: translateY(-2px); opacity: 0.9; }
+    
+    .alert { padding: 15px 20px; border-radius: 10px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; }
     .alert.success { background: rgba(0,166,81,0.15); border-left: 4px solid #00a651; color: #6fdc8c; }
     .alert.warning { background: rgba(247,127,0,0.15); border-left: 4px solid #f77f00; color: #ffb347; }
     .alert.danger { background: rgba(230,57,70,0.15); border-left: 4px solid #e63946; color: #ff6b6b; }
     
-    @keyframes slideIn {
-      from { transform: translateX(-100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
+    .chart-container { position: relative; height: 350px; margin-top: 20px; }
     
-    /* Coming Soon */
-    .coming-soon { text-align: center; padding: 100px 20px; }
-    .coming-soon-icon { font-size: 80px; margin-bottom: 20px; opacity: 0.5; }
-    .coming-soon-title { font-size: 32px; font-weight: 700; margin-bottom: 10px; }
-    .coming-soon-text { font-size: 18px; opacity: 0.7; }
+    .control-group { margin-bottom: 20px; }
+    .control-label { font-size: 13px; margin-bottom: 10px; display: block; }
+    .slider { width: 100%; height: 6px; border-radius: 3px; background: #2d3142; outline: none; }
+    .slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #667eea; cursor: pointer; }
     
-    /* Responsive */
-    @media (max-width: 768px) {
+    .config-section { background: #252836; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
+    .config-title { font-weight: 600; margin-bottom: 10px; color: #667eea; }
+    .input-group { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .input-group label { flex: 1; }
+    .input-group input { padding: 8px; background: #0f1117; border: 1px solid #2d3142; border-radius: 5px; color: white; width: 120px; }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #2d3142; }
+    th { background: #0f1117; font-size: 12px; text-transform: uppercase; }
+    tbody tr:hover { background: #0f1117; }
+    
+    /* Security specific */
+    .security-card { background: linear-gradient(135deg, #1a1d29, #252836); border-radius: 15px; padding: 25px; text-align: center; border: 1px solid #2d3142; transition: transform 0.3s; }
+    .security-card:hover { transform: translateY(-5px); }
+    .security-value { font-size: 24px; font-weight: 700; color: #667eea; margin: 10px 0; }
+    
+    @media (max-width: 768px) { 
+      .grid-2, .grid-4 { grid-template-columns: 1fr; } 
       .tabs { flex-direction: column; }
-      .tab-btn { width: 100%; justify-content: center; }
-      .grid-3 { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -87,234 +102,599 @@
   <div class="header">
     <div class="header-content">
       <div class="logo">
-        <span class="logo-icon">🏠</span>
-        <h1>PRIVA Platform - IoT Multi-Modules</h1>
+        <span style="font-size: 36px;">🏠</span>
+        <h1>PRIVA Platform - Multi-Modules IoT</h1>
+      </div>
+      <div class="status-bar">
+        <div class="status-item">
+          <div class="status-dot connected" id="connectionStatus"></div>
+          <span id="connectionText">Connexion...</span>
+        </div>
+        <div class="status-item">
+          <span>🤖 Mode: <strong id="modeDisplay">--</strong></span>
+        </div>
+        <div class="status-item">
+          <span>📡 <strong id="dataCount">0</strong> mesures</span>
+        </div>
       </div>
       <div class="tabs">
-        <button class="tab-btn active" onclick="showModule('agriculture')" id="tab-agriculture">
-          <span class="tab-icon">🌱</span> Agriculture
+        <button class="tab-btn active" onclick="showModule('agriculture')">
+          <span>🌱</span> Agriculture
         </button>
-        <button class="tab-btn" onclick="showModule('security')" id="tab-security">
-          <span class="tab-icon">🔒</span> Sécurité
-        </button>
-        <button class="tab-btn" onclick="showModule('energy')" id="tab-energy">
-          <span class="tab-icon">⚡</span> Énergie
-        </button>
-        <button class="tab-btn" onclick="showModule('monitoring')" id="tab-monitoring">
-          <span class="tab-icon">📊</span> Monitoring
+        <button class="tab-btn" onclick="showModule('security')">
+          <span>🔒</span> Sécurité
         </button>
       </div>
     </div>
   </div>
 
   <div class="container">
+    <!-- Configuration ESP32 Agriculture -->
+    <div class="card" style="margin-bottom: 25px;">
+      <div class="card-header">
+        <div class="card-title">⚙️ Configuration</div>
+      </div>
+      <div class="config-section">
+        <div class="config-title">📡 ESP32 Agriculture</div>
+        <div class="input-group">
+          <label>IP:</label>
+          <input type="text" id="esp32IP" placeholder="192.168.1.100" value="">
+          <button class="btn btn-primary" onclick="saveESP32IP()">💾 Enregistrer</button>
+          <button class="btn btn-success" onclick="testConnection()">🔍 Tester</button>
+        </div>
+      </div>
+    </div>
+
     <div id="alertContainer"></div>
 
     <!-- MODULE AGRICULTURE -->
     <div id="agriculture" class="module active">
-      <div class="grid-3">
-        <div class="card">
-          <div class="card-icon">🌡️</div>
-          <div class="card-title">Température</div>
-          <div>
-            <span class="card-value" id="agri-temp">24.5</span>
-            <span class="card-unit">°C</span>
-          </div>
-          <div class="card-status status-ok">Optimal</div>
+      <div class="grid-4">
+        <div class="sensor-card">
+          <div class="sensor-icon">🌡️</div>
+          <div class="sensor-value"><span id="tempValue">--</span><span class="sensor-unit">°C</span></div>
+          <div style="margin-top:10px"><span class="status-badge optimal" id="tempStatus">--</span></div>
         </div>
-        <div class="card">
-          <div class="card-icon">💧</div>
-          <div class="card-title">Humidité</div>
-          <div>
-            <span class="card-value" id="agri-humid">65</span>
-            <span class="card-unit">%</span>
-          </div>
-          <div class="card-status status-ok">Optimal</div>
+        <div class="sensor-card">
+          <div class="sensor-icon">💧</div>
+          <div class="sensor-value"><span id="humidValue">--</span><span class="sensor-unit">%</span></div>
+          <div style="margin-top:10px"><span class="status-badge optimal" id="humidStatus">--</span></div>
         </div>
-        <div class="card">
-          <div class="card-icon">🔬</div>
-          <div class="card-title">Qualité Air</div>
-          <div>
-            <span class="card-value" id="agri-air">420</span>
-            <span class="card-unit">ppm</span>
-          </div>
-          <div class="card-status status-ok">Bon</div>
+        <div class="sensor-card">
+          <div class="sensor-icon">🔬</div>
+          <div class="sensor-value"><span id="gasValue">--</span><span class="sensor-unit">ppm</span></div>
+          <div style="margin-top:10px"><span class="status-badge optimal" id="gasStatus">--</span></div>
+        </div>
+        <div class="sensor-card">
+          <div class="sensor-icon">⚡</div>
+          <div class="sensor-value"><span id="dcValue">--</span><span class="sensor-unit">V</span></div>
+          <div style="margin-top:10px"><span class="status-badge optimal">DC</span></div>
         </div>
       </div>
 
-      <div class="control-panel">
-        <div class="control-title">
-          <span>⚙️</span> Équipements Agriculture
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">⚙️ Équipements</div>
+          </div>
+          <div class="device-grid">
+            <div class="device-card" id="pompeCard" onclick="toggleDevice('pompe')">
+              <div class="device-icon">💧</div>
+              <div>Irrigation</div>
+              <small id="pompeStatus">Arrêté</small>
+            </div>
+            <div class="device-card" id="brumisateurCard" onclick="toggleDevice('brumisateur')">
+              <div class="device-icon">💦</div>
+              <div>Brumisation</div>
+              <small id="brumisateurStatus">Arrêté</small>
+            </div>
+            <div class="device-card" id="ventilateurCard" onclick="toggleDevice('ventilateur')">
+              <div class="device-icon">🌀</div>
+              <div>Ventilation</div>
+              <small id="ventilateurStatus">Arrêté</small>
+            </div>
+            <div class="device-card" id="chauffageCard" onclick="toggleDevice('chauffage')">
+              <div class="device-icon">🔥</div>
+              <div>Chauffage</div>
+              <small id="chauffageStatus">Arrêté</small>
+            </div>
+            <div class="device-card" id="eclairageCard" onclick="toggleDevice('eclairage')">
+              <div class="device-icon">💡</div>
+              <div>Éclairage</div>
+              <small id="eclairageStatus">Arrêté</small>
+            </div>
+            <div class="device-card" id="electrovanneCard" onclick="toggleDevice('electrovanne')">
+              <div class="device-icon">🚰</div>
+              <div>Électrovanne</div>
+              <small id="electrovanneStatus">Fermée</small>
+            </div>
+          </div>
+          <div style="margin-top:20px">
+            <button class="btn btn-success" onclick="setMode('auto')">🤖 Auto</button>
+            <button class="btn btn-primary" onclick="setMode('manual')">✋ Manuel</button>
+            <button class="btn btn-danger" onclick="emergencyStop()">🛑 Arrêt</button>
+          </div>
         </div>
-        <div class="device-grid">
-          <div class="device-btn" id="agri-pump" onclick="toggleDevice('agriculture', 'pump')">
-            <div class="device-btn-icon">💧</div>
-            <div class="device-btn-label">Irrigation</div>
-            <div class="device-btn-status">Arrêté</div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🎯 Paramètres Automatiques</div>
           </div>
-          <div class="device-btn" id="agri-mist" onclick="toggleDevice('agriculture', 'mist')">
-            <div class="device-btn-icon">💦</div>
-            <div class="device-btn-label">Brumisateur</div>
-            <div class="device-btn-status">Arrêté</div>
+          <div class="control-group">
+            <label class="control-label">🌡️ Température Min: <span id="tempMinVal">18°C</span></label>
+            <input type="range" min="10" max="25" value="18" class="slider" id="tempMin" oninput="updateSlider('tempMin',this.value,'°C')">
           </div>
-          <div class="device-btn" id="agri-fan" onclick="toggleDevice('agriculture', 'fan')">
-            <div class="device-btn-icon">🌀</div>
-            <div class="device-btn-label">Ventilateur</div>
-            <div class="device-btn-status">Arrêté</div>
+          <div class="control-group">
+            <label class="control-label">🌡️ Température Max: <span id="tempMaxVal">28°C</span></label>
+            <input type="range" min="20" max="40" value="28" class="slider" id="tempMax" oninput="updateSlider('tempMax',this.value,'°C')">
           </div>
-          <div class="device-btn" id="agri-heat" onclick="toggleDevice('agriculture', 'heat')">
-            <div class="device-btn-icon">🔥</div>
-            <div class="device-btn-label">Chauffage</div>
-            <div class="device-btn-status">Arrêté</div>
+          <div class="control-group">
+            <label class="control-label">💧 Humidité Min: <span id="humidMinVal">50%</span></label>
+            <input type="range" min="30" max="70" value="50" class="slider" id="humidMin" oninput="updateSlider('humidMin',this.value,'%')">
+          </div>
+          <div class="control-group">
+            <label class="control-label">💧 Humidité Max: <span id="humidMaxVal">80%</span></label>
+            <input type="range" min="50" max="95" value="80" class="slider" id="humidMax" oninput="updateSlider('humidMax',this.value,'%')">
+          </div>
+          <button class="btn btn-success" style="width:100%" onclick="saveSettings()">💾 Enregistrer sur ESP32</button>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📈 Température & Humidité</div>
+          </div>
+          <div class="chart-container">
+            <canvas id="climateChart"></canvas>
           </div>
         </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📊 Qualité Air</div>
+          </div>
+          <div class="chart-container">
+            <canvas id="airChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📋 Données Récentes</div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Date</th><th>Temp</th><th>Humid</th><th>CO2</th><th>DC</th></tr>
+          </thead>
+          <tbody id="dataTable">
+            <tr><td colspan="5" style="text-align:center">Chargement...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
     <!-- MODULE SÉCURITÉ -->
     <div id="security" class="module">
-      <div class="grid-3">
-        <div class="card">
-          <div class="card-icon">🚪</div>
-          <div class="card-title">État Porte</div>
-          <div>
-            <span class="card-value" id="sec-door">Fermée</span>
-          </div>
-          <div class="card-status status-ok">Sécurisé</div>
+      <div class="grid-4">
+        <div class="security-card">
+          <div class="sensor-icon">🚪</div>
+          <div class="security-value" id="sec-door">--</div>
+          <div>État Porte</div>
+          <div style="margin-top:10px"><span class="status-badge optimal">Normal</span></div>
         </div>
-        <div class="card">
-          <div class="card-icon">👁️</div>
-          <div class="card-title">Mouvement</div>
-          <div>
-            <span class="card-value" id="sec-motion">Aucun</span>
-          </div>
-          <div class="card-status status-ok">Normal</div>
+        <div class="security-card">
+          <div class="sensor-icon">👁️</div>
+          <div class="security-value" id="sec-motion">--</div>
+          <div>Détection Mouvement</div>
+          <div style="margin-top:10px"><span class="status-badge optimal">Aucun</span></div>
         </div>
-        <div class="card">
-          <div class="card-icon">🔑</div>
-          <div class="card-title">Dernier Accès</div>
-          <div>
-            <span class="card-value" style="font-size: 20px;" id="sec-access">10:30</span>
-          </div>
-          <div class="card-status status-ok">Autorisé</div>
+        <div class="security-card">
+          <div class="sensor-icon">🔑</div>
+          <div class="security-value" id="sec-badge" style="font-size: 18px;">--</div>
+          <div>Dernier Badge</div>
+          <div style="margin-top:10px"><span class="status-badge optimal">--</span></div>
+        </div>
+        <div class="security-card">
+          <div class="sensor-icon">⏰</div>
+          <div class="security-value" id="sec-time" style="font-size: 20px;">--</div>
+          <div>Dernier Accès</div>
+          <div style="margin-top:10px"><span class="status-badge optimal">--</span></div>
         </div>
       </div>
 
-      <div class="control-panel">
-        <div class="control-title">
-          <span>🔒</span> Contrôles Sécurité
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🔒 Contrôles Sécurité</div>
         </div>
         <div class="device-grid">
-          <div class="device-btn" id="sec-lock" onclick="toggleDevice('security', 'lock')">
-            <div class="device-btn-icon">🔓</div>
-            <div class="device-btn-label">Serrure</div>
-            <div class="device-btn-status">Verrouillée</div>
+          <div class="device-card" id="lockCard" onclick="toggleSecurityDevice('lock')">
+            <div class="device-icon">🔓</div>
+            <div>Serrure</div>
+            <small id="lockStatus">Verrouillée</small>
           </div>
-          <div class="device-btn" id="sec-alarm" onclick="toggleDevice('security', 'alarm')">
-            <div class="device-btn-icon">🚨</div>
-            <div class="device-btn-label">Alarme</div>
-            <div class="device-btn-status">Désactivée</div>
+          <div class="device-card" id="alarmCard" onclick="toggleSecurityDevice('alarm')">
+            <div class="device-icon">🚨</div>
+            <div>Alarme</div>
+            <small id="alarmStatus">Désactivée</small>
           </div>
-          <div class="device-btn" id="sec-camera" onclick="toggleDevice('security', 'camera')">
-            <div class="device-btn-icon">📹</div>
-            <div class="device-btn-label">Caméra</div>
-            <div class="device-btn-status">Enregistrement</div>
+          <div class="device-card" id="cameraCard" onclick="toggleSecurityDevice('camera')">
+            <div class="device-icon">📹</div>
+            <div>Caméra</div>
+            <small id="cameraStatus">Arrêt</small>
           </div>
-          <div class="device-btn" id="sec-lights" onclick="toggleDevice('security', 'lights')">
-            <div class="device-btn-icon">💡</div>
-            <div class="device-btn-label">Éclairage</div>
-            <div class="device-btn-status">Éteint</div>
+          <div class="device-card" id="lightsCard" onclick="toggleSecurityDevice('lights')">
+            <div class="device-icon">💡</div>
+            <div>Lumières</div>
+            <small id="lightsStatus">Éteintes</small>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- MODULE ÉNERGIE -->
-    <div id="energy" class="module">
-      <div class="coming-soon">
-        <div class="coming-soon-icon">⚡</div>
-        <div class="coming-soon-title">Module Énergie</div>
-        <div class="coming-soon-text">Gestion de la consommation électrique, panneaux solaires, batteries...</div>
-        <div class="coming-soon-text" style="margin-top: 20px; opacity: 0.5;">Bientôt disponible</div>
-      </div>
-    </div>
-
-    <!-- MODULE MONITORING -->
-    <div id="monitoring" class="module">
-      <div class="coming-soon">
-        <div class="coming-soon-icon">📊</div>
-        <div class="coming-soon-title">Module Monitoring Global</div>
-        <div class="coming-soon-text">Vue d'ensemble de tous les modules, statistiques, historiques...</div>
-        <div class="coming-soon-text" style="margin-top: 20px; opacity: 0.5;">Bientôt disponible</div>
+        <div style="margin-top:20px;text-align:center;padding:40px;background:#252836;border-radius:10px;">
+          <div style="font-size:48px;margin-bottom:15px;">🚧</div>
+          <div style="font-size:20px;font-weight:600;margin-bottom:10px;">Module Sécurité</div>
+          <div style="opacity:0.7;">ESP32 #2 à configurer - Fonctionnalité à venir</div>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
-    // Configuration
-    const modules = {
-      agriculture: {
-        dataURL: 'URL_GOOGLE_SHEETS_AGRICULTURE',
-        commandURL: 'URL_APPS_SCRIPT_AGRICULTURE'
-      },
-      security: {
-        dataURL: 'URL_GOOGLE_SHEETS_SECURITY',
-        commandURL: 'URL_APPS_SCRIPT_SECURITY'
-      }
-    };
-
-    // Afficher un module
-    function showModule(moduleName) {
-      // Cacher tous les modules
-      document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
-      
-      // Afficher le module sélectionné
-      document.getElementById(moduleName).classList.add('active');
-      document.getElementById('tab-' + moduleName).classList.add('active');
-      
-      showAlert('success', `📱 Module ${moduleName} activé`);
+    // ⚠️ CONFIGURATION - REMPLACEZ PAR VOS URLs
+    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQwJjy2KpJJ5X--C87zVuPjykAg9Fyc79zIxpdk1Dt0FvrxYw1Onfzt5wSHOVagvLry9uyyohzeN3h4/pub?gid=0&single=true&output=csv';
+    const PROXY = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(SHEET_URL);
+    const COMMAND_API_URL = 'https://script.google.com/macros/s/AKfycbzfc55KJi67mnUXNH4uxnhHuJCkiJhzk3RxrboAHOz2WorlEbVXFkHwfWeqJKMCNbLP5w/exec';
+    
+    let climateChart, airChart, allData = [];
+    let esp32IP = localStorage.getItem('esp32IP') || '';
+    let updateInterval;
+    let useLocalControl = false;
+    
+    if (esp32IP) {
+      document.getElementById('esp32IP').value = esp32IP;
+      startAutoUpdate();
     }
 
-    // Contrôler un appareil
-    async function toggleDevice(module, device) {
-      const btn = document.getElementById(`${module.substring(0,4)}-${device}`);
-      const isActive = btn.classList.contains('active');
+    function init() {
+      setupCharts();
+      loadData();
+      setInterval(loadData, 10000);
+    }
+
+    function setupCharts() {
+      const opts = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#f8f9fa' } } },
+        scales: {
+          x: { ticks: { color: '#9ca3af' }, grid: { color: '#2d3142' } },
+          y: { ticks: { color: '#9ca3af' }, grid: { color: '#2d3142' } }
+        }
+      };
+
+      climateChart = new Chart(document.getElementById('climateChart'), {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            { label: 'Température', data: [], borderColor: '#ef4444', tension: 0.4, borderWidth: 3 },
+            { label: 'Humidité', data: [], borderColor: '#3b82f6', tension: 0.4, borderWidth: 3 }
+          ]
+        },
+        options: opts
+      });
+
+      airChart = new Chart(document.getElementById('airChart'), {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{ label: 'CO2', data: [], borderColor: '#10b981', tension: 0.4, borderWidth: 3, fill: true }]
+        },
+        options: opts
+      });
+    }
+
+    async function loadData() {
+      try {
+        const res = await fetch(PROXY);
+        const csv = await res.text();
+        const rows = csv.trim().split('\n').map(r => r.split(',').map(c => c.trim()));
+        allData = rows.slice(1);
+        
+        if (allData.length > 0) {
+          updateCharts();
+          updateTable();
+          document.getElementById('dataCount').textContent = allData.length;
+        }
+      } catch (err) {
+        console.error('Erreur chargement Google Sheets:', err);
+      }
+    }
+
+    function updateCharts() {
+      const data = allData.slice(-50);
+      const labels = data.map(r => r[0]);
+      const temps = data.map(r => parseFloat(r[1]));
+      const humids = data.map(r => parseFloat(r[2]));
+      const gases = data.map(r => parseFloat(r[3]));
+
+      climateChart.data.labels = labels;
+      climateChart.data.datasets[0].data = temps;
+      climateChart.data.datasets[1].data = humids;
+      climateChart.update('none');
+
+      airChart.data.labels = labels;
+      airChart.data.datasets[0].data = gases;
+      airChart.update('none');
+    }
+
+    function updateTable() {
+      const tbody = document.getElementById('dataTable');
+      tbody.innerHTML = allData.slice(-10).reverse().map(r => `
+        <tr>
+          <td>${r[0]}</td>
+          <td>${r[1]}°C</td>
+          <td>${r[2]}%</td>
+          <td>${r[3]} ppm</td>
+          <td>${r[4]}V</td>
+        </tr>
+      `).join('');
+    }
+
+    function saveESP32IP() {
+      esp32IP = document.getElementById('esp32IP').value.trim();
+      if (!esp32IP) {
+        showAlert('warning', '⚠️ Veuillez entrer une adresse IP');
+        return;
+      }
+      localStorage.setItem('esp32IP', esp32IP);
+      useLocalControl = true;
+      showAlert('success', '✓ IP enregistrée: ' + esp32IP + ' (Contrôle local activé)');
+      startAutoUpdate();
+    }
+
+    function startAutoUpdate() {
+      if (updateInterval) clearInterval(updateInterval);
+      if (useLocalControl && esp32IP) {
+        updateESP32Data();
+        updateInterval = setInterval(updateESP32Data, 3000);
+      }
+    }
+
+    async function testConnection() {
+      const ip = document.getElementById('esp32IP').value.trim();
+      if (!ip) {
+        showAlert('warning', '⚠️ Entrez une IP d\'abord');
+        return;
+      }
       
-      btn.classList.toggle('active');
+      try {
+        const response = await fetch(`http://${ip}/`, {mode: 'cors'});
+        const text = await response.text();
+        useLocalControl = true;
+        showAlert('success', '✓ Connexion réussie: ' + text);
+        document.getElementById('connectionStatus').style.background = '#00a651';
+        document.getElementById('connectionText').textContent = 'Connecté (Local)';
+      } catch (error) {
+        useLocalControl = false;
+        showAlert('warning', '⚠️ Contrôle local impossible, utilisation de Google Sheets');
+        document.getElementById('connectionStatus').style.background = '#f77f00';
+        document.getElementById('connectionText').textContent = 'Cloud uniquement';
+      }
+    }
+
+    async function updateESP32Data() {
+      if (!esp32IP) return;
       
-      const status = btn.querySelector('.device-btn-status');
-      if (isActive) {
-        status.textContent = getOffText(device);
-        showAlert('warning', `⚠️ ${device} désactivé`);
+      try {
+        const response = await fetch(`http://${esp32IP}/status`, {mode: 'cors'});
+        const data = await response.json();
+        
+        document.getElementById('tempValue').textContent = data.temperature.toFixed(1);
+        document.getElementById('humidValue').textContent = data.humidity.toFixed(1);
+        document.getElementById('gasValue').textContent = data.gas.toFixed(0);
+        document.getElementById('dcValue').textContent = data.dc.toFixed(2);
+        
+        document.getElementById('modeDisplay').textContent = data.mode.toUpperCase();
+        
+        updateDeviceUI('pompe', data.devices.pompe);
+        updateDeviceUI('brumisateur', data.devices.brumisateur);
+        updateDeviceUI('ventilateur', data.devices.ventilateur);
+        updateDeviceUI('chauffage', data.devices.chauffage);
+        updateDeviceUI('eclairage', data.devices.eclairage);
+        updateDeviceUI('electrovanne', data.devices.electrovanne);
+        
+        if (data.settings) {
+          document.getElementById('tempMin').value = data.settings.tempMin;
+          document.getElementById('tempMax').value = data.settings.tempMax;
+          document.getElementById('humidMin').value = data.settings.humMin;
+          document.getElementById('humidMax').value = data.settings.humMax;
+          updateSlider('tempMin', data.settings.tempMin, '°C');
+          updateSlider('tempMax', data.settings.tempMax, '°C');
+          updateSlider('humidMin', data.settings.humMin, '%');
+          updateSlider('humidMax', data.settings.humMax, '%');
+        }
+        
+        document.getElementById('connectionStatus').style.background = '#00a651';
+        document.getElementById('connectionText').textContent = 'Connecté (Local)';
+        
+      } catch (error) {
+        console.error('Erreur ESP32:', error);
+        document.getElementById('connectionStatus').style.background = '#e63946';
+        document.getElementById('connectionText').textContent = 'Déconnecté';
+      }
+    }
+
+    function updateDeviceUI(device, state) {
+      const card = document.getElementById(device + 'Card');
+      const status = document.getElementById(device + 'Status');
+      
+      if (state) {
+        card.classList.add('active');
+        status.textContent = device === 'electrovanne' ? 'Ouverte' : 'Actif';
       } else {
-        status.textContent = getOnText(device);
-        showAlert('success', `✓ ${device} activé`);
+        card.classList.remove('active');
+        status.textContent = device === 'electrovanne' ? 'Fermée' : 'Arrêté';
+      }
+    }
+
+    async function toggleDevice(device) {
+      const card = document.getElementById(device + 'Card');
+      const newState = !card.classList.contains('active');
+      
+      // Essayer le contrôle local d'abord si disponible
+      if (useLocalControl && esp32IP) {
+        try {
+          const response = await fetch(`http://${esp32IP}/control`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `device=${device}&state=${newState ? '1' : '0'}`
+          });
+          
+          if (response.ok) {
+            updateDeviceUI(device, newState);
+            showAlert('success', `✓ ${device} ${newState ? 'activé' : 'désactivé'} (local)`);
+            return;
+          }
+        } catch (error) {
+          console.log('Contrôle local échoué, basculement vers cloud');
+        }
       }
       
-      // Envoyer commande au backend
-      await sendCommand(module, device, !isActive);
+      // Sinon, utiliser Google Sheets
+      try {
+        const response = await fetch(COMMAND_API_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            actionneur: device,
+            etat: newState ? 1 : 0
+          })
+        });
+        
+        updateDeviceUI(device, newState);
+        showAlert('success', `✓ ${device} ${newState ? 'activé' : 'désactivé'} (cloud - délai ~5s)`);
+      } catch (error) {
+        showAlert('danger', '❌ Erreur: ' + error.message);
+      }
     }
 
-    function getOnText(device) {
-      const texts = {
-        pump: 'Actif', mist: 'Actif', fan: 'Actif', heat: 'Actif',
-        lock: 'Déverrouillée', alarm: 'Activée', camera: 'Enregistrement', lights: 'Allumé'
+    async function setMode(mode) {
+      // Essayer le contrôle local d'abord
+      if (useLocalControl && esp32IP) {
+        try {
+          const response = await fetch(`http://${esp32IP}/mode`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `mode=${mode}`
+          });
+          
+          if (response.ok) {
+            document.getElementById('modeDisplay').textContent = mode.toUpperCase();
+            showAlert('success', `✓ Mode ${mode} activé (local)`);
+            return;
+          }
+        } catch (error) {
+          console.log('Contrôle local échoué, basculement vers cloud');
+        }
+      }
+      
+      // Sinon, utiliser Google Sheets
+      try {
+        await fetch(COMMAND_API_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            actionneur: 'mode',
+            etat: mode
+          })
+        });
+        
+        document.getElementById('modeDisplay').textContent = mode.toUpperCase();
+        showAlert('success', `✓ Mode ${mode} activé (cloud - délai ~5s)`);
+      } catch (error) {
+        showAlert('danger', '❌ Erreur: ' + error.message);
+      }
+    }
+
+    async function emergencyStop() {
+      if (!confirm('⚠️ CONFIRMER L\'ARRÊT D\'URGENCE ?')) return;
+      
+      // Essayer le contrôle local d'abord
+      if (useLocalControl && esp32IP) {
+        try {
+          const response = await fetch(`http://${esp32IP}/emergency`, {
+            method: 'POST'
+          });
+          
+          if (response.ok) {
+            ['pompe', 'brumisateur', 'ventilateur', 'chauffage', 'eclairage', 'electrovanne'].forEach(device => {
+              updateDeviceUI(device, false);
+            });
+            document.getElementById('modeDisplay').textContent = 'MANUAL';
+            showAlert('danger', '🛑 ARRÊT D\'URGENCE ACTIVÉ (local)');
+            return;
+          }
+        } catch (error) {
+          console.log('Contrôle local échoué, basculement vers cloud');
+        }
+      }
+      
+      // Sinon, envoyer via Google Sheets
+      const devices = ['pompe', 'brumisateur', 'ventilateur', 'chauffage', 'eclairage', 'electrovanne'];
+      for (const device of devices) {
+        try {
+          await fetch(COMMAND_API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              actionneur: device,
+              etat: 0
+            })
+          });
+          updateDeviceUI(device, false);
+        } catch (error) {
+          console.error('Erreur arrêt', device);
+        }
+      }
+      
+      document.getElementById('modeDisplay').textContent = 'MANUAL';
+      showAlert('danger', '🛑 ARRÊT D\'URGENCE ACTIVÉ (cloud - délai ~5s)');
+    }
+
+    async function saveSettings() {
+      const settings = {
+        tempMin: document.getElementById('tempMin').value,
+        tempMax: document.getElementById('tempMax').value,
+        humMin: document.getElementById('humidMin').value,
+        humMax: document.getElementById('humidMax').value
       };
-      return texts[device] || 'Actif';
+      
+      // Essayer le contrôle local d'abord
+      if (useLocalControl && esp32IP) {
+        try {
+          const response = await fetch(`http://${esp32IP}/settings`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `tempMin=${settings.tempMin}&tempMax=${settings.tempMax}&humMin=${settings.humMin}&humMax=${settings.humMax}`
+          });
+          
+          if (response.ok) {
+            showAlert('success', '💾 Paramètres envoyés à l\'ESP32 (local)');
+            return;
+          }
+        } catch (error) {
+          console.log('Contrôle local échoué');
+        }
+      }
+      
+      showAlert('warning', '⚠️ Paramètres sauvegardés localement (connectez l\'ESP32 pour synchroniser)');
     }
 
-    function getOffText(device) {
-      const texts = {
-        pump: 'Arrêté', mist: 'Arrêté', fan: 'Arrêté', heat: 'Arrêté',
-        lock: 'Verrouillée', alarm: 'Désactivée', camera: 'Arrêt', lights: 'Éteint'
-      };
-      return texts[device] || 'Arrêté';
-    }
-
-    async function sendCommand(module, device, state) {
-      // TODO: Implémenter l'envoi vers Google Sheets ou Firebase
-      console.log(`Command: ${module} - ${device} = ${state ? 'ON' : 'OFF'}`);
+    function updateSlider(id, val, unit) {
+      document.getElementById(id + 'Val').textContent = val + unit;
     }
 
     function showAlert(type, message) {
@@ -324,26 +704,39 @@
       alert.textContent = message;
       container.appendChild(alert);
       
-      setTimeout(() => alert.remove(), 3000);
+      setTimeout(() => alert.remove(), 5000);
     }
 
-    // Simulation de données (à remplacer par vraies données)
-    function updateData() {
-      // Agriculture
-      document.getElementById('agri-temp').textContent = (Math.random() * 5 + 22).toFixed(1);
-      document.getElementById('agri-humid').textContent = Math.floor(Math.random() * 20 + 55);
-      document.getElementById('agri-air').textContent = Math.floor(Math.random() * 100 + 400);
+    // Module Sécurité (placeholder)
+    function toggleSecurityDevice(device) {
+      const card = document.getElementById(device + 'Card');
+      card.classList.toggle('active');
+      const status = document.getElementById(device + 'Status');
       
-      // Sécurité
-      const doorStates = ['Fermée', 'Ouverte'];
-      const motionStates = ['Aucun', 'Détecté'];
-      document.getElementById('sec-door').textContent = doorStates[Math.floor(Math.random() * 2)];
-      document.getElementById('sec-motion').textContent = motionStates[Math.floor(Math.random() * 2)];
+      if (card.classList.contains('active')) {
+        const onTexts = {lock: 'Déverrouillée', alarm: 'Activée', camera: 'Enregistrement', lights: 'Allumées'};
+        status.textContent = onTexts[device];
+        showAlert('success', `✓ ${device} activé (Démo - ESP32 #2 requis)`);
+      } else {
+        const offTexts = {lock: 'Verrouillée', alarm: 'Désactivée', camera: 'Arrêt', lights: 'Éteintes'};
+        status.textContent = offTexts[device];
+        showAlert('warning', `⚠️ ${device} désactivé (Démo)`);
+      }
     }
 
-    // Mise à jour toutes les 3 secondes
-    setInterval(updateData, 3000);
-    updateData();
+    // Navigation entre modules
+    function showModule(moduleName) {
+      document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+      
+      document.getElementById(moduleName).classList.add('active');
+      event.target.classList.add('active');
+      
+      showAlert('success', `📱 Module ${moduleName} activé`);
+    }
+
+    // Initialiser
+    init();
   </script>
 </body>
 </html>
