@@ -140,8 +140,9 @@
       </div>
       
       <!-- Modal Ajout d'appareil -->
-      <div id="deviceManagerModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
-        <div style="background: #1a1d29; border-radius: 15px; padding: 30px; max-width: 500px; width: 90%; border: 2px solid #667eea;">
+      <div id="deviceManagerModal" style="display: none;">
+        <div class="modal-overlay" onclick="closeDeviceManager()"></div>
+        <div class="modal-content">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h2 style="margin: 0;">➕ Ajouter un ESP32</h2>
             <button class="btn btn-danger" onclick="closeDeviceManager()" style="padding: 8px 15px;">✖</button>
