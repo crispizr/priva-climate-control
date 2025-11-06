@@ -127,7 +127,64 @@
       </div>
     </div>
   </div>
-
+<!-- Gestionnaire d'Appareils Multi-ESP32 -->
+    <div class="card" style="margin-bottom: 25px;">
+      <div class="card-header">
+        <div class="card-title">🎛️ Gestionnaire d'Appareils ESP32</div>
+        <button class="btn btn-primary" onclick="showDeviceManager()">➕ Ajouter un appareil</button>
+      </div>
+      
+      <!-- Liste des appareils -->
+      <div id="devicesList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-top: 20px;">
+        <!-- Les appareils seront ajoutés ici dynamiquement -->
+      </div>
+      
+      <!-- Modal Ajout d'appareil -->
+      <div id="deviceManagerModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: #1a1d29; border-radius: 15px; padding: 30px; max-width: 500px; width: 90%; border: 2px solid #667eea;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="margin: 0;">➕ Ajouter un ESP32</h2>
+            <button class="btn btn-danger" onclick="closeDeviceManager()" style="padding: 8px 15px;">✖</button>
+          </div>
+          
+          <div class="config-section">
+            <div class="input-group">
+              <label>📛 Nom:</label>
+              <input type="text" id="newDeviceName" placeholder="Agriculture - Serre 1" style="width: 100%;">
+            </div>
+            <div class="input-group">
+              <label>📡 Adresse IP:</label>
+              <input type="text" id="newDeviceIP" placeholder="192.168.1.100" style="width: 100%;">
+            </div>
+            <div class="input-group">
+              <label>🏷️ Type:</label>
+              <select id="newDeviceType" style="padding: 8px; background: #0f1117; border: 1px solid #2d3142; border-radius: 5px; color: white; width: 100%;">
+                <option value="agriculture">🌱 Agriculture</option>
+                <option value="security">🔒 Sécurité</option>
+                <option value="generic">⚙️ Générique</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>📍 Emplacement:</label>
+              <input type="text" id="newDeviceLocation" placeholder="Serre principale" style="width: 100%;">
+            </div>
+          </div>
+          
+          <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button class="btn btn-success" onclick="addDevice()" style="flex: 1;">💾 Ajouter</button>
+            <button class="btn" onclick="scanNetwork()" style="flex: 1; background: #667eea; color: white;">🔍 Scanner réseau</button>
+          </div>
+          
+          <div id="scanResults" style="margin-top: 15px; display: none;">
+            <div style="padding: 10px; background: #252836; border-radius: 8px;">
+              <div style="font-weight: 600; margin-bottom: 10px;">📡 Appareils détectés:</div>
+              <div id="scanResultsList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
   <div class="container">
     <!-- Configuration ESP32 Agriculture -->
     <div class="card" style="margin-bottom: 25px;">
