@@ -140,9 +140,8 @@
       </div>
       
       <!-- Modal Ajout d'appareil -->
-      <div id="deviceManagerModal" style="display: none;">
-        <div class="modal-overlay" onclick="closeDeviceManager()"></div>
-        <div class="modal-content">
+      <div id="deviceManagerModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: #1a1d29; border-radius: 15px; padding: 30px; max-width: 500px; width: 90%; border: 2px solid #667eea;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h2 style="margin: 0;">➕ Ajouter un ESP32</h2>
             <button class="btn btn-danger" onclick="closeDeviceManager()" style="padding: 8px 15px;">✖</button>
@@ -185,7 +184,6 @@
         </div>
       </div>
     </div>
-  
   <div class="container">
     <!-- Configuration ESP32 Agriculture -->
     <div class="card" style="margin-bottom: 25px;">
@@ -791,7 +789,39 @@
       event.target.classList.add('active');
       
       showAlert('success', `📱 Module ${moduleName} activé`);
-    }
+    }function saveConfig(moduleName) {
+  const config = {
+    ip: document.getElementById("config-ip").value,
+    port: document.getElementById("config-port").value,
+    nom: document.getElementById("config-nom").value,
+  };
+  localStorage.setItem("config_" + moduleName, JSON.stringify(config));
+}
+
+function loadConfig(moduleName) {
+  const saved = localStorage.getItem("config_" + moduleName);
+  if (saved) {
+    const config = JSON.parse(saved);
+    document.getElementById("config-ip").value = config.ip || "";
+    document.getElementById("config-port").value = config.port || "";
+    document.getElementById("config-nom").value = config.nom || "";
+  } else {
+    // Si aucune config enregistrée, vider les champs
+    document.getElementById("config-ip").value = "";
+    document.getElementById("config-port").value = "";
+    document.getElementById("config-nom").value = "";
+  }
+}
+
+function switchModule(moduleName) {
+  // Sauvegarder l’actuel avant de changer
+  if (currentModule) saveConfig(currentModule);
+
+  // Charger le nouveau
+  currentModule = moduleName;
+  loadConfig(moduleName);
+  loadModule(moduleName);
+}
 
     // Initialiser
     init();
