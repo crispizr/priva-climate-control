@@ -34,7 +34,7 @@
     .module.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     
-    /* Common styles from old dashboard */
+    /* Common styles */
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 25px; }
     .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px; }
     .card { background: #1a1d29; border-radius: 15px; padding: 25px; border: 1px solid #2d3142; }
@@ -127,81 +127,41 @@
       </div>
     </div>
   </div>
-<!-- Gestionnaire d'Appareils Multi-ESP32 -->
-    <div class="card" style="margin-bottom: 25px;">
-      <div class="card-header">
-        <div class="card-title">🎛️ Gestionnaire d'Appareils ESP32</div>
-        <button class="btn btn-primary" onclick="showDeviceManager()">➕ Ajouter un appareil</button>
-      </div>
-      
-      <!-- Liste des appareils -->
-      <div id="devicesList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-top: 20px;">
-        <!-- Les appareils seront ajoutés ici dynamiquement -->
-      </div>
-      
-      <!-- Modal Ajout d'appareil -->
-      <div id="deviceManagerModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
-        <div style="background: #1a1d29; border-radius: 15px; padding: 30px; max-width: 500px; width: 90%; border: 2px solid #667eea;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2 style="margin: 0;">➕ Ajouter un ESP32</h2>
-            <button class="btn btn-danger" onclick="closeDeviceManager()" style="padding: 8px 15px;">✖</button>
-          </div>
-          
-          <div class="config-section">
-            <div class="input-group">
-              <label>📛 Nom:</label>
-              <input type="text" id="newDeviceName" placeholder="Agriculture - Serre 1" style="width: 100%;">
-            </div>
-            <div class="input-group">
-              <label>📡 Adresse IP:</label>
-              <input type="text" id="newDeviceIP" placeholder="192.168.1.100" style="width: 100%;">
-            </div>
-            <div class="input-group">
-              <label>🏷️ Type:</label>
-              <select id="newDeviceType" style="padding: 8px; background: #0f1117; border: 1px solid #2d3142; border-radius: 5px; color: white; width: 100%;">
-                <option value="agriculture">🌱 Agriculture</option>
-                <option value="security">🔒 Sécurité</option>
-                <option value="generic">⚙️ Générique</option>
-              </select>
-            </div>
-            <div class="input-group">
-              <label>📍 Emplacement:</label>
-              <input type="text" id="newDeviceLocation" placeholder="Serre principale" style="width: 100%;">
-            </div>
-          </div>
-          
-          <div style="display: flex; gap: 10px; margin-top: 20px;">
-            <button class="btn btn-success" onclick="addDevice()" style="flex: 1;">💾 Ajouter</button>
-            <button class="btn" onclick="scanNetwork()" style="flex: 1; background: #667eea; color: white;">🔍 Scanner réseau</button>
-          </div>
-          
-          <div id="scanResults" style="margin-top: 15px; display: none;">
-            <div style="padding: 10px; background: #252836; border-radius: 8px;">
-              <div style="font-weight: 600; margin-bottom: 10px;">📡 Appareils détectés:</div>
-              <div id="scanResultsList"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+
   <div class="container">
+    <div id="alertContainer"></div>
+    
     <!-- Configuration ESP32 Agriculture -->
-    <div class="card" style="margin-bottom: 25px;">
+    <div class="card config-card" id="config-agriculture" style="margin-bottom: 25px;">
       <div class="card-header">
-        <div class="card-title">⚙️ Configuration</div>
+        <div class="card-title">⚙️ Configuration Agriculture</div>
       </div>
       <div class="config-section">
         <div class="config-title">📡 ESP32 Agriculture</div>
         <div class="input-group">
           <label>IP:</label>
-          <input type="text" id="esp32IP" placeholder="192.168.1.100" value="">
-          <button class="btn btn-primary" onclick="saveESP32IP()">💾 Enregistrer</button>
-          <button class="btn btn-success" onclick="testConnection()">🔍 Tester</button>
+          <input type="text" id="esp32IP_agriculture" placeholder="192.168.1.100" value="">
+          <button class="btn btn-primary" onclick="saveESP32IP('agriculture')">💾 Enregistrer</button>
+          <button class="btn btn-success" onclick="testConnection('agriculture')">🔍 Tester</button>
         </div>
       </div>
     </div>
 
-    <div id="alertContainer"></div>
+    <!-- Configuration ESP32 Sécurité -->
+    <div class="card config-card" id="config-security" style="margin-bottom: 25px; display: none;">
+      <div class="card-header">
+        <div class="card-title">⚙️ Configuration Sécurité</div>
+      </div>
+      <div class="config-section">
+        <div class="config-title">📡 ESP32 Sécurité</div>
+        <div class="input-group">
+          <label>IP:</label>
+          <input type="text" id="esp32IP_security" placeholder="192.168.1.101" value="">
+          <button class="btn btn-primary" onclick="saveESP32IP('security')">💾 Enregistrer</button>
+          <button class="btn btn-success" onclick="testConnection('security')">🔍 Tester</button>
+        </div>
+      </div>
+    </div>
 
     <!-- MODULE AGRICULTURE -->
     <div id="agriculture" class="module active">
@@ -388,7 +348,7 @@
         <div style="margin-top:20px;text-align:center;padding:40px;background:#252836;border-radius:10px;">
           <div style="font-size:48px;margin-bottom:15px;">🚧</div>
           <div style="font-size:20px;font-weight:600;margin-bottom:10px;">Module Sécurité</div>
-          <div style="opacity:0.7;">ESP32 #2 à configurer - Fonctionnalité à venir</div>
+          <div style="opacity:0.7;">Configurez l'ESP32 #2 pour activer les fonctionnalités</div>
         </div>
       </div>
     </div>
@@ -401,13 +361,19 @@
     const COMMAND_API_URL = 'https://script.google.com/macros/s/AKfycbzfc55KJi67mnUXNH4uxnhHuJCkiJhzk3RxrboAHOz2WorlEbVXFkHwfWeqJKMCNbLP5w/exec';
     
     let climateChart, airChart, allData = [];
-    let esp32IP = localStorage.getItem('esp32IP') || '';
+    let esp32IP_agriculture = localStorage.getItem('esp32IP_agriculture') || '';
+    let esp32IP_security = localStorage.getItem('esp32IP_security') || '';
     let updateInterval;
-    let useLocalControl = false;
+    let useLocalControl_agriculture = false;
+    let useLocalControl_security = false;
+    let currentModule = 'agriculture';
     
-    if (esp32IP) {
-      document.getElementById('esp32IP').value = esp32IP;
-      startAutoUpdate();
+    if (esp32IP_agriculture) {
+      document.getElementById('esp32IP_agriculture').value = esp32IP_agriculture;
+      startAutoUpdate('agriculture');
+    }
+    if (esp32IP_security) {
+      document.getElementById('esp32IP_security').value = esp32IP_security;
     }
 
     function init() {
@@ -496,28 +462,44 @@
       `).join('');
     }
 
-    function saveESP32IP() {
-      esp32IP = document.getElementById('esp32IP').value.trim();
-      if (!esp32IP) {
+    function saveESP32IP(module) {
+      const ip = document.getElementById('esp32IP_' + module).value.trim();
+      if (!ip) {
         showAlert('warning', '⚠️ Veuillez entrer une adresse IP');
         return;
       }
-      localStorage.setItem('esp32IP', esp32IP);
-      useLocalControl = true;
-      showAlert('success', '✓ IP enregistrée: ' + esp32IP + ' (Contrôle local activé)');
-      startAutoUpdate();
-    }
-
-    function startAutoUpdate() {
-      if (updateInterval) clearInterval(updateInterval);
-      if (useLocalControl && esp32IP) {
-        updateESP32Data();
-        updateInterval = setInterval(updateESP32Data, 3000);
+      
+      if (module === 'agriculture') {
+        esp32IP_agriculture = ip;
+        localStorage.setItem('esp32IP_agriculture', ip);
+        useLocalControl_agriculture = true;
+        showAlert('success', '✓ IP Agriculture enregistrée: ' + ip);
+        startAutoUpdate('agriculture');
+      } else if (module === 'security') {
+        esp32IP_security = ip;
+        localStorage.setItem('esp32IP_security', ip);
+        useLocalControl_security = true;
+        showAlert('success', '✓ IP Sécurité enregistrée: ' + ip);
+        startAutoUpdate('security');
       }
     }
 
-    async function testConnection() {
-      const ip = document.getElementById('esp32IP').value.trim();
+    function startAutoUpdate(module) {
+      if (module === 'agriculture' && useLocalControl_agriculture && esp32IP_agriculture) {
+        if (updateInterval) clearInterval(updateInterval);
+        updateESP32Data();
+        updateInterval = setInterval(updateESP32Data, 3000);
+      } else if (module === 'security' && useLocalControl_security && esp32IP_security) {
+        updateSecurityData();
+        if (currentModule === 'security') {
+          if (updateInterval) clearInterval(updateInterval);
+          updateInterval = setInterval(updateSecurityData, 3000);
+        }
+      }
+    }
+
+    async function testConnection(module) {
+      const ip = document.getElementById('esp32IP_' + module).value.trim();
       if (!ip) {
         showAlert('warning', '⚠️ Entrez une IP d\'abord');
         return;
@@ -526,23 +508,34 @@
       try {
         const response = await fetch(`http://${ip}/`, {mode: 'cors'});
         const text = await response.text();
-        useLocalControl = true;
-        showAlert('success', '✓ Connexion réussie: ' + text);
+        
+        if (module === 'agriculture') {
+          useLocalControl_agriculture = true;
+          showAlert('success', '✓ Connexion Agriculture réussie: ' + text);
+        } else if (module === 'security') {
+          useLocalControl_security = true;
+          showAlert('success', '✓ Connexion Sécurité réussie: ' + text);
+        }
+        
         document.getElementById('connectionStatus').style.background = '#00a651';
         document.getElementById('connectionText').textContent = 'Connecté (Local)';
       } catch (error) {
-        useLocalControl = false;
-        showAlert('warning', '⚠️ Contrôle local impossible, utilisation de Google Sheets');
+        if (module === 'agriculture') {
+          useLocalControl_agriculture = false;
+        } else if (module === 'security') {
+          useLocalControl_security = false;
+        }
+        showAlert('warning', '⚠️ Contrôle local impossible pour ' + module);
         document.getElementById('connectionStatus').style.background = '#f77f00';
         document.getElementById('connectionText').textContent = 'Cloud uniquement';
       }
     }
 
     async function updateESP32Data() {
-      if (!esp32IP) return;
+      if (!esp32IP_agriculture) return;
       
       try {
-        const response = await fetch(`http://${esp32IP}/status`, {mode: 'cors'});
+        const response = await fetch(`http://${esp32IP_agriculture}/status`, {mode: 'cors'});
         const data = await response.json();
         
         document.getElementById('tempValue').textContent = data.temperature.toFixed(1);
@@ -571,10 +564,40 @@
         }
         
         document.getElementById('connectionStatus').style.background = '#00a651';
-        document.getElementById('connectionText').textContent = 'Connecté (Local)';
+        document.getElementById('connectionText').textContent = 'Connecté (Agriculture)';
         
       } catch (error) {
         console.error('Erreur ESP32:', error);
+        document.getElementById('connectionStatus').style.background = '#e63946';
+        document.getElementById('connectionText').textContent = 'Déconnecté';
+      }
+    }
+
+    async function updateSecurityData() {
+      if (!esp32IP_security) return;
+      
+      try {
+        const response = await fetch(`http://${esp32IP_security}/status`, {mode: 'cors'});
+        const data = await response.json();
+        
+        document.getElementById('sec-door').textContent = data.doorOpen ? 'OUVERTE' : 'FERMÉE';
+        document.getElementById('sec-motion').textContent = data.motionDetected ? 'DÉTECTÉ' : 'AUCUN';
+        document.getElementById('sec-badge').textContent = data.lastBadge || '--';
+        
+        if (data.lastAccess > 0) {
+          const date = new Date(data.lastAccess);
+          document.getElementById('sec-time').textContent = date.toLocaleTimeString();
+        }
+        
+        updateSecurityDeviceUI('lock', data.devices.lock);
+        updateSecurityDeviceUI('alarm', data.devices.alarm);
+        updateSecurityDeviceUI('lights', data.devices.lights);
+        
+        document.getElementById('connectionStatus').style.background = '#00a651';
+        document.getElementById('connectionText').textContent = 'Connecté (Sécurité)';
+        
+      } catch (error) {
+        console.error('Erreur ESP32 Sécurité:', error);
         document.getElementById('connectionStatus').style.background = '#e63946';
         document.getElementById('connectionText').textContent = 'Déconnecté';
       }
@@ -593,14 +616,30 @@
       }
     }
 
+    function updateSecurityDeviceUI(device, state) {
+      const card = document.getElementById(device + 'Card');
+      const status = document.getElementById(device + 'Status');
+      
+      if (card && status) {
+        if (state) {
+          card.classList.add('active');
+          const onTexts = {lock: 'Déverrouillée', alarm: 'Activée', camera: 'Enregistrement', lights: 'Allumées'};
+          status.textContent = onTexts[device] || 'Actif';
+        } else {
+          card.classList.remove('active');
+          const offTexts = {lock: 'Verrouillée', alarm: 'Désactivée', camera: 'Arrêt', lights: 'Éteintes'};
+          status.textContent = offTexts[device] || 'Arrêté';
+        }
+      }
+    }
+
     async function toggleDevice(device) {
       const card = document.getElementById(device + 'Card');
       const newState = !card.classList.contains('active');
       
-      // Essayer le contrôle local d'abord si disponible
-      if (useLocalControl && esp32IP) {
+      if (useLocalControl_agriculture && esp32IP_agriculture) {
         try {
-          const response = await fetch(`http://${esp32IP}/control`, {
+          const response = await fetch(`http://${esp32IP_agriculture}/control`, {
             method: 'POST',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
             body: `device=${device}&state=${newState ? '1' : '0'}`
@@ -616,7 +655,6 @@
         }
       }
       
-      // Sinon, utiliser Google Sheets
       try {
         const response = await fetch(COMMAND_API_URL, {
           method: 'POST',
@@ -636,10 +674,9 @@
     }
 
     async function setMode(mode) {
-      // Essayer le contrôle local d'abord
-      if (useLocalControl && esp32IP) {
+      if (useLocalControl_agriculture && esp32IP_agriculture) {
         try {
-          const response = await fetch(`http://${esp32IP}/mode`, {
+          const response = await fetch(`http://${esp32IP_agriculture}/mode`, {
             method: 'POST',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
             body: `mode=${mode}`
@@ -655,7 +692,6 @@
         }
       }
       
-      // Sinon, utiliser Google Sheets
       try {
         await fetch(COMMAND_API_URL, {
           method: 'POST',
@@ -677,10 +713,9 @@
     async function emergencyStop() {
       if (!confirm('⚠️ CONFIRMER L\'ARRÊT D\'URGENCE ?')) return;
       
-      // Essayer le contrôle local d'abord
-      if (useLocalControl && esp32IP) {
+      if (useLocalControl_agriculture && esp32IP_agriculture) {
         try {
-          const response = await fetch(`http://${esp32IP}/emergency`, {
+          const response = await fetch(`http://${esp32IP_agriculture}/emergency`, {
             method: 'POST'
           });
           
@@ -697,7 +732,6 @@
         }
       }
       
-      // Sinon, envoyer via Google Sheets
       const devices = ['pompe', 'brumisateur', 'ventilateur', 'chauffage', 'eclairage', 'electrovanne'];
       for (const device of devices) {
         try {
@@ -728,10 +762,9 @@
         humMax: document.getElementById('humidMax').value
       };
       
-      // Essayer le contrôle local d'abord
-      if (useLocalControl && esp32IP) {
+      if (useLocalControl_agriculture && esp32IP_agriculture) {
         try {
-          const response = await fetch(`http://${esp32IP}/settings`, {
+          const response = await fetch(`http://${esp32IP_agriculture}/settings`, {
             method: 'POST',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
             body: `tempMin=${settings.tempMin}&tempMax=${settings.tempMax}&humMin=${settings.humMin}&humMax=${settings.humMax}`
@@ -763,16 +796,35 @@
       setTimeout(() => alert.remove(), 5000);
     }
 
-    // Module Sécurité (placeholder)
-    function toggleSecurityDevice(device) {
+    async function toggleSecurityDevice(device) {
       const card = document.getElementById(device + 'Card');
+      const newState = !card.classList.contains('active');
+      
+      if (useLocalControl_security && esp32IP_security) {
+        try {
+          const response = await fetch(`http://${esp32IP_security}/control`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `device=${device}&state=${newState ? '1' : '0'}`
+          });
+          
+          if (response.ok) {
+            updateSecurityDeviceUI(device, newState);
+            showAlert('success', `✓ ${device} ${newState ? 'activé' : 'désactivé'} (local)`);
+            return;
+          }
+        } catch (error) {
+          console.log('Contrôle local sécurité échoué');
+        }
+      }
+      
       card.classList.toggle('active');
       const status = document.getElementById(device + 'Status');
       
       if (card.classList.contains('active')) {
         const onTexts = {lock: 'Déverrouillée', alarm: 'Activée', camera: 'Enregistrement', lights: 'Allumées'};
         status.textContent = onTexts[device];
-        showAlert('success', `✓ ${device} activé (Démo - ESP32 #2 requis)`);
+        showAlert('success', `✓ ${device} activé (Démo - Configurez ESP32 #2)`);
       } else {
         const offTexts = {lock: 'Verrouillée', alarm: 'Désactivée', camera: 'Arrêt', lights: 'Éteintes'};
         status.textContent = offTexts[device];
@@ -780,50 +832,28 @@
       }
     }
 
-    // Navigation entre modules
     function showModule(moduleName) {
+      currentModule = moduleName;
+      
       document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+      document.querySelectorAll('.config-card').forEach(c => c.style.display = 'none');
       document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
       
       document.getElementById(moduleName).classList.add('active');
+      document.getElementById('config-' + moduleName).style.display = 'block';
       event.target.classList.add('active');
       
+      if (updateInterval) clearInterval(updateInterval);
+      
+      if (moduleName === 'agriculture' && useLocalControl_agriculture) {
+        startAutoUpdate('agriculture');
+      } else if (moduleName === 'security' && useLocalControl_security) {
+        startAutoUpdate('security');
+      }
+      
       showAlert('success', `📱 Module ${moduleName} activé`);
-    }function saveConfig(moduleName) {
-  const config = {
-    ip: document.getElementById("config-ip").value,
-    port: document.getElementById("config-port").value,
-    nom: document.getElementById("config-nom").value,
-  };
-  localStorage.setItem("config_" + moduleName, JSON.stringify(config));
-}
+    }
 
-function loadConfig(moduleName) {
-  const saved = localStorage.getItem("config_" + moduleName);
-  if (saved) {
-    const config = JSON.parse(saved);
-    document.getElementById("config-ip").value = config.ip || "";
-    document.getElementById("config-port").value = config.port || "";
-    document.getElementById("config-nom").value = config.nom || "";
-  } else {
-    // Si aucune config enregistrée, vider les champs
-    document.getElementById("config-ip").value = "";
-    document.getElementById("config-port").value = "";
-    document.getElementById("config-nom").value = "";
-  }
-}
-
-function switchModule(moduleName) {
-  // Sauvegarder l’actuel avant de changer
-  if (currentModule) saveConfig(currentModule);
-
-  // Charger le nouveau
-  currentModule = moduleName;
-  loadConfig(moduleName);
-  loadModule(moduleName);
-}
-
-    // Initialiser
     init();
   </script>
 </body>
