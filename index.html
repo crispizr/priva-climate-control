@@ -78,13 +78,11 @@
     th { background: #0f1117; font-size: 12px; text-transform: uppercase; }
     tbody tr:hover { background: #0f1117; }
     
-    /* Modal */
     .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
     .modal.active { display: flex; }
     .modal-content { background: #1a1d29; border-radius: 15px; padding: 30px; max-width: 500px; width: 90%; border: 2px solid #667eea; animation: modalSlide 0.3s; }
     @keyframes modalSlide { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     
-    /* Device Manager */
     .device-item { background: #252836; border-radius: 10px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
     .device-info { flex: 1; }
     .device-name { font-weight: 600; margin-bottom: 5px; }
@@ -331,7 +329,6 @@
     
     let climateChart, airChart, allData = [], devices = {}, currentModule = 'agriculture', updateInterval;
 
-    // Charger les appareils sauvegardés
     const savedDevices = localStorage.getItem('priva_devices');
     if (savedDevices) devices = JSON.parse(savedDevices);
 
@@ -341,8 +338,7 @@
       setInterval(loadData, 10000);
       renderDevicesList();
       
-      // Auto-connect premier appareil agriculture
-      const agriDevice = Object.values(devices).find(d => d.type === 'agriculture');
+      const agriDevice = Object.values(devices).find(d => d.type === 'agriculture' && d.active);
       if (agriDevice) startModuleUpdate('agriculture');
     }
 
@@ -467,6 +463,31 @@
         }
         
         document.getElementById('connectionStatus').style.background = '#00a651';
+        document.getElementById('connectionText').textContent = 'Connecté (Agriculture)';
+      } catch (err) {
+        document.getElementById('connectionStatus').style.background = '#e63946';
+        document.getElementById('connectionText').textContent = 'Déconnecté';
+      }
+    }
+
+    async function updateSecurityData(ip) {
+      try {
+        const res = await fetch(`http://${ip}/status`, {mode: 'cors'});
+        const data = await res.json();
+        
+        document.getElementById('sec-door').textContent = data.doorOpen ? 'OUVERTE' : 'FERMÉE';
+        document.getElementById('sec-motion').textContent = data.motionDetected ? 'DÉTECTÉ' : 'AUCUN';
+        document.getElementById('sec-badge').textContent = data.lastBadge || '--';
+        
+        if (data.lastAccess > 0) {
+          document.getElementById('sec-time').textContent = new Date(data.lastAccess).toLocaleTimeString();
+        }
+        
+        updateDeviceUI('lock', data.devices.lock);
+        updateDeviceUI('alarm', data.devices.alarm);
+        updateDeviceUI('lights', data.devices.lights);
+        
+        document.getElementById('connectionStatus').style.background = '#00a651';
         document.getElementById('connectionText').textContent = 'Connecté (Sécurité)';
       } catch (err) {
         document.getElementById('connectionStatus').style.background = '#e63946';
@@ -513,7 +534,6 @@
         }
       }
       
-      // Fallback cloud
       try {
         await fetch(COMMAND_API_URL, {
           method: 'POST',
@@ -620,8 +640,6 @@
       setTimeout(() => alert.remove(), 5000);
     }
 
-    // ==================== GESTIONNAIRE D'APPAREILS ====================
-    
     function showDeviceManager() {
       document.querySelectorAll('.module').forEach(m => m.style.display = 'none');
       document.getElementById('deviceManager').style.display = 'block';
@@ -694,7 +712,6 @@
         addedAt: new Date().toISOString()
       };
       
-      // Désactiver les autres appareils du même type
       Object.entries(devices).forEach(([key, dev]) => {
         if (key !== id && dev.type === type) dev.active = false;
       });
@@ -705,7 +722,6 @@
       renderDevicesList();
       showAlert('success', `✓ ${name} ajouté avec succès`);
       
-      // Clear inputs
       document.getElementById('newDeviceName').value = '';
       document.getElementById('newDeviceIP').value = '';
       document.getElementById('newDeviceLocation').value = '';
@@ -715,14 +731,12 @@
       const device = devices[id];
       
       if (!device.active) {
-        // Désactiver les autres du même type
         Object.entries(devices).forEach(([key, dev]) => {
           if (dev.type === device.type) dev.active = false;
         });
         device.active = true;
         showAlert('success', `✓ ${device.name} activé`);
         
-        // Redémarrer la mise à jour si on est sur ce module
         if (currentModule === device.type) {
           if (updateInterval) clearInterval(updateInterval);
           startModuleUpdate(device.type);
@@ -743,7 +757,7 @@
       showAlert('warning', `🔍 Test de ${device.name}...`);
       
       try {
-        const res = await fetch(`http://${device.ip}/`, {mode: 'cors', timeout: 3000});
+        const res = await fetch(`http://${device.ip}/`, {mode: 'cors'});
         const text = await res.text();
         showAlert('success', `✓ ${device.name} répond: ${text.substring(0, 50)}`);
       } catch (err) {
@@ -764,29 +778,4 @@
     init();
   </script>
 </body>
-</html>Status').style.background = '#00a651';
-        document.getElementById('connectionText').textContent = 'Connecté (Agriculture)';
-      } catch (err) {
-        document.getElementById('connectionStatus').style.background = '#e63946';
-        document.getElementById('connectionText').textContent = 'Déconnecté';
-      }
-    }
-
-    async function updateSecurityData(ip) {
-      try {
-        const res = await fetch(`http://${ip}/status`, {mode: 'cors'});
-        const data = await res.json();
-        
-        document.getElementById('sec-door').textContent = data.doorOpen ? 'OUVERTE' : 'FERMÉE';
-        document.getElementById('sec-motion').textContent = data.motionDetected ? 'DÉTECTÉ' : 'AUCUN';
-        document.getElementById('sec-badge').textContent = data.lastBadge || '--';
-        
-        if (data.lastAccess > 0) {
-          document.getElementById('sec-time').textContent = new Date(data.lastAccess).toLocaleTimeString();
-        }
-        
-        updateDeviceUI('lock', data.devices.lock);
-        updateDeviceUI('alarm', data.devices.alarm);
-        updateDeviceUI('lights', data.devices.lights);
-        
-        document.getElementById('connection
+</html>
