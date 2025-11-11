@@ -136,6 +136,16 @@
 
     <!-- MODULE AGRICULTURE -->
     <div id="agriculture" class="module active">
+      <!-- Configuration appareil actif -->
+      <div class="card" id="agri-config" style="background: linear-gradient(135deg, #252836, #1a1d29); border: 2px solid #667eea;">
+        <div class="card-header" style="border-bottom: 2px solid #667eea;">
+          <div class="card-title">⚙️ Configuration ESP32 Agriculture</div>
+        </div>
+        <div id="agri-device-info" style="text-align: center; padding: 20px; opacity: 0.6;">
+          Aucun appareil actif. Ajoutez un ESP32 via l'onglet "🎛️ Appareils"
+        </div>
+      </div>
+      
       <div class="grid-4">
         <div class="sensor-card">
           <div class="sensor-icon">🌡️</div>
@@ -245,6 +255,16 @@
 
     <!-- MODULE SÉCURITÉ -->
     <div id="security" class="module">
+      <!-- Configuration appareil actif -->
+      <div class="card" id="sec-config" style="background: linear-gradient(135deg, #252836, #1a1d29); border: 2px solid #667eea;">
+        <div class="card-header" style="border-bottom: 2px solid #667eea;">
+          <div class="card-title">⚙️ Configuration ESP32 Sécurité</div>
+        </div>
+        <div id="sec-device-info" style="text-align: center; padding: 20px; opacity: 0.6;">
+          Aucun appareil actif. Ajoutez un ESP32 via l'onglet "🎛️ Appareils"
+        </div>
+      </div>
+      
       <div class="grid-4">
         <div class="sensor-card">
           <div class="sensor-icon">🚪</div>
@@ -339,7 +359,10 @@
       renderDevicesList();
       
       const agriDevice = Object.values(devices).find(d => d.type === 'agriculture' && d.active);
-      if (agriDevice) startModuleUpdate('agriculture');
+      if (agriDevice) {
+        updateModuleConfig('agriculture');
+        startModuleUpdate('agriculture');
+      }
     }
 
     function setupCharts() {
@@ -420,10 +443,77 @@
       if (module !== 'devices') {
         document.getElementById(module).style.display = 'block';
         if (updateInterval) clearInterval(updateInterval);
+        updateModuleConfig(module);
         startModuleUpdate(module);
       }
       
       showAlert('success', `📱 Module ${module} activé`);
+    }
+
+    function updateModuleConfig(module) {
+      const device = Object.values(devices).find(d => d.type === module && d.active);
+      const configId = module === 'agriculture' ? 'agri-device-info' : 'sec-device-info';
+      const configDiv = document.getElementById(configId);
+      
+      if (!device) {
+        configDiv.innerHTML = `
+          <div style="text-align: center; padding: 20px; opacity: 0.6;">
+            Aucun appareil actif. Ajoutez un ESP32 via l'onglet "🎛️ Appareils"
+          </div>
+        `;
+        return;
+      }
+      
+      configDiv.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+          <div style="flex: 1;">
+            <div style="font-weight: 600; margin-bottom: 5px;">${getDeviceIcon(device.type)} ${device.name}</div>
+            <div style="font-size: 12px; opacity: 0.7;">📍 ${device.location}</div>
+          </div>
+          <div style="flex: 2; display: flex; gap: 10px; align-items: center;">
+            <label style="font-weight: 600;">📡 IP:</label>
+            <input type="text" id="edit-ip-${module}" value="${device.ip}" 
+                   style="flex: 1; padding: 8px; background: #0f1117; border: 1px solid #2d3142; border-radius: 5px; color: white;">
+            <button class="btn btn-success btn-small" onclick="updateDeviceIP('${module}')">💾 Sauver</button>
+            <button class="btn btn-primary btn-small" onclick="testActiveDevice('${module}')">🔍 Tester</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function updateDeviceIP(module) {
+      const device = Object.values(devices).find(d => d.type === module && d.active);
+      if (!device) return;
+      
+      const newIP = document.getElementById(`edit-ip-${module}`).value.trim();
+      if (!newIP) {
+        showAlert('warning', '⚠️ IP invalide');
+        return;
+      }
+      
+      const deviceId = Object.keys(devices).find(key => devices[key] === device);
+      device.ip = newIP;
+      
+      localStorage.setItem('priva_devices', JSON.stringify(devices));
+      showAlert('success', `✓ IP mise à jour: ${newIP}`);
+      
+      if (updateInterval) clearInterval(updateInterval);
+      startModuleUpdate(module);
+    }
+
+    async function testActiveDevice(module) {
+      const device = Object.values(devices).find(d => d.type === module && d.active);
+      if (!device) return;
+      
+      showAlert('warning', `🔍 Test de connexion...`);
+      
+      try {
+        const res = await fetch(`http://${device.ip}/`, {mode: 'cors'});
+        const text = await res.text();
+        showAlert('success', `✓ Connexion réussie: ${text.substring(0, 50)}`);
+      } catch (err) {
+        showAlert('danger', `❌ Connexion échouée`);
+      }
     }
 
     function startModuleUpdate(module) {
@@ -725,6 +815,14 @@
       document.getElementById('newDeviceName').value = '';
       document.getElementById('newDeviceIP').value = '';
       document.getElementById('newDeviceLocation').value = '';
+      
+      // Rediriger automatiquement vers le module correspondant
+      if (type === 'agriculture' || type === 'security') {
+        setTimeout(() => {
+          const moduleBtn = document.querySelector(`.tab-btn[onclick="switchModule('${type}')"]`);
+          if (moduleBtn) moduleBtn.click();
+        }, 500);
+      }
     }
 
     function toggleDeviceActive(id) {
