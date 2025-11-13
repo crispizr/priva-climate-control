@@ -135,23 +135,9 @@ body {
 
 .grid-4 { 
   display: grid; 
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  max-width: 100%;
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px; 
   margin-bottom: 25px; 
-}
-
-/* Limiter à 4 colonnes maximum */
-@supports (grid-template-columns: repeat(auto-fit, minmax(250px, 1fr))) {
-  .grid-4 {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  }
-  
-  @media (min-width: 1400px) {
-    .grid-4 {
-      grid-template-columns: repeat(4, 1fr);
-    }
-  }
 }
 
 /* Cards */
