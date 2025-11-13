@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -12,8 +11,8 @@
   <div class="header">
     <div class="header-content">
       <div class="logo">
-        <span style="font-size: 36px;">🌍</span>
-        <h1>Sagitarius-Nova</h1>
+        <span style="font-size: 36px;">🏠</span>
+        <h1>PRIVA Platform - Multi-Modules IoT</h1>
       </div>
       <div class="status-bar">
         <div class="status-item">
@@ -59,7 +58,8 @@
         </div>
       </div>
       
-      <div class="grid-4">
+      <!-- Première ligne : Température et Humidité sur 2 colonnes -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
         <div class="sensor-card">
           <div class="sensor-icon">🌡️</div>
           <div class="sensor-value"><span id="tempValue">--</span><span class="sensor-unit">°C</span></div>
@@ -70,6 +70,10 @@
           <div class="sensor-value"><span id="humidValue">--</span><span class="sensor-unit">%</span></div>
           <div style="margin-top:10px"><span class="status-badge optimal">Normal</span></div>
         </div>
+      </div>
+      
+      <!-- Deuxième ligne : CO2, DC et autres capteurs sur 4 colonnes -->
+      <div class="grid-4" style="margin-bottom: 25px;">
         <div class="sensor-card">
           <div class="sensor-icon">🔬</div>
           <div class="sensor-value"><span id="gasValue">--</span><span class="sensor-unit">ppm</span></div>
@@ -132,7 +136,7 @@
           </div>
           <div class="control-group">
             <label class="control-label">🌡️ Temp Max: <span id="tempMaxVal">28°C</span></label>
-            <input type="range" min="0" max="120" value="28" class="slider" id="tempMax" oninput="updateSlider('tempMax',this.value,'°C')">
+            <input type="range" min="0" max="100" value="28" class="slider" id="tempMax" oninput="updateSlider('tempMax',this.value,'°C')">
           </div>
           <div class="control-group">
             <label class="control-label">💧 Humid Min: <span id="humidMinVal">50%</span></label>
@@ -140,7 +144,7 @@
           </div>
           <div class="control-group">
             <label class="control-label">💧 Humid Max: <span id="humidMaxVal">80%</span></label>
-            <input type="range" min="0" max="110" value="80" class="slider" id="humidMax" oninput="updateSlider('humidMax',this.value,'%')">
+            <input type="range" min="0" max="100" value="80" class="slider" id="humidMax" oninput="updateSlider('humidMax',this.value,'%')">
           </div>
           <button class="btn btn-success" style="width:100%" onclick="saveSettings()">💾 Enregistrer</button>
         </div>
