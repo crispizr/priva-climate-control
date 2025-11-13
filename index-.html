@@ -1,1 +1,260 @@
 
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRIVA Platform Multi-Modules</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+</head>
+<body>
+  <div class="header">
+    <div class="header-content">
+      <div class="logo">
+        <span style="font-size: 36px;">🏠</span>
+        <h1>PRIVA Platform - Multi-Modules IoT</h1>
+      </div>
+      <div class="status-bar">
+        <div class="status-item">
+          <div class="status-dot connected" id="connectionStatus"></div>
+          <span id="connectionText">Démarrage...</span>
+        </div>
+        <div class="status-item">
+          <span>🤖 Mode: <strong id="modeDisplay">--</strong></span>
+        </div>
+        <div class="status-item">
+          <span>📡 <strong id="dataCount">0</strong> mesures</span>
+        </div>
+      </div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchModule('agriculture')">🌱 Agriculture</button>
+        <button class="tab-btn" onclick="switchModule('security')">🔒 Sécurité</button>
+        <button class="tab-btn" onclick="showDeviceManager()">🎛️ Appareils</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="alertContainer"></div>
+    
+    <!-- Gestionnaire d'Appareils -->
+    <div class="card" id="deviceManager" style="display:none;">
+      <div class="card-header">
+        <div class="card-title">🎛️ Gestionnaire d'Appareils ESP32</div>
+        <button class="btn btn-success" onclick="openAddDeviceModal()">➕ Ajouter</button>
+      </div>
+      <div id="devicesList"></div>
+    </div>
+
+    <!-- MODULE AGRICULTURE -->
+    <div id="agriculture" class="module active">
+      <!-- Configuration appareil actif -->
+      <div class="card" id="agri-config" style="background: linear-gradient(135deg, #252836, #1a1d29); border: 2px solid #667eea;">
+        <div class="card-header" style="border-bottom: 2px solid #667eea;">
+          <div class="card-title">⚙️ Configuration ESP32 Agriculture</div>
+        </div>
+        <div id="agri-device-info" style="text-align: center; padding: 20px; opacity: 0.6;">
+          Aucun appareil actif. Ajoutez un ESP32 via l'onglet "🎛️ Appareils"
+        </div>
+      </div>
+      
+      <div class="grid-4">
+        <div class="sensor-card">
+          <div class="sensor-icon">🌡️</div>
+          <div class="sensor-value"><span id="tempValue">--</span><span class="sensor-unit">°C</span></div>
+          <div style="margin-top:10px"><span class="status-badge optimal">Normal</span></div>
+        </div>
+        <div class="sensor-card">
+          <div class="sensor-icon">💧</div>
+          <div class="sensor-value"><span id="humidValue">--</span><span class="sensor-unit">%</span></div>
+          <div style="margin-top:10px"><span class="status-badge optimal">Normal</span></div>
+        </div>
+        <div class="sensor-card">
+          <div class="sensor-icon">🔬</div>
+          <div class="sensor-value"><span id="gasValue">--</span><span class="sensor-unit">ppm</span></div>
+          <div style="margin-top:10px"><span class="status-badge optimal">Normal</span></div>
+        </div>
+        <div class="sensor-card">
+          <div class="sensor-icon">⚡</div>
+          <div class="sensor-value"><span id="dcValue">--</span><span class="sensor-unit">V</span></div>
+          <div style="margin-top:10px"><span class="status-badge optimal">DC</span></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">⚙️ Équipements</div></div>
+          <div class="device-grid">
+            <div class="device-card" id="pompeCard" onclick="toggleDevice('agriculture', 'pompe')">
+              <div class="device-icon">💧</div>
+              <div>Irrigation</div>
+              <small id="pompeStatus">Arrêté</small>
+            </div>
+            <div class="device-card" id="brumisateurCard" onclick="toggleDevice('agriculture', 'brumisateur')">
+              <div class="device-icon">💦</div>
+              <div>Brumisation</div>
+              <small id="brumisateurStatus">Arrêté</small>
+            </div>
+            <div class="device-card" id="ventilateurCard" onclick="toggleDevice('agriculture', 'ventilateur')">
+              <div class="device-icon">🌀</div>
+              <div>Ventilation</div>
+              <small id="ventilateurStatus">Arrêté</small>
+            </div>
+            <div class="device-card" id="chauffageCard" onclick="toggleDevice('agriculture', 'chauffage')">
+              <div class="device-icon">🔥</div>
+              <div>Chauffage</div>
+              <small id="chauffageStatus">Arrêté</small>
+            </div>
+            <div class="device-card" id="eclairageCard" onclick="toggleDevice('agriculture', 'eclairage')">
+              <div class="device-icon">💡</div>
+              <div>Éclairage</div>
+              <small id="eclairageStatus">Arrêté</small>
+            </div>
+            <div class="device-card" id="electrovanneCard" onclick="toggleDevice('agriculture', 'electrovanne')">
+              <div class="device-icon">🚰</div>
+              <div>Électrovanne</div>
+              <small id="electrovanneStatus">Fermée</small>
+            </div>
+          </div>
+          <div style="margin-top:20px">
+            <button class="btn btn-success" onclick="setMode('auto')">🤖 Auto</button>
+            <button class="btn btn-primary" onclick="setMode('manual')">✋ Manuel</button>
+            <button class="btn btn-danger" onclick="emergencyStop()">🛑 Arrêt</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">🎯 Paramètres Auto</div></div>
+          <div class="control-group">
+            <label class="control-label">🌡️ Temp Min: <span id="tempMinVal">18°C</span></label>
+            <input type="range" min="10" max="25" value="18" class="slider" id="tempMin" oninput="updateSlider('tempMin',this.value,'°C')">
+          </div>
+          <div class="control-group">
+            <label class="control-label">🌡️ Temp Max: <span id="tempMaxVal">28°C</span></label>
+            <input type="range" min="20" max="40" value="28" class="slider" id="tempMax" oninput="updateSlider('tempMax',this.value,'°C')">
+          </div>
+          <div class="control-group">
+            <label class="control-label">💧 Humid Min: <span id="humidMinVal">50%</span></label>
+            <input type="range" min="30" max="70" value="50" class="slider" id="humidMin" oninput="updateSlider('humidMin',this.value,'%')">
+          </div>
+          <div class="control-group">
+            <label class="control-label">💧 Humid Max: <span id="humidMaxVal">80%</span></label>
+            <input type="range" min="50" max="95" value="80" class="slider" id="humidMax" oninput="updateSlider('humidMax',this.value,'%')">
+          </div>
+          <button class="btn btn-success" style="width:100%" onclick="saveSettings()">💾 Enregistrer</button>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">📈 Température & Humidité</div></div>
+          <div class="chart-container"><canvas id="climateChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">📊 Qualité Air</div></div>
+          <div class="chart-container"><canvas id="airChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">📋 Données Récentes</div></div>
+        <table>
+          <thead><tr><th>Date</th><th>Temp</th><th>Humid</th><th>CO2</th><th>DC</th></tr></thead>
+          <tbody id="dataTable"><tr><td colspan="5" style="text-align:center">Chargement...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MODULE SÉCURITÉ -->
+    <div id="security" class="module">
+      <!-- Configuration appareil actif -->
+      <div class="card" id="sec-config" style="background: linear-gradient(135deg, #252836, #1a1d29); border: 2px solid #667eea;">
+        <div class="card-header" style="border-bottom: 2px solid #667eea;">
+          <div class="card-title">⚙️ Configuration ESP32 Sécurité</div>
+        </div>
+        <div id="sec-device-info" style="text-align: center; padding: 20px; opacity: 0.6;">
+          Aucun appareil actif. Ajoutez un ESP32 via l'onglet "🎛️ Appareils"
+        </div>
+      </div>
+      
+      <div class="grid-4">
+        <div class="sensor-card">
+          <div class="sensor-icon">🚪</div>
+          <div class="sensor-value" id="sec-door" style="font-size: 24px;">--</div>
+          <div>État Porte</div>
+        </div>
+        <div class="sensor-card">
+          <div class="sensor-icon">👁️</div>
+          <div class="sensor-value" id="sec-motion" style="font-size: 24px;">--</div>
+          <div>Mouvement</div>
+        </div>
+        <div class="sensor-card">
+          <div class="sensor-icon">🔑</div>
+          <div class="sensor-value" id="sec-badge" style="font-size: 18px;">--</div>
+          <div>Dernier Badge</div>
+        </div>
+        <div class="sensor-card">
+          <div class="sensor-icon">⏰</div>
+          <div class="sensor-value" id="sec-time" style="font-size: 20px;">--</div>
+          <div>Dernier Accès</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">🔒 Contrôles</div></div>
+        <div class="device-grid">
+          <div class="device-card" id="lockCard" onclick="toggleDevice('security', 'lock')">
+            <div class="device-icon">🔓</div>
+            <div>Serrure</div>
+            <small id="lockStatus">Verrouillée</small>
+          </div>
+          <div class="device-card" id="alarmCard" onclick="toggleDevice('security', 'alarm')">
+            <div class="device-icon">🚨</div>
+            <div>Alarme</div>
+            <small id="alarmStatus">Désactivée</small>
+          </div>
+          <div class="device-card" id="lightsCard" onclick="toggleDevice('security', 'lights')">
+            <div class="device-icon">💡</div>
+            <div>Lumières</div>
+            <small id="lightsStatus">Éteintes</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Ajout Appareil -->
+  <div id="addDeviceModal" class="modal">
+    <div class="modal-content">
+      <div class="card-header">
+        <h2 style="margin: 0;">➕ Ajouter un ESP32</h2>
+        <button class="btn btn-danger btn-small" onclick="closeAddDeviceModal()">✖</button>
+      </div>
+      <div class="input-group">
+        <label>📛 Nom:</label>
+        <input type="text" id="newDeviceName" placeholder="Serre 1" style="flex: 2;">
+      </div>
+      <div class="input-group">
+        <label>📡 IP:</label>
+        <input type="text" id="newDeviceIP" placeholder="192.168.1.100" style="flex: 2;">
+      </div>
+      <div class="input-group">
+        <label>🏷️ Type:</label>
+        <select id="newDeviceType" style="flex: 2;">
+          <option value="agriculture">🌱 Agriculture</option>
+          <option value="security">🔒 Sécurité</option>
+          <option value="custom">⚙️ Personnalisé</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>📍 Lieu:</label>
+        <input type="text" id="newDeviceLocation" placeholder="Zone A" style="flex: 2;">
+      </div>
+      <button class="btn btn-success" onclick="addDevice()" style="width: 100%; margin-top: 15px;">💾 Ajouter</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
