@@ -128,19 +128,19 @@
           <div class="card-header"><div class="card-title">🎯 Paramètres Auto</div></div>
           <div class="control-group">
             <label class="control-label">🌡️ Temp Min: <span id="tempMinVal">18°C</span></label>
-            <input type="range" min="10" max="25" value="18" class="slider" id="tempMin" oninput="updateSlider('tempMin',this.value,'°C')">
+            <input type="range" min="0" max="100" value="18" class="slider" id="tempMin" oninput="updateSlider('tempMin',this.value,'°C')">
           </div>
           <div class="control-group">
             <label class="control-label">🌡️ Temp Max: <span id="tempMaxVal">28°C</span></label>
-            <input type="range" min="20" max="40" value="28" class="slider" id="tempMax" oninput="updateSlider('tempMax',this.value,'°C')">
+            <input type="range" min="0" max="120" value="28" class="slider" id="tempMax" oninput="updateSlider('tempMax',this.value,'°C')">
           </div>
           <div class="control-group">
             <label class="control-label">💧 Humid Min: <span id="humidMinVal">50%</span></label>
-            <input type="range" min="30" max="70" value="50" class="slider" id="humidMin" oninput="updateSlider('humidMin',this.value,'%')">
+            <input type="range" min="0" max="100" value="50" class="slider" id="humidMin" oninput="updateSlider('humidMin',this.value,'%')">
           </div>
           <div class="control-group">
             <label class="control-label">💧 Humid Max: <span id="humidMaxVal">80%</span></label>
-            <input type="range" min="50" max="95" value="80" class="slider" id="humidMax" oninput="updateSlider('humidMax',this.value,'%')">
+            <input type="range" min="0" max="110" value="80" class="slider" id="humidMax" oninput="updateSlider('humidMax',this.value,'%')">
           </div>
           <button class="btn btn-success" style="width:100%" onclick="saveSettings()">💾 Enregistrer</button>
         </div>
