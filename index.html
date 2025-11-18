@@ -1,333 +1,707 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PRIVA Platform Multi-Modules</title>
-  <link rel="stylesheet" href="styles.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-</head>
-<body>
+/* ============================================ */
+/* PRIVA Platform - CSS Complet */
+/* ============================================ */
+
+* { 
+  margin: 0; 
+  padding: 0; 
+  box-sizing: border-box; 
+}
+
+body { 
+  font-family: 'Segoe UI', Arial, sans-serif; 
+  background: #0f1117; 
+  color: #f8f9fa; 
+}
+
+/* ============================================ */
+/* PAGE D'ACCUEIL */
+/* ============================================ */
+
+.homepage {
+  background: #0a0e27;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Image de fond Sagittaire */
+.home-background-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('https://img.freepik.com/vecteurs-premium/signe-du-zodiaque-sagittaire-resume-fond-ciel-nocturne-icone-sagittaire-fond-espace-bleu_101969-2533.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  animation: zoomBackground 30s ease-in-out infinite alternate;
+  z-index: 1;
+}
+
+@keyframes zoomBackground {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.1);
+  }
+}
+
+/* Overlay pour améliorer la lisibilité */
+.home-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, rgba(10,14,39,0.3) 0%, rgba(10,14,39,0.7) 100%);
+  z-index: 2;
+}
+
+/* Container page d'accueil */
+.home-container {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  animation: fadeInHome 1.5s ease-out;
+}
+
+@keyframes fadeInHome {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Bouton page d'accueil */
+.home-button {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.95);
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  box-shadow: 
+    0 0 40px rgba(102, 126, 234, 0.6),
+    0 0 80px rgba(118, 75, 162, 0.4),
+    inset 0 0 20px rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  animation: pulseButton 3s ease-in-out infinite;
+}
+
+@keyframes pulseButton {
+  0%, 100% {
+    box-shadow: 
+      0 0 40px rgba(102, 126, 234, 0.6),
+      0 0 80px rgba(118, 75, 162, 0.4),
+      inset 0 0 20px rgba(255, 255, 255, 0.1);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 
+      0 0 60px rgba(102, 126, 234, 0.8),
+      0 0 120px rgba(118, 75, 162, 0.6),
+      inset 0 0 30px rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+  }
+}
+
+.button-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  transition: all 0.6s ease;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+.home-button:hover {
+  transform: scale(1.15) rotate(10deg);
+  box-shadow: 
+    0 0 80px rgba(102, 126, 234, 1),
+    0 0 160px rgba(118, 75, 162, 0.8),
+    inset 0 0 40px rgba(255, 255, 255, 0.3);
+  border-color: rgba(102, 126, 234, 0.8);
+}
+
+.home-button:hover .button-glow {
+  width: 400px;
+  height: 400px;
+}
+
+.home-button:active {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.home-icon {
+  position: relative;
+  z-index: 2;
+  font-size: 100px;
+  transition: all 0.4s ease;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
+  margin-bottom: 15px;
+  animation: floatIcon 3s ease-in-out infinite;
+}
+
+@keyframes floatIcon {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.home-button:hover .home-icon {
+  transform: scale(1.3) translateY(-5px);
+  filter: drop-shadow(0 12px 24px rgba(0,0,0,0.4));
+}
+
+.home-button-text {
+  position: relative;
+  z-index: 2;
+  font-size: 16px;
+  font-weight: 700;
+  color: #667eea;
+  transition: all 0.4s ease;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.home-button:hover .home-button-text {
+  color: white;
+  transform: translateY(-5px);
+  text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+/* ============================================ */
+/* PLATEFORME PRINCIPALE */
+/* ============================================ */
+
+/* Header */
+.header { 
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+  padding: 20px; 
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3); 
+}
+
+.header-content { 
+  max-width: 1400px; 
+  margin: 0 auto; 
+  padding: 0 20px; 
+}
+
+.logo { 
+  display: flex; 
+  align-items: center; 
+  gap: 15px; 
+  margin-bottom: 20px; 
+}
+
+.logo h1 { 
+  color: white; 
+  font-size: 26px; 
+  font-weight: 700; 
+}
+
+.status-bar { 
+  display: flex; 
+  gap: 15px; 
+  flex-wrap: wrap; 
+}
+
+.status-item { 
+  background: rgba(255,255,255,0.1); 
+  padding: 8px 15px; 
+  border-radius: 20px; 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+}
+
+.status-dot { 
+  width: 10px; 
+  height: 10px; 
+  border-radius: 50%; 
+  animation: pulse 2s infinite; 
+}
+
+.status-dot.connected { 
+  background: #00a651; 
+}
+
+.status-dot.disconnected {
+  background: #e63946;
+}
+
+@keyframes pulse { 
+  0%, 100% { opacity: 1; } 
+  50% { opacity: 0.5; } 
+}
+
+/* Tabs */
+.tabs { 
+  display: flex; 
+  gap: 10px; 
+  margin-top: 20px; 
+  flex-wrap: wrap; 
+}
+
+.tab-btn { 
+  background: rgba(255,255,255,0.1); 
+  border: none; 
+  padding: 12px 24px; 
+  border-radius: 10px; 
+  color: white; 
+  cursor: pointer; 
+  transition: all 0.3s; 
+  font-size: 16px; 
+  font-weight: 600; 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+}
+
+.tab-btn:hover { 
+  background: rgba(255,255,255,0.2); 
+  transform: translateY(-2px); 
+}
+
+.tab-btn.active { 
+  background: linear-gradient(135deg, #00a651, #00d164); 
+  box-shadow: 0 4px 15px rgba(0,166,81,0.4); 
+}
+
+/* Container */
+.container { 
+  max-width: 1400px; 
+  margin: 30px auto; 
+  padding: 0 20px;
+  width: 100%;
+}
+
+.module { 
+  display: none; 
+  animation: fadeIn 0.5s;
+  width: 100%;
+}
+
+.module.active { 
+  display: block; 
+}
+
+@keyframes fadeIn { 
+  from { opacity: 0; transform: translateY(20px); } 
+  to { opacity: 1; transform: translateY(0); } 
+}
+
+/* Grids */
+.grid-2 { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 25px; 
+  margin-bottom: 25px; 
+}
+
+.grid-4 { 
+  display: grid; 
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px; 
+  margin-bottom: 25px; 
+}
+
+/* Cards */
+.card { 
+  background: #1a1d29; 
+  border-radius: 15px; 
+  padding: 25px; 
+  border: 1px solid #2d3142; 
+  margin-bottom: 25px; 
+}
+
+.card-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 20px; 
+  padding-bottom: 15px; 
+  border-bottom: 2px solid #2d3142; 
+}
+
+.card-title { 
+  font-size: 18px; 
+  font-weight: 600; 
+}
+
+/* Sensor Cards */
+.sensor-card { 
+  background: linear-gradient(135deg, #1a1d29, #252836); 
+  border-radius: 15px; 
+  padding: 25px; 
+  text-align: center; 
+  border: 1px solid #2d3142; 
+  transition: transform 0.3s, box-shadow 0.3s; 
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.sensor-card:hover { 
+  transform: translateY(-5px); 
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.sensor-icon { 
+  font-size: 40px; 
+  margin-bottom: 15px; 
+}
+
+.sensor-value { 
+  font-size: 36px; 
+  font-weight: 700; 
+  color: white; 
+}
+
+.sensor-unit { 
+  font-size: 18px; 
+  color: rgba(248,249,250,0.6); 
+}
+
+/* Status Badges */
+.status-badge { 
+  padding: 4px 10px; 
+  border-radius: 12px; 
+  font-size: 11px; 
+  font-weight: 600; 
+}
+
+.status-badge.optimal { 
+  background: rgba(0,166,81,0.2); 
+  color: #00a651; 
+}
+
+.status-badge.warning {
+  background: rgba(247,127,0,0.2);
+  color: #f77f00;
+}
+
+.status-badge.danger {
+  background: rgba(230,57,70,0.2);
+  color: #e63946;
+}
+
+/* Device Grid */
+.device-grid { 
+  display: grid; 
+  grid-template-columns: repeat(3, 1fr); 
+  gap: 15px; 
+}
+
+.device-card { 
+  background: #0f1117; 
+  border: 2px solid #2d3142; 
+  border-radius: 12px; 
+  padding: 20px; 
+  text-align: center; 
+  cursor: pointer; 
+  transition: all 0.3s; 
+}
+
+.device-card:hover { 
+  border-color: #667eea; 
+}
+
+.device-card.active { 
+  background: linear-gradient(135deg, #667eea, #764ba2); 
+  border-color: #667eea; 
+}
+
+.device-icon { 
+  font-size: 32px; 
+  margin-bottom: 10px; 
+}
+
+/* Buttons */
+.btn { 
+  padding: 12px 24px; 
+  border: none; 
+  border-radius: 8px; 
+  font-weight: 600; 
+  cursor: pointer; 
+  transition: all 0.3s; 
+  margin: 5px; 
+}
+
+.btn-primary { 
+  background: #0066cc; 
+  color: white; 
+}
+
+.btn-success { 
+  background: #00a651; 
+  color: white; 
+}
+
+.btn-danger { 
+  background: #e63946; 
+  color: white; 
+}
+
+.btn:hover { 
+  transform: translateY(-2px); 
+  opacity: 0.9; 
+}
+
+.btn-small { 
+  padding: 6px 12px; 
+  font-size: 12px; 
+}
+
+/* Alerts */
+.alert { 
+  padding: 15px 20px; 
+  border-radius: 10px; 
+  margin-bottom: 12px; 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  animation: slideIn 0.3s; 
+}
+
+.alert.success { 
+  background: rgba(0,166,81,0.15); 
+  border-left: 4px solid #00a651; 
+  color: #6fdc8c; 
+}
+
+.alert.warning { 
+  background: rgba(247,127,0,0.15); 
+  border-left: 4px solid #f77f00; 
+  color: #ffb347; 
+}
+
+.alert.danger { 
+  background: rgba(230,57,70,0.15); 
+  border-left: 4px solid #e63946; 
+  color: #ff6b6b; 
+}
+
+@keyframes slideIn { 
+  from { transform: translateX(-100%); opacity: 0; } 
+  to { transform: translateX(0); opacity: 1; } 
+}
+
+/* Charts */
+.chart-container { 
+  position: relative; 
+  height: 350px; 
+  margin-top: 20px; 
+}
+
+/* Controls */
+.control-group { 
+  margin-bottom: 20px; 
+}
+
+.control-label { 
+  font-size: 13px; 
+  margin-bottom: 10px; 
+  display: block; 
+}
+
+.slider { 
+  width: 100%; 
+  height: 6px; 
+  border-radius: 3px; 
+  background: #2d3142; 
+  outline: none; 
+}
+
+.slider::-webkit-slider-thumb { 
+  -webkit-appearance: none; 
+  width: 20px; 
+  height: 20px; 
+  border-radius: 50%; 
+  background: #667eea; 
+  cursor: pointer; 
+}
+
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+  border: none;
+}
+
+/* Input Groups */
+.input-group { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  margin-bottom: 10px; 
+}
+
+.input-group label { 
+  flex: 1; 
+}
+
+.input-group input, 
+.input-group select { 
+  padding: 8px; 
+  background: #0f1117; 
+  border: 1px solid #2d3142; 
+  border-radius: 5px; 
+  color: white; 
+}
+
+/* Table */
+table { 
+  width: 100%; 
+  border-collapse: collapse; 
+  margin-top: 20px; 
+}
+
+th, td { 
+  padding: 12px; 
+  text-align: left; 
+  border-bottom: 1px solid #2d3142; 
+}
+
+th { 
+  background: #0f1117; 
+  font-size: 12px; 
+  text-transform: uppercase; 
+}
+
+tbody tr:hover { 
+  background: #0f1117; 
+}
+
+/* Modal */
+.modal { 
+  display: none; 
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  right: 0; 
+  bottom: 0; 
+  background: rgba(0,0,0,0.8); 
+  z-index: 1000; 
+  align-items: center; 
+  justify-content: center; 
+}
+
+.modal.active { 
+  display: flex; 
+}
+
+.modal-content { 
+  background: #1a1d29; 
+  border-radius: 15px; 
+  padding: 30px; 
+  max-width: 500px; 
+  width: 90%; 
+  border: 2px solid #667eea; 
+  animation: modalSlide 0.3s; 
+}
+
+@keyframes modalSlide { 
+  from { transform: translateY(-50px); opacity: 0; } 
+  to { transform: translateY(0); opacity: 1; } 
+}
+
+/* Device Manager */
+.device-item { 
+  background: #252836; 
+  border-radius: 10px; 
+  padding: 15px; 
+  margin-bottom: 10px; 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+}
+
+.device-info { 
+  flex: 1; 
+}
+
+.device-name { 
+  font-weight: 600; 
+  margin-bottom: 5px; 
+}
+
+.device-details { 
+  font-size: 12px; 
+  opacity: 0.7; 
+}
+
+.device-actions { 
+  display: flex; 
+  gap: 5px; 
+}
+
+/* ============================================ */
+/* RESPONSIVE */
+/* ============================================ */
+
+@media (max-width: 768px) { 
+  /* Page d'accueil responsive */
+  .home-button {
+    width: 200px;
+    height: 200px;
+  }
   
-  <!-- ========================================= -->
-  <!-- PAGE D'ACCUEIL -->
-  <!-- ========================================= -->
-  <div id="homepage" class="homepage">
-    <div class="background-animation"></div>
-    
-    <div class="home-container">
-      <div class="home-logo">
-        <div class="home-logo-icon">🌍</div>
-      </div>
-      
-      <h1 class="home-title">PRIVA Platform</h1>
-      <p class="home-subtitle">Système de Gestion Multi-Modules IoT</p>
-      
-      <button class="home-button" onclick="enterPlatform()">
-        <span class="home-icon">🏠</span>
-        <span class="home-button-text">Accéder à la Plateforme</span>
-        <div class="button-glow"></div>
-      </button>
-      
-      <div class="home-features">
-        <div class="home-feature-item">
-          <span class="home-feature-icon">🌱</span>
-          <span>Agriculture Intelligente</span>
-        </div>
-        <div class="home-feature-item">
-          <span class="home-feature-icon">🔒</span>
-          <span>Sécurité Avancée</span>
-        </div>
-        <div class="home-feature-item">
-          <span class="home-feature-icon">📊</span>
-          <span>Monitoring Temps Réel</span>
-        </div>
-      </div>
-    </div>
-    
-    <footer class="home-footer">
-      <p>© 2024 PRIVA Platform - Sagitarius-Nova</p>
-    </footer>
-  </div>
+  .home-icon {
+    font-size: 80px;
+  }
+  
+  .home-button-text {
+    font-size: 14px;
+  }
+  
+  /* Plateforme responsive */
+  .grid-2, 
+  .grid-4, 
+  .device-grid { 
+    grid-template-columns: 1fr; 
+  }
+}
 
-  <!-- ========================================= -->
-  <!-- PLATEFORME PRINCIPALE (cachée au départ) -->
-  <!-- ========================================= -->
-  <div id="platform" style="display: none;">
-    <div class="header">
-      <div class="header-content">
-        <div class="logo">
-          <span style="font-size: 36px;">🏠</span>
-          <h1>PRIVA Platform - Multi-Modules IoT</h1>
-        </div>
-        <div class="status-bar">
-          <div class="status-item">
-            <div class="status-dot connected" id="connectionStatus"></div>
-            <span id="connectionText">Démarrage...</span>
-          </div>
-          <div class="status-item">
-            <span>🤖 Mode: <strong id="modeDisplay">--</strong></span>
-          </div>
-          <div class="status-item">
-            <span>📡 <strong id="dataCount">0</strong> mesures</span>
-          </div>
-          <div class="status-item">
-            <button class="btn btn-danger btn-small" onclick="returnHome()">🏠 Accueil</button>
-          </div>
-        </div>
-        <div class="tabs">
-          <button class="tab-btn active" onclick="switchModule('agriculture')">🌱 Agriculture</button>
-          <button class="tab-btn" onclick="switchModule('security')">🔒 Sécurité</button>
-          <button class="tab-btn" onclick="showDeviceManager()">🎛️ Appareils</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="container">
-      <div id="alertContainer"></div>
-      
-      <!-- Gestionnaire d'Appareils -->
-      <div class="card" id="deviceManager" style="display:none;">
-        <div class="card-header">
-          <div class="card-title">🎛️ Gestionnaire d'Appareils ESP32</div>
-          <button class="btn btn-success" onclick="openAddDeviceModal()">➕ Ajouter</button>
-        </div>
-        <div id="devicesList"></div>
-      </div>
-
-      <!-- MODULE AGRICULTURE -->
-      <div id="agriculture" class="module active">
-        <!-- Configuration appareil actif -->
-        <div class="card" id="agri-config" style="background: linear-gradient(135deg, #252836, #1a1d29); border: 2px solid #667eea;">
-          <div class="card-header" style="border-bottom: 2px solid #667eea;">
-            <div class="card-title">⚙️ Configuration ESP32 Agriculture</div>
-          </div>
-          <div id="agri-device-info" style="text-align: center; padding: 20px; opacity: 0.6;">
-            Aucun appareil actif. Ajoutez un ESP32 via l'onglet "🎛️ Appareils"
-          </div>
-        </div>
-        
-        <!-- Première ligne : Température et Humidité sur 2 colonnes -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
-          <div class="sensor-card">
-            <div class="sensor-icon">🌡️</div>
-            <div class="sensor-value"><span id="tempValue">--</span><span class="sensor-unit">°C</span></div>
-            <div style="margin-top:10px"><span class="status-badge optimal">Normal</span></div>
-          </div>
-          <div class="sensor-card">
-            <div class="sensor-icon">💧</div>
-            <div class="sensor-value"><span id="humidValue">--</span><span class="sensor-unit">%</span></div>
-            <div style="margin-top:10px"><span class="status-badge optimal">Normal</span></div>
-          </div>
-        </div>
-        
-        <!-- Deuxième ligne : CO2, DC et autres capteurs sur 4 colonnes -->
-        <div class="grid-4" style="margin-bottom: 25px;">
-          <div class="sensor-card">
-            <div class="sensor-icon">🔬</div>
-            <div class="sensor-value"><span id="gasValue">--</span><span class="sensor-unit">ppm</span></div>
-            <div style="margin-top:10px"><span class="status-badge optimal">Normal</span></div>
-          </div>
-          <div class="sensor-card">
-            <div class="sensor-icon">⚡</div>
-            <div class="sensor-value"><span id="dcValue">--</span><span class="sensor-unit">V</span></div>
-            <div style="margin-top:10px"><span class="status-badge optimal">DC</span></div>
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-header"><div class="card-title">⚙️ Équipements</div></div>
-            <div class="device-grid">
-              <div class="device-card" id="pompeCard" onclick="toggleDevice('agriculture', 'pompe')">
-                <div class="device-icon">💧</div>
-                <div>Irrigation</div>
-                <small id="pompeStatus">Arrêté</small>
-              </div>
-              <div class="device-card" id="brumisateurCard" onclick="toggleDevice('agriculture', 'brumisateur')">
-                <div class="device-icon">💦</div>
-                <div>Brumisation</div>
-                <small id="brumisateurStatus">Arrêté</small>
-              </div>
-              <div class="device-card" id="ventilateurCard" onclick="toggleDevice('agriculture', 'ventilateur')">
-                <div class="device-icon">🌀</div>
-                <div>Ventilation</div>
-                <small id="ventilateurStatus">Arrêté</small>
-              </div>
-              <div class="device-card" id="chauffageCard" onclick="toggleDevice('agriculture', 'chauffage')">
-                <div class="device-icon">🔥</div>
-                <div>Chauffage</div>
-                <small id="chauffageStatus">Arrêté</small>
-              </div>
-              <div class="device-card" id="eclairageCard" onclick="toggleDevice('agriculture', 'eclairage')">
-                <div class="device-icon">💡</div>
-                <div>Éclairage</div>
-                <small id="eclairageStatus">Arrêté</small>
-              </div>
-              <div class="device-card" id="electrovanneCard" onclick="toggleDevice('agriculture', 'electrovanne')">
-                <div class="device-icon">🚰</div>
-                <div>Électrovanne</div>
-                <small id="electrovanneStatus">Fermée</small>
-              </div>
-            </div>
-            <div style="margin-top:20px">
-              <button class="btn btn-success" onclick="setMode('auto')">🤖 Auto</button>
-              <button class="btn btn-primary" onclick="setMode('manual')">✋ Manuel</button>
-              <button class="btn btn-danger" onclick="emergencyStop()">🛑 Arrêt</button>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-header"><div class="card-title">🎯 Paramètres Auto</div></div>
-            <div class="control-group">
-              <label class="control-label">🌡️ Temp Min: <span id="tempMinVal">18°C</span></label>
-              <input type="range" min="0" max="100" value="18" class="slider" id="tempMin" oninput="updateSlider('tempMin',this.value,'°C')">
-            </div>
-            <div class="control-group">
-              <label class="control-label">🌡️ Temp Max: <span id="tempMaxVal">28°C</span></label>
-              <input type="range" min="0" max="100" value="28" class="slider" id="tempMax" oninput="updateSlider('tempMax',this.value,'°C')">
-            </div>
-            <div class="control-group">
-              <label class="control-label">💧 Humid Min: <span id="humidMinVal">50%</span></label>
-              <input type="range" min="0" max="100" value="50" class="slider" id="humidMin" oninput="updateSlider('humidMin',this.value,'%')">
-            </div>
-            <div class="control-group">
-              <label class="control-label">💧 Humid Max: <span id="humidMaxVal">80%</span></label>
-              <input type="range" min="0" max="100" value="80" class="slider" id="humidMax" oninput="updateSlider('humidMax',this.value,'%')">
-            </div>
-            <button class="btn btn-success" style="width:100%" onclick="saveSettings()">💾 Enregistrer</button>
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-header"><div class="card-title">📈 Température & Humidité</div></div>
-            <div class="chart-container"><canvas id="climateChart"></canvas></div>
-          </div>
-          <div class="card">
-            <div class="card-header"><div class="card-title">📊 Qualité Air</div></div>
-            <div class="chart-container"><canvas id="airChart"></canvas></div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header"><div class="card-title">📋 Données Récentes</div></div>
-          <table>
-            <thead><tr><th>Date</th><th>Temp</th><th>Humid</th><th>CO2</th><th>DC</th></tr></thead>
-            <tbody id="dataTable"><tr><td colspan="5" style="text-align:center">Chargement...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- MODULE SÉCURITÉ -->
-      <div id="security" class="module">
-        <!-- Configuration appareil actif -->
-        <div class="card" id="sec-config" style="background: linear-gradient(135deg, #252836, #1a1d29); border: 2px solid #667eea;">
-          <div class="card-header" style="border-bottom: 2px solid #667eea;">
-            <div class="card-title">⚙️ Configuration ESP32 Sécurité</div>
-          </div>
-          <div id="sec-device-info" style="text-align: center; padding: 20px; opacity: 0.6;">
-            Aucun appareil actif. Ajoutez un ESP32 via l'onglet "🎛️ Appareils"
-          </div>
-        </div>
-        
-        <div class="grid-4">
-          <div class="sensor-card">
-            <div class="sensor-icon">🚪</div>
-            <div class="sensor-value" id="sec-door" style="font-size: 24px;">--</div>
-            <div>État Porte</div>
-          </div>
-          <div class="sensor-card">
-            <div class="sensor-icon">👁️</div>
-            <div class="sensor-value" id="sec-motion" style="font-size: 24px;">--</div>
-            <div>Mouvement</div>
-          </div>
-          <div class="sensor-card">
-            <div class="sensor-icon">🔑</div>
-            <div class="sensor-value" id="sec-badge" style="font-size: 18px;">--</div>
-            <div>Dernier Badge</div>
-          </div>
-          <div class="sensor-card">
-            <div class="sensor-icon">⏰</div>
-            <div class="sensor-value" id="sec-time" style="font-size: 20px;">--</div>
-            <div>Dernier Accès</div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header"><div class="card-title">🔒 Contrôles</div></div>
-          <div class="device-grid">
-            <div class="device-card" id="lockCard" onclick="toggleDevice('security', 'lock')">
-              <div class="device-icon">🔓</div>
-              <div>Serrure</div>
-              <small id="lockStatus">Verrouillée</small>
-            </div>
-            <div class="device-card" id="alarmCard" onclick="toggleDevice('security', 'alarm')">
-              <div class="device-icon">🚨</div>
-              <div>Alarme</div>
-              <small id="alarmStatus">Désactivée</small>
-            </div>
-            <div class="device-card" id="lightsCard" onclick="toggleDevice('security', 'lights')">
-              <div class="device-icon">💡</div>
-              <div>Lumières</div>
-              <small id="lightsStatus">Éteintes</small>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal Ajout Appareil -->
-    <div id="addDeviceModal" class="modal">
-      <div class="modal-content">
-        <div class="card-header">
-          <h2 style="margin: 0;">➕ Ajouter un ESP32</h2>
-          <button class="btn btn-danger btn-small" onclick="closeAddDeviceModal()">✖</button>
-        </div>
-        <div class="input-group">
-          <label>📛 Nom:</label>
-          <input type="text" id="newDeviceName" placeholder="Serre 1" style="flex: 2;">
-        </div>
-        <div class="input-group">
-          <label>📡 IP:</label>
-          <input type="text" id="newDeviceIP" placeholder="192.168.1.100" style="flex: 2;">
-        </div>
-        <div class="input-group">
-          <label>🏷️ Type:</label>
-          <select id="newDeviceType" style="flex: 2;">
-            <option value="agriculture">🌱 Agriculture</option>
-            <option value="security">🔒 Sécurité</option>
-            <option value="custom">⚙️ Personnalisé</option>
-          </select>
-        </div>
-        <div class="input-group">
-          <label>📍 Lieu:</label>
-          <input type="text" id="newDeviceLocation" placeholder="Zone A" style="flex: 2;">
-        </div>
-        <button class="btn btn-success" onclick="addDevice()" style="width: 100%; margin-top: 15px;">💾 Ajouter</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="app.js"></script>
-  <script>
-    // Fonction pour entrer dans la plateforme
-    function enterPlatform() {
-      document.getElementById('homepage').style.display = 'none';
-      document.getElementById('platform').style.display = 'block';
-      // Initialiser la plateforme si ce n'est pas déjà fait
-      if (typeof init === 'function') {
-        init();
-      }
-    }
-    
-    // Fonction pour retourner à l'accueil
-    function returnHome() {
-      if (confirm('Voulez-vous vraiment retourner à l\'accueil ?')) {
-        document.getElementById('platform').style.display = 'none';
-        document.getElementById('homepage').style.display = 'flex';
-      }
-    }
-  </script>
-</body>
-</html>
+@media (max-width: 480px) {
+  .home-button {
+    width: 180px;
+    height: 180px;
+  }
+  
+  .home-icon {
+    font-size: 70px;
+  }
+  
+  .home-button-text {
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+}
