@@ -1,4 +1,6 @@
-/* PRIVA Platform - Styles CSS */
+/* ============================================ */
+/* PRIVA Platform - CSS Complet */
+/* ============================================ */
 
 * { 
   margin: 0; 
@@ -7,10 +9,194 @@
 }
 
 body { 
-  font-family: Arial, sans-serif; 
+  font-family: 'Segoe UI', Arial, sans-serif; 
   background: #0f1117; 
   color: #f8f9fa; 
 }
+
+/* ============================================ */
+/* PAGE D'ACCUEIL */
+/* ============================================ */
+
+.homepage {
+  background: #0a0e27;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Image de fond Sagittaire */
+.home-background-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('https://img.freepik.com/vecteurs-premium/signe-du-zodiaque-sagittaire-resume-fond-ciel-nocturne-icone-sagittaire-fond-espace-bleu_101969-2533.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  animation: zoomBackground 30s ease-in-out infinite alternate;
+  z-index: 1;
+}
+
+@keyframes zoomBackground {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.1);
+  }
+}
+
+/* Overlay pour améliorer la lisibilité */
+.home-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, rgba(10,14,39,0.3) 0%, rgba(10,14,39,0.7) 100%);
+  z-index: 2;
+}
+
+/* Container page d'accueil */
+.home-container {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  animation: fadeInHome 1.5s ease-out;
+}
+
+@keyframes fadeInHome {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Bouton page d'accueil */
+.home-button {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.95);
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  box-shadow: 
+    0 0 40px rgba(102, 126, 234, 0.6),
+    0 0 80px rgba(118, 75, 162, 0.4),
+    inset 0 0 20px rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  animation: pulseButton 3s ease-in-out infinite;
+}
+
+@keyframes pulseButton {
+  0%, 100% {
+    box-shadow: 
+      0 0 40px rgba(102, 126, 234, 0.6),
+      0 0 80px rgba(118, 75, 162, 0.4),
+      inset 0 0 20px rgba(255, 255, 255, 0.1);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 
+      0 0 60px rgba(102, 126, 234, 0.8),
+      0 0 120px rgba(118, 75, 162, 0.6),
+      inset 0 0 30px rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+  }
+}
+
+.button-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  transition: all 0.6s ease;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+.home-button:hover {
+  transform: scale(1.15) rotate(10deg);
+  box-shadow: 
+    0 0 80px rgba(102, 126, 234, 1),
+    0 0 160px rgba(118, 75, 162, 0.8),
+    inset 0 0 40px rgba(255, 255, 255, 0.3);
+  border-color: rgba(102, 126, 234, 0.8);
+}
+
+.home-button:hover .button-glow {
+  width: 400px;
+  height: 400px;
+}
+
+.home-button:active {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.home-icon {
+  position: relative;
+  z-index: 2;
+  font-size: 100px;
+  transition: all 0.4s ease;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
+  margin-bottom: 15px;
+  animation: floatIcon 3s ease-in-out infinite;
+}
+
+@keyframes floatIcon {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.home-button:hover .home-icon {
+  transform: scale(1.3) translateY(-5px);
+  filter: drop-shadow(0 12px 24px rgba(0,0,0,0.4));
+}
+
+.home-button-text {
+  position: relative;
+  z-index: 2;
+  font-size: 16px;
+  font-weight: 700;
+  color: #667eea;
+  transition: all 0.4s ease;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.home-button:hover .home-button-text {
+  color: white;
+  transform: translateY(-5px);
+  text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+/* ============================================ */
+/* PLATEFORME PRINCIPALE */
+/* ============================================ */
 
 /* Header */
 .header { 
@@ -62,6 +248,10 @@ body {
 
 .status-dot.connected { 
   background: #00a651; 
+}
+
+.status-dot.disconnected {
+  background: #e63946;
 }
 
 @keyframes pulse { 
@@ -211,6 +401,16 @@ body {
   color: #00a651; 
 }
 
+.status-badge.warning {
+  background: rgba(247,127,0,0.2);
+  color: #f77f00;
+}
+
+.status-badge.danger {
+  background: rgba(230,57,70,0.2);
+  color: #e63946;
+}
+
 /* Device Grid */
 .device-grid { 
   display: grid; 
@@ -347,6 +547,15 @@ body {
   cursor: pointer; 
 }
 
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+  border: none;
+}
+
 /* Input Groups */
 .input-group { 
   display: flex; 
@@ -454,11 +663,45 @@ tbody tr:hover {
   gap: 5px; 
 }
 
-/* Responsive */
+/* ============================================ */
+/* RESPONSIVE */
+/* ============================================ */
+
 @media (max-width: 768px) { 
+  /* Page d'accueil responsive */
+  .home-button {
+    width: 200px;
+    height: 200px;
+  }
+  
+  .home-icon {
+    font-size: 80px;
+  }
+  
+  .home-button-text {
+    font-size: 14px;
+  }
+  
+  /* Plateforme responsive */
   .grid-2, 
   .grid-4, 
   .device-grid { 
     grid-template-columns: 1fr; 
+  }
+}
+
+@media (max-width: 480px) {
+  .home-button {
+    width: 180px;
+    height: 180px;
+  }
+  
+  .home-icon {
+    font-size: 70px;
+  }
+  
+  .home-button-text {
+    font-size: 12px;
+    letter-spacing: 1px;
   }
 }
