@@ -1,6 +1,6 @@
 {
   "name": "PRIVA Climate Control",
-  "short_name": "PRIVA",
+  "short_name": "Sagitarius-Nova",
   "description": "Plateforme IoT pour Agriculture et Sécurité",
   "start_url": "/priva-climate-control/",
   "scope": "/priva-climate-control/",
@@ -10,7 +10,7 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
