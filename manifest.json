@@ -1,0 +1,38 @@
+{
+  "name": "PRIVA Climate Control",
+  "short_name": "PRIVA",
+  "description": "Plateforme IoT pour Agriculture et Sécurité",
+  "start_url": "/priva-climate-control/",
+  "scope": "/priva-climate-control/",
+  "display": "standalone",
+  "background_color": "#0f1117",
+  "theme_color": "#667eea",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Agriculture",
+      "url": "/priva-climate-control/?module=agriculture",
+      "icons": [{ 
+        "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>",
+        "sizes": "96x96" 
+      }]
+    },
+    {
+      "name": "Sécurité",
+      "url": "/priva-climate-control/?module=security",
+      "icons": [{ 
+        "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔒</text></svg>",
+        "sizes": "96x96" 
+      }]
+    }
+  ]
+}
