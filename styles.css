@@ -705,3 +705,39 @@ tbody tr:hover {
     letter-spacing: 1px;
   }
 }
+/* ============================================ */
+/* PWA STYLES */
+/* ============================================ */
+
+/* Support notches iPhone */
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Amélioration tactile mobile */
+@media (hover: none) and (pointer: coarse) {
+  .btn, .tab-btn, .device-card {
+    min-height: 44px;
+    padding: 15px 20px;
+  }
+  
+  .btn:active, .tab-btn:active {
+    transform: scale(0.98);
+    opacity: 0.8;
+  }
+}
+
+/* Mode paysage */
+@media (orientation: landscape) and (max-height: 500px) {
+  .header { padding: 10px; }
+  .sensor-card { padding: 15px; }
+}
+
+/* Accessibilité - Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
