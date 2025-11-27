@@ -3,6 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#667eea">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PRIVA">
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Icônes temporaires (emoji SVG) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
   <title>PRIVA Platform Multi-Modules</title>
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
@@ -302,6 +312,88 @@
         document.getElementById('platform').style.display = 'none';
         document.getElementById('homepage').style.display = 'flex';
       }
+    }
+  </script>
+  <!-- Bannière d'installation PWA -->
+  <div id="installPrompt" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; z-index: 10000; box-shadow: 0 -4px 20px rgba(0,0,0,0.3);">
+    <div style="display: flex; align-items: center; gap: 15px; max-width: 900px; margin: 0 auto;">
+      <div style="font-size: 48px;">📱</div>
+      <div style="flex: 1;">
+        <strong style="display: block; font-size: 18px;">Installer PRIVA</strong>
+        <p style="margin: 5px 0 0 0; opacity: 0.9;">Ajoutez l'app à votre écran d'accueil</p>
+      </div>
+      <button id="installBtn" class="btn btn-success">Installer</button>
+      <button id="dismissBtn" class="btn btn-secondary" style="background: rgba(255,255,255,0.2);">Plus tard</button>
+    </div>
+  </div>
+
+  <!-- Indicateur hors-ligne -->
+  <div id="offlineIndicator" style="display: none; position: fixed; top: 0; left: 0; right: 0; background: #f77f00; color: white; padding: 10px; text-align: center; font-weight: bold; z-index: 9999;">
+    📡 Mode hors-ligne
+  </div>
+
+  <!-- Script PWA -->
+  <script>
+    // Service Worker
+    let deferredPrompt;
+    
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', async () => {
+        try {
+          const registration = await navigator.serviceWorker.register('sw.js');
+          console.log('✅ Service Worker enregistré');
+        } catch (err) {
+          console.error('❌ Erreur SW:', err);
+        }
+      });
+    }
+
+    // Détection online/offline
+    window.addEventListener('online', () => {
+      document.getElementById('offlineIndicator').style.display = 'none';
+      if (typeof showAlert === 'function') {
+        showAlert('success', '✅ Connexion rétablie');
+      }
+    });
+
+    window.addEventListener('offline', () => {
+      document.getElementById('offlineIndicator').style.display = 'block';
+      if (typeof showAlert === 'function') {
+        showAlert('warning', '⚠️ Mode hors-ligne');
+      }
+    });
+
+    // Prompt d'installation
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('installPrompt').style.display = 'block';
+    });
+
+    document.getElementById('installBtn')?.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        console.log('✅ PWA installée');
+        if (typeof showAlert === 'function') {
+          showAlert('success', '🎉 PRIVA installée !');
+        }
+      }
+      
+      deferredPrompt = null;
+      document.getElementById('installPrompt').style.display = 'none';
+    });
+
+    document.getElementById('dismissBtn')?.addEventListener('click', () => {
+      document.getElementById('installPrompt').style.display = 'none';
+    });
+
+    // Détection si installée
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      console.log('🚀 PWA en mode standalone');
     }
   </script>
 </body>
