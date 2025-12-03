@@ -895,3 +895,270 @@ function formatDateTime(dateStr) {
 // ==================== DÉMARRAGE ====================
 
 window.addEventListener('DOMContentLoaded', init);
+// ==================== GESTION CAMÉRAS SÉCURITÉ ====================
+
+let securityCameras = {};
+let securityCaptures = [];
+let currentCameraForFullscreen = null;
+
+// Charger les données sauvegardées
+try {
+  const saved = localStorage.getItem('priva_security_cameras');
+  if (saved) securityCameras = JSON.parse(saved);
+  
+  const savedCaptures = localStorage.getItem('priva_security_captures');
+  if (savedCaptures) securityCaptures = JSON.parse(savedCaptures);
+} catch (e) {
+  console.error('Erreur chargement caméras:', e);
+}
+
+// Rendre les caméras
+function renderSecurityCameras() {
+  const container = document.getElementById('security-cameras-container');
+  if (!container) return;
+  
+  const activeCameras = Object.entries(securityCameras).filter(([id, cam]) => cam.active);
+  
+  if (activeCameras.length === 0) {
+    container.innerHTML = '<div style="text-align: center; padding: 40px; opacity: 0.6; grid-column: 1/-1;">Aucune caméra configurée. Cliquez sur "➕ Ajouter Caméra"</div>';
+    return;
+  }
+  
+  container.innerHTML = activeCameras.map(([id, cam]) => `
+    <div style="background: #0f1117; border: 2px solid #2d3142; border-radius: 12px; padding: 15px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <div style="font-weight: 600;">📹 ${cam.name}</div>
+        <button class="btn btn-small btn-danger" onclick="removeSecurityCamera('${id}')">🗑️</button>
+      </div>
+      
+      <img src="http://${cam.ip}:81/stream?t=${Date.now()}" 
+           style="width: 100%; border-radius: 8px; background: #000; min-height: 200px; cursor: pointer;"
+           onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')"
+           onerror="this.style.opacity='0.3'">
+      
+      <div style="display: flex; gap: 5px; margin-top: 10px; flex-wrap: wrap;">
+        <button class="btn btn-small btn-success" onclick="captureSecurityCamera('${id}', '${cam.name}', '${cam.ip}')">📸</button>
+        <button class="btn btn-small btn-primary" onclick="toggleCameraFlash('${id}', '${cam.ip}')">💡</button>
+      </div>
+      
+      <div style="font-size: 11px; opacity: 0.6; margin-top: 5px;">📍 ${cam.location} • ${cam.ip}</div>
+    </div>
+  `).join('');
+}
+
+// Rendre les captures
+function renderSecurityCaptures() {
+  const container = document.getElementById('security-captures-container');
+  if (!container) return;
+  
+  if (securityCaptures.length === 0) {
+    container.innerHTML = '<div style="text-align: center; padding: 20px; opacity: 0.6; grid-column: 1/-1;">Aucune capture</div>';
+    return;
+  }
+  
+  container.innerHTML = securityCaptures.slice(0, 20).map((cap, idx) => `
+    <div style="position: relative; border-radius: 8px; overflow: hidden; cursor: pointer;" onclick="viewCapture(${idx})">
+      <img src="${cap.url}" style="width: 100%; height: 120px; object-fit: cover;">
+      <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); padding: 8px; font-size: 10px;">
+        ${cap.name}<br>${new Date(cap.timestamp).toLocaleTimeString()}
+      </div>
+      <button onclick="event.stopPropagation(); deleteCapture(${idx})" 
+              style="position: absolute; top: 5px; right: 5px; background: rgba(230,57,70,0.95); border: none; border-radius: 50%; width: 25px; height: 25px; color: white; cursor: pointer;">✖</button>
+    </div>
+  `).join('');
+}
+
+// Ouvrir modal ajout
+function openAddCameraModal() {
+  const modal = document.getElementById('addCameraModal');
+  if (modal) modal.classList.add('active');
+}
+
+// Fermer modal ajout
+function closeAddCameraModal() {
+  const modal = document.getElementById('addCameraModal');
+  if (modal) modal.classList.remove('active');
+}
+
+// Ajouter caméra
+function addSecurityCamera() {
+  const name = document.getElementById('newCameraName').value.trim();
+  const ip = document.getElementById('newCameraIP').value.trim();
+  const location = document.getElementById('newCameraLocation').value.trim();
+  
+  if (!name || !ip) {
+    showAlert('warning', '⚠️ Nom et IP requis');
+    return;
+  }
+  
+  const id = 'cam_' + Date.now();
+  securityCameras[id] = {
+    name,
+    ip,
+    location: location || 'Non spécifié',
+    active: true
+  };
+  
+  localStorage.setItem('priva_security_cameras', JSON.stringify(securityCameras));
+  
+  closeAddCameraModal();
+  renderSecurityCameras();
+  showAlert('success', `✅ ${name} ajoutée`);
+  
+  document.getElementById('newCameraName').value = '';
+  document.getElementById('newCameraIP').value = '';
+  document.getElementById('newCameraLocation').value = '';
+}
+
+// Supprimer caméra
+function removeSecurityCamera(id) {
+  const cam = securityCameras[id];
+  if (!confirm(`Supprimer "${cam.name}" ?`)) return;
+  
+  delete securityCameras[id];
+  localStorage.setItem('priva_security_cameras', JSON.stringify(securityCameras));
+  renderSecurityCameras();
+  showAlert('success', `🗑️ ${cam.name} supprimée`);
+}
+
+// Capturer photo
+function captureSecurityCamera(id, name, ip) {
+  const captureUrl = `http://${ip}:81/capture?t=${Date.now()}`;
+  
+  securityCaptures.unshift({
+    id: 'cap_' + Date.now(),
+    name: name,
+    url: captureUrl,
+    timestamp: new Date().toISOString()
+  });
+  
+  if (securityCaptures.length > 100) securityCaptures = securityCaptures.slice(0, 100);
+  
+  localStorage.setItem('priva_security_captures', JSON.stringify(securityCaptures));
+  renderSecurityCaptures();
+  showAlert('success', `📸 ${name} capturée`);
+}
+
+// Capturer toutes
+function captureAllSecurityCameras() {
+  const active = Object.entries(securityCameras).filter(([id, cam]) => cam.active);
+  
+  if (active.length === 0) {
+    showAlert('warning', '⚠️ Aucune caméra');
+    return;
+  }
+  
+  active.forEach(([id, cam]) => {
+    setTimeout(() => captureSecurityCamera(id, cam.name, cam.ip), 300);
+  });
+  
+  showAlert('success', `📸 ${active.length} caméra(s)`);
+}
+
+// Toggle flash
+async function toggleCameraFlash(id, ip) {
+  try {
+    await fetch(`http://${ip}/flash`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: 'state=1'
+    });
+    
+    setTimeout(async () => {
+      await fetch(`http://${ip}/flash`, { method: 'POST', body: 'state=0' });
+    }, 200);
+    
+    showAlert('success', '💡 Flash');
+  } catch (e) {
+    showAlert('danger', '❌ Erreur flash');
+  }
+}
+
+// Rafraîchir toutes
+function refreshAllSecurityCameras() {
+  renderSecurityCameras();
+  showAlert('success', '🔄 Rafraîchi');
+}
+
+// Vider captures
+function clearAllSecurityCaptures() {
+  if (!confirm('Vider toutes les captures ?')) return;
+  
+  securityCaptures = [];
+  localStorage.setItem('priva_security_captures', JSON.stringify(securityCaptures));
+  renderSecurityCaptures();
+  showAlert('success', '🗑️ Vidé');
+}
+
+// Voir capture
+function viewCapture(idx) {
+  const cap = securityCaptures[idx];
+  if (!cap) return;
+  
+  openCameraFullscreen(null, cap.name, null, cap.url);
+}
+
+// Supprimer capture
+function deleteCapture(idx) {
+  securityCaptures.splice(idx, 1);
+  localStorage.setItem('priva_security_captures', JSON.stringify(securityCaptures));
+  renderSecurityCaptures();
+  showAlert('success', '🗑️ Supprimée');
+}
+
+// Plein écran
+function openCameraFullscreen(id, name, ip, captureUrl = null) {
+  const modal = document.getElementById('cameraFullscreenModal');
+  const img = document.getElementById('fullscreen-camera-image');
+  const title = document.getElementById('fullscreen-camera-title');
+  
+  if (!modal || !img || !title) return;
+  
+  title.textContent = `📹 ${name}`;
+  img.src = captureUrl || `http://${ip}:81/stream?t=${Date.now()}`;
+  currentCameraForFullscreen = captureUrl ? null : { id, name, ip };
+  modal.classList.add('active');
+}
+
+// Fermer plein écran
+function closeCameraFullscreen() {
+  const modal = document.getElementById('cameraFullscreenModal');
+  if (modal) modal.classList.remove('active');
+  currentCameraForFullscreen = null;
+}
+
+// Capturer depuis plein écran
+function captureFromFullscreen() {
+  if (currentCameraForFullscreen) {
+    const { id, name, ip } = currentCameraForFullscreen;
+    captureSecurityCamera(id, name, ip);
+  }
+}
+
+// Flash depuis plein écran
+function toggleFlashFromFullscreen() {
+  if (currentCameraForFullscreen) {
+    toggleCameraFlash(currentCameraForFullscreen.id, currentCameraForFullscreen.ip);
+  }
+}
+
+// Initialiser au chargement du module sécurité
+const originalSwitchModule = switchModule;
+switchModule = function(module) {
+  originalSwitchModule(module);
+  
+  if (module === 'security') {
+    setTimeout(() => {
+      renderSecurityCameras();
+      renderSecurityCaptures();
+    }, 100);
+  }
+};
+
+// Initialiser au chargement de la page
+window.addEventListener('DOMContentLoaded', () => {
+  if (Object.keys(securityCameras).length > 0) {
+    renderSecurityCameras();
+    renderSecurityCaptures();
+  }
+});
