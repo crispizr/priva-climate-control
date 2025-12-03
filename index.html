@@ -907,7 +907,83 @@ window.switchModule = function(module) {
   }
 };
 </script>
+
+      <!-- ========================================= -->
+  <!-- SECTION CAMÉRAS (À AJOUTER ICI) -->
+  <!-- ========================================= -->
+  
+  <!-- Carte Caméras -->
+  <div class="card" style="background: linear-gradient(135deg, #1a1d29, #252836); border: 2px solid #667eea; margin-top: 25px;">
+    <div class="card-header" style="border-bottom: 2px solid #667eea;">
+      <div class="card-title">📹 Caméras de Surveillance</div>
+      <button class="btn btn-success btn-small" onclick="openAddCameraModal()">➕ Ajouter Caméra</button>
     </div>
+    
+    <!-- Contrôles -->
+    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+      <button class="btn btn-small btn-success" onclick="refreshAllSecurityCameras()">🔄 Rafraîchir</button>
+      <button class="btn btn-small btn-danger" onclick="captureAllSecurityCameras()">📸 Capturer Tout</button>
+    </div>
+    
+    <!-- Grille caméras -->
+    <div id="security-cameras-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+      <div style="text-align: center; padding: 40px; opacity: 0.6;">
+        Aucune caméra configurée. Cliquez sur "➕ Ajouter Caméra"
+      </div>
+    </div>
+  </div>
+
+  <!-- Galerie captures -->
+  <div class="card" style="margin-top: 20px;">
+    <div class="card-header">
+      <div class="card-title">📸 Captures Récentes</div>
+      <button class="btn btn-small btn-danger" onclick="clearAllSecurityCaptures()">🗑️ Vider</button>
+    </div>
+    <div id="security-captures-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;">
+      <div style="text-align: center; padding: 20px; opacity: 0.6;">Aucune capture</div>
+    </div>
+  </div>
+    </div>
+
+    <!-- Modal Ajout Caméra -->
+<div id="addCameraModal" class="modal">
+  <div class="modal-content">
+    <div class="card-header">
+      <h2 style="margin: 0;">➕ Ajouter ESP32-CAM</h2>
+      <button class="btn btn-danger btn-small" onclick="closeAddCameraModal()">✖</button>
+    </div>
+    <div class="input-group">
+      <label>📛 Nom:</label>
+      <input type="text" id="newCameraName" placeholder="Caméra Entrée" style="flex: 2;">
+    </div>
+    <div class="input-group">
+      <label>📡 IP:</label>
+      <input type="text" id="newCameraIP" placeholder="192.168.1.200" style="flex: 2;">
+    </div>
+    <div class="input-group">
+      <label>📍 Position:</label>
+      <input type="text" id="newCameraLocation" placeholder="Entrée" style="flex: 2;">
+    </div>
+    <button class="btn btn-success" onclick="addSecurityCamera()" style="width: 100%; margin-top: 15px;">
+      💾 Ajouter
+    </button>
+  </div>
+</div>
+
+<!-- Modal Plein Écran Caméra -->
+<div id="cameraFullscreenModal" class="modal">
+  <div class="modal-content" style="max-width: 95%; padding: 15px;">
+    <div class="card-header">
+      <h2 style="margin: 0;" id="fullscreen-camera-title">📹 Caméra</h2>
+      <button class="btn btn-danger btn-small" onclick="closeCameraFullscreen()">✖</button>
+    </div>
+    <img id="fullscreen-camera-image" style="width: 100%; height: auto; border-radius: 10px; margin-top: 15px;">
+    <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+      <button class="btn btn-success" onclick="captureFromFullscreen()">📸 Capturer</button>
+      <button class="btn btn-primary" onclick="toggleFlashFromFullscreen()">💡 Flash</button>
+    </div>
+  </div>
+</div>
 
     <!-- Modal Ajout Appareil -->
     <div id="addDeviceModal" class="modal">
