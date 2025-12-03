@@ -206,60 +206,707 @@
 
       <!-- MODULE SÉCURITÉ -->
       <div id="security" class="module">
-        <!-- Configuration appareil actif -->
-        <div class="card" id="sec-config" style="background: linear-gradient(135deg, #252836, #1a1d29); border: 2px solid #667eea;">
-          <div class="card-header" style="border-bottom: 2px solid #667eea;">
-            <div class="card-title">⚙️ Configuration ESP32 Sécurité</div>
-          </div>
-          <div id="sec-device-info" style="text-align: center; padding: 20px; opacity: 0.6;">
-            Aucun appareil actif. Ajoutez un ESP32 via l'onglet "🎛️ Appareils"
-          </div>
-        </div>
-        
-        <div class="grid-4">
-          <div class="sensor-card">
-            <div class="sensor-icon">🚪</div>
-            <div class="sensor-value" id="sec-door" style="font-size: 24px;">--</div>
-            <div>État Porte</div>
-          </div>
-          <div class="sensor-card">
-            <div class="sensor-icon">👁️</div>
-            <div class="sensor-value" id="sec-motion" style="font-size: 24px;">--</div>
-            <div>Mouvement</div>
-          </div>
-          <div class="sensor-card">
-            <div class="sensor-icon">🔑</div>
-            <div class="sensor-value" id="sec-badge" style="font-size: 18px;">--</div>
-            <div>Dernier Badge</div>
-          </div>
-          <div class="sensor-card">
-            <div class="sensor-icon">⏰</div>
-            <div class="sensor-value" id="sec-time" style="font-size: 20px;">--</div>
-            <div>Dernier Accès</div>
-          </div>
-        </div>
+       <!-- ========================================= -->
+<!-- MODULE SÉCURITÉ AVEC CAMÉRAS INTÉGRÉES -->
+<!-- Remplacez tout le contenu entre <div id="security" class="module"> et son </div> de fermeture -->
+<!-- ========================================= -->
 
-        <div class="card">
-          <div class="card-header"><div class="card-title">🔒 Contrôles</div></div>
-          <div class="device-grid">
-            <div class="device-card" id="lockCard" onclick="toggleDevice('security', 'lock')">
-              <div class="device-icon">🔓</div>
-              <div>Serrure</div>
-              <small id="lockStatus">Verrouillée</small>
-            </div>
-            <div class="device-card" id="alarmCard" onclick="toggleDevice('security', 'alarm')">
-              <div class="device-icon">🚨</div>
-              <div>Alarme</div>
-              <small id="alarmStatus">Désactivée</small>
-            </div>
-            <div class="device-card" id="lightsCard" onclick="toggleDevice('security', 'lights')">
-              <div class="device-icon">💡</div>
-              <div>Lumières</div>
-              <small id="lightsStatus">Éteintes</small>
-            </div>
-          </div>
-        </div>
+<div id="security" class="module">
+  <!-- Configuration ESP32 Sécurité -->
+  <div class="card" id="sec-config" style="background: linear-gradient(135deg, #252836, #1a1d29); border: 2px solid #667eea;">
+    <div class="card-header" style="border-bottom: 2px solid #667eea;">
+      <div class="card-title">⚙️ Configuration ESP32 Sécurité</div>
+    </div>
+    <div id="sec-device-info" style="text-align: center; padding: 20px; opacity: 0.6;">
+      Aucun appareil actif. Ajoutez un ESP32 via l'onglet "🎛️ Appareils"
+    </div>
+  </div>
+  
+  <!-- Capteurs sécurité -->
+  <div class="grid-4">
+    <div class="sensor-card">
+      <div class="sensor-icon">🚪</div>
+      <div class="sensor-value" id="sec-door" style="font-size: 24px;">--</div>
+      <div>État Porte</div>
+    </div>
+    <div class="sensor-card">
+      <div class="sensor-icon">👁️</div>
+      <div class="sensor-value" id="sec-motion" style="font-size: 24px;">--</div>
+      <div>Mouvement</div>
+    </div>
+    <div class="sensor-card">
+      <div class="sensor-icon">🔑</div>
+      <div class="sensor-value" id="sec-badge" style="font-size: 18px;">--</div>
+      <div>Dernier Badge</div>
+    </div>
+    <div class="sensor-card">
+      <div class="sensor-icon">⏰</div>
+      <div class="sensor-value" id="sec-time" style="font-size: 20px;">--</div>
+      <div>Dernier Accès</div>
+    </div>
+  </div>
+
+  <!-- Contrôles sécurité -->
+  <div class="card">
+    <div class="card-header"><div class="card-title">🔒 Contrôles</div></div>
+    <div class="device-grid">
+      <div class="device-card" id="lockCard" onclick="toggleDevice('security', 'lock')">
+        <div class="device-icon">🔓</div>
+        <div>Serrure</div>
+        <small id="lockStatus">Verrouillée</small>
       </div>
+      <div class="device-card" id="alarmCard" onclick="toggleDevice('security', 'alarm')">
+        <div class="device-icon">🚨</div>
+        <div>Alarme</div>
+        <small id="alarmStatus">Désactivée</small>
+      </div>
+      <div class="device-card" id="lightsCard" onclick="toggleDevice('security', 'lights')">
+        <div class="device-icon">💡</div>
+        <div>Lumières</div>
+        <small id="lightsStatus">Éteintes</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================= -->
+  <!-- NOUVEAU : SECTION CAMÉRAS -->
+  <!-- ========================================= -->
+  <div class="card" style="background: linear-gradient(135deg, #1a1d29, #252836); border: 2px solid #667eea;">
+    <div class="card-header" style="border-bottom: 2px solid #667eea;">
+      <div class="card-title">📹 Caméras de Surveillance</div>
+      <button class="btn btn-success btn-small" onclick="openAddCameraModal()">➕ Ajouter Caméra</button>
+    </div>
+    
+    <!-- Contrôles caméras -->
+    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+      <button class="btn btn-small btn-primary" onclick="setCameraView('grid')">🔲 Grille</button>
+      <button class="btn btn-small btn-primary" onclick="setCameraView('single')">📺 Simple</button>
+      <button class="btn btn-small btn-success" onclick="refreshAllCameras()">🔄 Rafraîchir</button>
+      <button class="btn btn-small btn-danger" onclick="captureAllCameras()">📸 Capturer Tout</button>
+    </div>
+    
+    <!-- Liste des caméras -->
+    <div id="security-cameras-grid">
+      <div style="text-align: center; padding: 40px; opacity: 0.6;">
+        Aucune caméra configurée. Cliquez sur "➕ Ajouter Caméra"
+      </div>
+    </div>
+  </div>
+
+  <!-- Galerie des captures -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">📸 Captures Récentes</div>
+      <button class="btn btn-small btn-danger" onclick="clearSecurityCaptures()">🗑️ Vider</button>
+    </div>
+    <div id="security-captures-gallery" class="capture-gallery">
+      <div style="text-align: center; padding: 20px; opacity: 0.6;">
+        Aucune capture
+      </div>
+    </div>
+  </div>
+
+  <!-- Tableau des événements sécurité -->
+  <div class="card">
+    <div class="card-header"><div class="card-title">📋 Événements Récents</div></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Badge</th>
+          <th>Porte</th>
+          <th>Mouvement</th>
+          <th>Auth</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="securityTable">
+        <tr><td colspan="6" style="text-align:center">Chargement...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ========================================= -->
+<!-- MODAL AJOUT CAMÉRA -->
+<!-- ========================================= -->
+<div id="addCameraModal" class="modal">
+  <div class="modal-content">
+    <div class="card-header">
+      <h2 style="margin: 0;">➕ Ajouter une ESP32-CAM</h2>
+      <button class="btn btn-danger btn-small" onclick="closeAddCameraModal()">✖</button>
+    </div>
+    <div class="input-group">
+      <label>📛 Nom:</label>
+      <input type="text" id="newCameraName" placeholder="Caméra Entrée" style="flex: 2;">
+    </div>
+    <div class="input-group">
+      <label>📡 IP:</label>
+      <input type="text" id="newCameraIP" placeholder="192.168.1.200" style="flex: 2;">
+    </div>
+    <div class="input-group">
+      <label>📍 Position:</label>
+      <input type="text" id="newCameraLocation" placeholder="Entrée principale" style="flex: 2;">
+    </div>
+    <button class="btn btn-success" onclick="addSecurityCamera()" style="width: 100%; margin-top: 15px;">
+      💾 Ajouter Caméra
+    </button>
+  </div>
+</div>
+
+<!-- ========================================= -->
+<!-- MODAL PLEIN ÉCRAN CAMÉRA -->
+<!-- ========================================= -->
+<div id="cameraFullscreenModal" class="modal">
+  <div class="modal-content" style="max-width: 95%; max-height: 95vh; padding: 15px;">
+    <div class="card-header">
+      <h2 style="margin: 0;" id="fullscreen-camera-name">📹 Caméra</h2>
+      <button class="btn btn-danger btn-small" onclick="closeCameraFullscreen()">✖ Fermer</button>
+    </div>
+    <img id="fullscreen-camera-img" style="width: 100%; height: auto; border-radius: 10px; margin-top: 15px;">
+    <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+      <button class="btn btn-success" onclick="captureFromFullscreen()">📸 Capturer</button>
+      <button class="btn btn-primary" onclick="toggleFlashFullscreen()">💡 Flash</button>
+      <button class="btn btn-primary" onclick="downloadCapture()">⬇️ Télécharger</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================= -->
+<!-- STYLES CSS CAMÉRAS -->
+<!-- ========================================= -->
+<style>
+/* Carte caméra */
+.security-camera-card {
+  background: #0f1117;
+  border: 2px solid #2d3142;
+  border-radius: 12px;
+  padding: 15px;
+  transition: all 0.3s;
+  position: relative;
+}
+
+.security-camera-card:hover {
+  border-color: #667eea;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+}
+
+.security-camera-card.offline {
+  opacity: 0.5;
+  border-color: #e63946;
+}
+
+.camera-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.camera-name {
+  font-weight: 600;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.camera-status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00a651;
+  animation: pulse 2s infinite;
+}
+
+.camera-status-indicator.offline {
+  background: #e63946;
+  animation: none;
+}
+
+.camera-stream-img {
+  width: 100%;
+  border-radius: 8px;
+  background: #000;
+  min-height: 250px;
+  cursor: pointer;
+  object-fit: cover;
+}
+
+.camera-controls {
+  display: flex;
+  gap: 5px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.camera-info {
+  font-size: 11px;
+  opacity: 0.6;
+  margin-top: 8px;
+}
+
+/* Grille caméras */
+.cameras-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.cameras-single {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Galerie captures */
+.capture-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.capture-item {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s;
+  background: #0f1117;
+}
+
+.capture-item:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.capture-item img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+
+.capture-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+  padding: 8px;
+  color: white;
+  font-size: 10px;
+}
+
+.capture-delete {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: rgba(230, 57, 70, 0.95);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 14px;
+}
+
+.capture-item:hover .capture-delete {
+  opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .cameras-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .capture-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+  
+  .capture-item img {
+    height: 80px;
+  }
+}
+</style>
+
+<!-- ========================================= -->
+<!-- JAVASCRIPT CAMÉRAS -->
+<!-- À ajouter à la fin de votre fichier app.js -->
+<!-- ========================================= -->
+<script>
+// ==================== GESTION CAMÉRAS SÉCURITÉ ====================
+
+let securityCameras = {};
+let securityCaptures = [];
+let cameraViewMode = 'grid';
+let currentFullscreenCamera = null;
+
+// Charger les caméras sauvegardées
+const savedSecCams = localStorage.getItem('priva_security_cameras');
+if (savedSecCams) securityCameras = JSON.parse(savedSecCams);
+
+const savedSecCaptures = localStorage.getItem('priva_security_captures');
+if (savedSecCaptures) securityCaptures = JSON.parse(savedSecCaptures);
+
+// Initialiser les caméras
+function initSecurityCameras() {
+  renderSecurityCameras();
+  renderSecurityCaptures();
+  
+  // Rafraîchir les statuts toutes les 15 secondes
+  setInterval(checkSecurityCamerasStatus, 15000);
+}
+
+// Afficher les caméras
+function renderSecurityCameras() {
+  const grid = document.getElementById('security-cameras-grid');
+  const activeCameras = Object.entries(securityCameras).filter(([id, cam]) => cam.active);
+  
+  if (activeCameras.length === 0) {
+    grid.innerHTML = '<div style="text-align:center;padding:40px;opacity:0.6;">Aucune caméra configurée. Cliquez sur "➕ Ajouter Caméra"</div>';
+    return;
+  }
+  
+  const gridClass = cameraViewMode === 'single' ? 'cameras-single' : 'cameras-grid';
+  grid.className = gridClass;
+  
+  grid.innerHTML = activeCameras.map(([id, cam]) => `
+    <div class="security-camera-card" id="sec-cam-${id}">
+      <div class="camera-header">
+        <div class="camera-name">
+          📹 ${cam.name}
+          <div class="camera-status-indicator" id="sec-cam-status-${id}"></div>
+        </div>
+        <button class="btn btn-small btn-danger" onclick="removeSecurityCamera('${id}')">
+          🗑️
+        </button>
+      </div>
+      
+      <img class="camera-stream-img" 
+           id="sec-cam-stream-${id}" 
+           src="http://${cam.ip}:81/stream?t=${Date.now()}"
+           onerror="handleSecurityCameraError('${id}')"
+           onload="handleSecurityCameraLoad('${id}')"
+           onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')">
+      
+      <div class="camera-controls">
+        <button class="btn btn-small btn-success" onclick="captureSecurityCamera('${id}')">
+          📸 Capturer
+        </button>
+        <button class="btn btn-small btn-primary" onclick="toggleSecurityFlash('${id}')">
+          💡 Flash
+        </button>
+        <button class="btn btn-small btn-primary" onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')">
+          🔍 Plein écran
+        </button>
+      </div>
+      
+      <div class="camera-info">📍 ${cam.location} • 🔗 ${cam.ip}</div>
+    </div>
+  `).join('');
+}
+
+// Gérer le chargement réussi
+function handleSecurityCameraLoad(id) {
+  const indicator = document.getElementById(`sec-cam-status-${id}`);
+  const card = document.getElementById(`sec-cam-${id}`);
+  if (indicator) indicator.classList.remove('offline');
+  if (card) card.classList.remove('offline');
+}
+
+// Gérer l'erreur de chargement
+function handleSecurityCameraError(id) {
+  const indicator = document.getElementById(`sec-cam-status-${id}`);
+  const card = document.getElementById(`sec-cam-${id}`);
+  if (indicator) indicator.classList.add('offline');
+  if (card) card.classList.add('offline');
+}
+
+// Vérifier les statuts des caméras
+async function checkSecurityCamerasStatus() {
+  Object.entries(securityCameras).forEach(async ([id, cam]) => {
+    if (!cam.active) return;
+    
+    try {
+      const res = await fetch(`http://${cam.ip}/status`, { timeout: 5000 });
+      if (res.ok) {
+        handleSecurityCameraLoad(id);
+      } else {
+        handleSecurityCameraError(id);
+      }
+    } catch (err) {
+      handleSecurityCameraError(id);
+    }
+  });
+}
+
+// Capturer une photo
+async function captureSecurityCamera(id) {
+  const cam = securityCameras[id];
+  if (!cam) return;
+  
+  showAlert('warning', '📸 Capture en cours...');
+  
+  try {
+    const captureUrl = `http://${cam.ip}:81/capture?t=${Date.now()}`;
+    
+    const capture = {
+      id: 'cap_' + Date.now(),
+      cameraId: id,
+      cameraName: cam.name,
+      timestamp: new Date().toISOString(),
+      url: captureUrl
+    };
+    
+    securityCaptures.unshift(capture);
+    
+    // Limiter à 100 captures
+    if (securityCaptures.length > 100) {
+      securityCaptures = securityCaptures.slice(0, 100);
+    }
+    
+    localStorage.setItem('priva_security_captures', JSON.stringify(securityCaptures));
+    
+    renderSecurityCaptures();
+    showAlert('success', `✅ Photo capturée: ${cam.name}`);
+  } catch (err) {
+    showAlert('danger', '❌ Erreur capture');
+  }
+}
+
+// Capturer toutes les caméras
+function captureAllCameras() {
+  const activeCameras = Object.entries(securityCameras).filter(([id, cam]) => cam.active);
+  
+  if (activeCameras.length === 0) {
+    showAlert('warning', '⚠️ Aucune caméra active');
+    return;
+  }
+  
+  showAlert('warning', `📸 Capture de ${activeCameras.length} caméra(s)...`);
+  
+  activeCameras.forEach(([id, cam]) => {
+    setTimeout(() => captureSecurityCamera(id), 500);
+  });
+}
+
+// Toggle flash
+async function toggleSecurityFlash(id) {
+  const cam = securityCameras[id];
+  if (!cam) return;
+  
+  try {
+    await fetch(`http://${cam.ip}/flash`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: 'state=1'
+    });
+    
+    setTimeout(async () => {
+      await fetch(`http://${cam.ip}/flash`, {
+        method: 'POST',
+        body: 'state=0'
+      });
+    }, 200);
+    
+    showAlert('success', '💡 Flash');
+  } catch (err) {
+    showAlert('danger', '❌ Erreur flash');
+  }
+}
+
+// Afficher les captures
+function renderSecurityCaptures() {
+  const gallery = document.getElementById('security-captures-gallery');
+  
+  if (securityCaptures.length === 0) {
+    gallery.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.6;">Aucune capture</div>';
+    return;
+  }
+  
+  gallery.innerHTML = securityCaptures.slice(0, 20).map(cap => {
+    const date = new Date(cap.timestamp);
+    return `
+      <div class="capture-item" onclick="viewSecurityCapture('${cap.id}')">
+        <img src="${cap.url}" alt="${cap.cameraName}" loading="lazy">
+        <div class="capture-info">
+          <div>📹 ${cap.cameraName}</div>
+          <div>⏰ ${date.toLocaleTimeString('fr-FR')}</div>
+        </div>
+        <button class="capture-delete" onclick="event.stopPropagation(); deleteSecurityCapture('${cap.id}')">
+          ✖
+        </button>
+      </div>
+    `;
+  }).join('');
+}
+
+// Voir une capture en grand
+function viewSecurityCapture(capId) {
+  const capture = securityCaptures.find(c => c.id === capId);
+  if (!capture) return;
+  
+  openCameraFullscreen(null, capture.cameraName, null, capture.url);
+}
+
+// Supprimer une capture
+function deleteSecurityCapture(capId) {
+  securityCaptures = securityCaptures.filter(c => c.id !== capId);
+  localStorage.setItem('priva_security_captures', JSON.stringify(securityCaptures));
+  renderSecurityCaptures();
+  showAlert('success', '🗑️ Capture supprimée');
+}
+
+// Vider la galerie
+function clearSecurityCaptures() {
+  if (!confirm('Vider toutes les captures ?')) return;
+  
+  securityCaptures = [];
+  localStorage.setItem('priva_security_captures', JSON.stringify(securityCaptures));
+  renderSecurityCaptures();
+  showAlert('success', '🗑️ Galerie vidée');
+}
+
+// Changer la vue (grille/simple)
+function setCameraView(mode) {
+  cameraViewMode = mode;
+  renderSecurityCameras();
+}
+
+// Rafraîchir toutes les caméras
+function refreshAllCameras() {
+  Object.keys(securityCameras).forEach(id => {
+    const img = document.getElementById(`sec-cam-stream-${id}`);
+    if (img) {
+      const cam = securityCameras[id];
+      img.src = `http://${cam.ip}:81/stream?t=${Date.now()}`;
+    }
+  });
+  showAlert('success', '🔄 Caméras rafraîchies');
+}
+
+// Ouvrir modal ajout caméra
+function openAddCameraModal() {
+  document.getElementById('addCameraModal').classList.add('active');
+}
+
+// Fermer modal ajout caméra
+function closeAddCameraModal() {
+  document.getElementById('addCameraModal').classList.remove('active');
+}
+
+// Ajouter une caméra
+function addSecurityCamera() {
+  const name = document.getElementById('newCameraName').value.trim();
+  const ip = document.getElementById('newCameraIP').value.trim();
+  const location = document.getElementById('newCameraLocation').value.trim();
+  
+  if (!name || !ip) {
+    showAlert('warning', '⚠️ Nom et IP requis');
+    return;
+  }
+  
+  const id = 'cam_' + Date.now();
+  securityCameras[id] = {
+    name,
+    ip,
+    location: location || 'Non spécifié',
+    active: true,
+    addedAt: new Date().toISOString()
+  };
+  
+  localStorage.setItem('priva_security_cameras', JSON.stringify(securityCameras));
+  
+  closeAddCameraModal();
+  renderSecurityCameras();
+  showAlert('success', `✅ ${name} ajoutée`);
+  
+  // Réinitialiser
+  document.getElementById('newCameraName').value = '';
+  document.getElementById('newCameraIP').value = '';
+  document.getElementById('newCameraLocation').value = '';
+}
+
+// Supprimer une caméra
+function removeSecurityCamera(id) {
+  const cam = securityCameras[id];
+  if (!confirm(`Supprimer "${cam.name}" ?`)) return;
+  
+  delete securityCameras[id];
+  localStorage.setItem('priva_security_cameras', JSON.stringify(securityCameras));
+  renderSecurityCameras();
+  showAlert('success', `🗑️ ${cam.name} supprimée`);
+}
+
+// Plein écran caméra
+function openCameraFullscreen(id, name, ip, captureUrl = null) {
+  const modal = document.getElementById('cameraFullscreenModal');
+  const img = document.getElementById('fullscreen-camera-img');
+  const title = document.getElementById('fullscreen-camera-name');
+  
+  title.textContent = `📹 ${name}`;
+  
+  if (captureUrl) {
+    img.src = captureUrl;
+    currentFullscreenCamera = null;
+  } else {
+    img.src = `http://${ip}:81/stream?t=${Date.now()}`;
+    currentFullscreenCamera = id;
+  }
+  
+  modal.classList.add('active');
+}
+
+// Fermer plein écran
+function closeCameraFullscreen() {
+  document.getElementById('cameraFullscreenModal').classList.remove('active');
+  currentFullscreenCamera = null;
+}
+
+// Capturer depuis plein écran
+function captureFromFullscreen() {
+  if (currentFullscreenCamera) {
+    captureSecurityCamera(currentFullscreenCamera);
+  }
+}
+
+// Toggle flash depuis plein écran
+function toggleFlashFullscreen() {
+  if (currentFullscreenCamera) {
+    toggleSecurityFlash(currentFullscreenCamera);
+  }
+}
+
+// Télécharger la capture
+function downloadCapture() {
+  const img = document.getElementById('fullscreen-camera-img');
+  const link = document.createElement('a');
+  link.href = img.src;
+  link.download = `capture_${Date.now()}.jpg`;
+  link.click();
+}
+
+// Initialiser au chargement du module sécurité
+const originalSwitchModule = window.switchModule;
+window.switchModule = function(module) {
+  originalSwitchModule(module);
+  
+  if (module === 'security') {
+    setTimeout(() => {
+      initSecurityCameras();
+    }, 100);
+  }
+};
+</script>
     </div>
 
     <!-- Modal Ajout Appareil -->
