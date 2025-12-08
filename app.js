@@ -618,90 +618,28 @@ function deleteDevice(id) {
   renderDevicesList();
   showAlert('success', `🗑️ ${device.name} supprimé`);
 }
+// ==================== CODE ESP32-CAM À AJOUTER À LA FIN DE app.js ====================
 
-// ==================== ESP32-CAM SÉCURITÉ ====================
-
+// ===== INITIALISATION CAMÉRAS =====
 function initSecurityCameras() {
-  console.log('📹 Initialisation caméras...', Object.keys(securityCameras).length, 'caméras');
+  console.log('📹 Initialisation caméras:', Object.keys(securityCameras).length);
   renderSecurityCameras();
   renderSecurityCaptures();
   setInterval(checkCamerasStatus, 15000);
 }
 
-function renderSecurityCameras() {
-  const container = document.getElementById('security-cameras-grid');
-  if (!container) {
-    console.warn('⚠️ Container caméras introuvable');
-    return;
-  }
-  
-  const activeCameras = Object.entries(securityCameras).filter(([id, cam]) => cam.active);
-  
-  if (activeCameras.length === 0) {
-    container.innerHTML = '<div style="text-align:center;padding:40px;opacity:0.6;">Aucune caméra. Cliquez sur "➕ Ajouter Caméra"</div>';
-    return;
-  }
-  
-  container.innerHTML = activeCameras.map(([id, cam]) => `
-    <div class="security-camera-card" id="sec-cam-${id}">
-      <div class="camera-header">
-        <div class="camera-name">
-          📹 ${cam.name}
-          <div class="camera-status-indicator" id="sec-cam-status-${id}"></div>
-        </div>
-        <button class="btn btn-small btn-danger" onclick="removeSecurityCamera('${id}')">🗑️</button>
-      </div>
-      
-      <img class="camera-stream-img" 
-           id="sec-cam-stream-${id}" 
-           src="http://${cam.ip}:81/stream?t=${Date.now()}"
-           onerror="handleCameraError('${id}')"
-           onload="handleCameraLoad('${id}')"
-           onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')">
-      
-      <div class="camera-controls">
-        <button class="btn btn-small btn-success" onclick="captureSecurityCamera('${id}')">📸</button>
-        <button class="btn btn-small btn-primary" onclick="toggleSecurityFlash('${id}')">💡</button>
-        <button class="btn btn-small btn-primary" onclick="openCamera
-        // ==================== ESP32-CAM SÉCURITÉ - CODE CORRIGÉ ====================
-// Ajoutez ce code à la fin de votre app.js
-
-// Variables caméras
-let securityCameras = {};
-let securityCaptures = [];
-let currentFullscreenCamera = null;
-
-// Charger données sauvegardées
-try {
-  const savedCams = localStorage.getItem('priva_security_cameras');
-  if (savedCams) securityCameras = JSON.parse(savedCams);
-  
-  const savedCaps = localStorage.getItem('priva_security_captures');
-  if (savedCaps) securityCaptures = JSON.parse(savedCaps);
-} catch (e) {
-  console.error('Erreur chargement caméras:', e);
-}
-
-// Initialiser les caméras
-function initSecurityCameras() {
-  console.log('📹 Init caméras:', Object.keys(securityCameras).length);
-  renderSecurityCameras();
-  renderSecurityCaptures();
-  setInterval(checkCamerasStatus, 15000);
-}
-
-// Afficher les caméras
+// ===== RENDU CAMÉRAS =====
 function renderSecurityCameras() {
   const grid = document.getElementById('security-cameras-grid');
   if (!grid) {
-    console.warn('⚠️ Element security-cameras-grid introuvable!');
+    console.error('❌ Element security-cameras-grid introuvable!');
     return;
   }
   
   const active = Object.entries(securityCameras).filter(([id, cam]) => cam.active);
   
   if (active.length === 0) {
-    grid.innerHTML = '<div style="text-align:center;padding:40px;opacity:0.6;grid-column:1/-1;">Aucune caméra configurée</div>';
+    grid.innerHTML = '<div style="text-align:center;padding:40px;opacity:0.6;">Aucune caméra configurée. Cliquez sur "➕ Ajouter Caméra"</div>';
     return;
   }
   
@@ -724,25 +662,25 @@ function renderSecurityCameras() {
            alt="${cam.name}">
       
       <div class="camera-controls">
-        <button class="btn btn-small btn-success" onclick="captureCamera('${id}', '${cam.name}', '${cam.ip}')">📸</button>
-        <button class="btn btn-small btn-primary" onclick="toggleFlash('${id}', '${cam.ip}')">💡</button>
-        <button class="btn btn-small btn-primary" onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')">🔍</button>
+        <button class="btn btn-small btn-success" onclick="captureCamera('${id}', '${cam.name}', '${cam.ip}')">📸 Capturer</button>
+        <button class="btn btn-small btn-primary" onclick="toggleFlash('${id}', '${cam.ip}')">💡 Flash</button>
+        <button class="btn btn-small btn-primary" onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')">🔍 Zoom</button>
       </div>
       
-      <div class="camera-info">📍 ${cam.location} • ${cam.ip}</div>
+      <div class="camera-info">📍 ${cam.location} • 🔗 ${cam.ip}</div>
     </div>
   `).join('');
   
   console.log('✅ Caméras rendues:', active.length);
 }
 
-// Afficher captures
+// ===== RENDU CAPTURES =====
 function renderSecurityCaptures() {
   const gallery = document.getElementById('security-captures-gallery');
   if (!gallery) return;
   
   if (securityCaptures.length === 0) {
-    gallery.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.6;grid-column:1/-1;">Aucune capture</div>';
+    gallery.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.6;">Aucune capture</div>';
     return;
   }
   
@@ -761,7 +699,7 @@ function renderSecurityCaptures() {
   }).join('');
 }
 
-// Gérer chargement image
+// ===== GESTION CHARGEMENT IMAGE =====
 function handleCameraLoad(id) {
   const indicator = document.getElementById(`status-${id}`);
   const card = document.getElementById(`sec-cam-${id}`);
@@ -769,7 +707,6 @@ function handleCameraLoad(id) {
   if (card) card.classList.remove('offline');
 }
 
-// Gérer erreur image
 function handleCameraError(id) {
   const indicator = document.getElementById(`status-${id}`);
   const card = document.getElementById(`sec-cam-${id}`);
@@ -777,27 +714,24 @@ function handleCameraError(id) {
   if (card) card.classList.add('offline');
 }
 
-// Vérifier statuts
+// ===== VÉRIFICATION STATUTS =====
 async function checkCamerasStatus() {
   Object.entries(securityCameras).forEach(async ([id, cam]) => {
     if (!cam.active) return;
     
     try {
       const res = await fetch(`http://${cam.ip}/status`, {timeout: 5000});
-      if (res.ok) {
-        handleCameraLoad(id);
-      } else {
-        handleCameraError(id);
-      }
+      if (res.ok) handleCameraLoad(id);
+      else handleCameraError(id);
     } catch (err) {
       handleCameraError(id);
     }
   });
 }
 
-// Capturer photo
+// ===== CAPTURE PHOTO =====
 function captureCamera(id, name, ip) {
-  showAlert('warning', '📸 Capture...');
+  showAlert('warning', '📸 Capture en cours...');
   
   const captureUrl = `http://${ip}:81/capture?t=${Date.now()}`;
   
@@ -817,26 +751,26 @@ function captureCamera(id, name, ip) {
   
   localStorage.setItem('priva_security_captures', JSON.stringify(securityCaptures));
   renderSecurityCaptures();
-  showAlert('success', `✅ Capturé: ${name}`);
+  showAlert('success', `✅ Photo capturée: ${name}`);
 }
 
-// Capturer toutes
+// ===== CAPTURER TOUTES =====
 function captureAllCameras() {
   const active = Object.entries(securityCameras).filter(([id, cam]) => cam.active);
   
   if (active.length === 0) {
-    showAlert('warning', '⚠️ Aucune caméra');
+    showAlert('warning', '⚠️ Aucune caméra active');
     return;
   }
   
-  showAlert('warning', `📸 Capture ${active.length} caméra(s)...`);
+  showAlert('warning', `📸 Capture de ${active.length} caméra(s)...`);
   
   active.forEach(([id, cam], idx) => {
     setTimeout(() => captureCamera(id, cam.name, cam.ip), idx * 500);
   });
 }
 
-// Toggle flash
+// ===== TOGGLE FLASH =====
 async function toggleFlash(id, ip) {
   try {
     await fetch(`http://${ip}/flash`, {
@@ -849,13 +783,13 @@ async function toggleFlash(id, ip) {
       await fetch(`http://${ip}/flash`, {method: 'POST', body: 'state=0'});
     }, 200);
     
-    showAlert('success', '💡 Flash');
+    showAlert('success', '💡 Flash activé');
   } catch (err) {
     showAlert('danger', '❌ Erreur flash');
   }
 }
 
-// Rafraîchir toutes
+// ===== RAFRAÎCHIR TOUTES =====
 function refreshAllCameras() {
   Object.entries(securityCameras).forEach(([id, cam]) => {
     const img = document.getElementById(`stream-${id}`);
@@ -863,22 +797,26 @@ function refreshAllCameras() {
       img.src = `http://${cam.ip}:81/stream?t=${Date.now()}`;
     }
   });
-  showAlert('success', '🔄 Rafraîchi');
+  showAlert('success', '🔄 Caméras rafraîchies');
 }
 
-// Ouvrir modal ajout caméra
+// ===== MODAL AJOUT CAMÉRA =====
 function openAddCameraModal() {
+  console.log('📹 Ouverture modal ajout caméra');
   const modal = document.getElementById('addCameraModal');
-  if (modal) modal.classList.add('active');
+  if (modal) {
+    modal.classList.add('active');
+  } else {
+    console.error('❌ Modal addCameraModal introuvable!');
+  }
 }
 
-// Fermer modal ajout caméra
 function closeAddCameraModal() {
   const modal = document.getElementById('addCameraModal');
   if (modal) modal.classList.remove('active');
 }
 
-// Ajouter caméra
+// ===== AJOUTER CAMÉRA =====
 function addSecurityCamera() {
   const name = document.getElementById('newCameraName').value.trim();
   const ip = document.getElementById('newCameraIP').value.trim();
@@ -900,16 +838,19 @@ function addSecurityCamera() {
   
   localStorage.setItem('priva_security_cameras', JSON.stringify(securityCameras));
   
+  console.log('✅ Caméra ajoutée:', securityCameras[id]);
+  
   closeAddCameraModal();
   renderSecurityCameras();
-  showAlert('success', `✅ ${name} ajoutée`);
+  showAlert('success', `✅ ${name} ajoutée avec succès`);
   
+  // Réinitialiser formulaire
   document.getElementById('newCameraName').value = '';
   document.getElementById('newCameraIP').value = '';
   document.getElementById('newCameraLocation').value = '';
 }
 
-// Supprimer caméra
+// ===== SUPPRIMER CAMÉRA =====
 function removeSecurityCamera(id) {
   const cam = securityCameras[id];
   if (!confirm(`Supprimer "${cam.name}" ?`)) return;
@@ -920,22 +861,22 @@ function removeSecurityCamera(id) {
   showAlert('success', `🗑️ ${cam.name} supprimée`);
 }
 
-// Voir capture
+// ===== VOIR CAPTURE =====
 function viewCapture(idx) {
   const cap = securityCaptures[idx];
   if (!cap) return;
   openCameraFullscreen(null, cap.name, null, cap.url);
 }
 
-// Supprimer capture
+// ===== SUPPRIMER CAPTURE =====
 function deleteCapture(idx) {
   securityCaptures.splice(idx, 1);
   localStorage.setItem('priva_security_captures', JSON.stringify(securityCaptures));
   renderSecurityCaptures();
-  showAlert('success', '🗑️ Supprimée');
+  showAlert('success', '🗑️ Capture supprimée');
 }
 
-// Vider captures
+// ===== VIDER CAPTURES =====
 function clearSecurityCaptures() {
   if (!confirm('Vider toutes les captures ?')) return;
   
@@ -945,7 +886,7 @@ function clearSecurityCaptures() {
   showAlert('success', '🗑️ Galerie vidée');
 }
 
-// Changer vue caméras
+// ===== CHANGER VUE =====
 function setCameraView(mode) {
   const grid = document.getElementById('security-cameras-grid');
   if (!grid) return;
@@ -958,14 +899,14 @@ function setCameraView(mode) {
   showAlert('success', `📺 Vue ${mode === 'single' ? 'simple' : 'grille'}`);
 }
 
-// Plein écran caméra
+// ===== PLEIN ÉCRAN =====
 function openCameraFullscreen(id, name, ip, captureUrl = null) {
   const modal = document.getElementById('cameraFullscreenModal');
   const img = document.getElementById('fullscreen-camera-img');
   const title = document.getElementById('fullscreen-camera-name');
   
   if (!modal || !img || !title) {
-    console.warn('⚠️ Elements modal introuvables');
+    console.error('❌ Elements modal plein écran introuvables');
     return;
   }
   
@@ -982,14 +923,12 @@ function openCameraFullscreen(id, name, ip, captureUrl = null) {
   modal.classList.add('active');
 }
 
-// Fermer plein écran
 function closeCameraFullscreen() {
   const modal = document.getElementById('cameraFullscreenModal');
   if (modal) modal.classList.remove('active');
   currentFullscreenCamera = null;
 }
 
-// Capturer depuis plein écran
 function captureFromFullscreen() {
   if (currentFullscreenCamera) {
     const {id, name, ip} = currentFullscreenCamera;
@@ -997,14 +936,12 @@ function captureFromFullscreen() {
   }
 }
 
-// Flash depuis plein écran
 function toggleFlashFullscreen() {
   if (currentFullscreenCamera) {
     toggleFlash(currentFullscreenCamera.id, currentFullscreenCamera.ip);
   }
 }
 
-// Télécharger capture
 function downloadCapture() {
   const img = document.getElementById('fullscreen-camera-img');
   if (!img) return;
@@ -1013,6 +950,8 @@ function downloadCapture() {
   link.href = img.src;
   link.download = `capture_${Date.now()}.jpg`;
   link.click();
+  showAlert('success', '⬇️ Téléchargement...');
 }
 
-console.log('✅ Code ESP32-CAM chargé');
+console.log('✅ Code ESP32-CAM chargé - Caméras disponibles:', Object.keys(securityCameras).length);
+
