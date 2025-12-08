@@ -741,3 +741,217 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+/* ============================================ */
+/* ESP32-CAM STYLES */
+/* ============================================ */
+
+/* Grille caméras */
+.cameras-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.cameras-single {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Carte caméra */
+.security-camera-card {
+  background: #0f1117;
+  border: 2px solid #2d3142;
+  border-radius: 12px;
+  padding: 15px;
+  transition: all 0.3s;
+  position: relative;
+}
+
+.security-camera-card:hover {
+  border-color: #667eea;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+}
+
+.security-camera-card.offline {
+  opacity: 0.5;
+  border-color: #e63946;
+}
+
+/* Header caméra */
+.camera-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.camera-name {
+  font-weight: 600;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Indicateur statut */
+.camera-status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00a651;
+  animation: pulse 2s infinite;
+}
+
+.camera-status-indicator.offline {
+  background: #e63946;
+  animation: none;
+}
+
+/* Image stream */
+.camera-stream-img {
+  width: 100%;
+  border-radius: 8px;
+  background: #000;
+  min-height: 250px;
+  max-height: 400px;
+  cursor: pointer;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.camera-stream-img:hover {
+  transform: scale(1.02);
+}
+
+/* Contrôles caméra */
+.camera-controls {
+  display: flex;
+  gap: 5px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+/* Info caméra */
+.camera-info {
+  font-size: 11px;
+  opacity: 0.6;
+  margin-top: 8px;
+}
+
+/* Galerie captures */
+.capture-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.capture-item {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s;
+  background: #0f1117;
+}
+
+.capture-item:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.capture-item img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Info capture */
+.capture-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+  padding: 8px;
+  color: white;
+  font-size: 10px;
+}
+
+/* Bouton supprimer capture */
+.capture-delete {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: rgba(230, 57, 70, 0.95);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 14px;
+}
+
+.capture-item:hover .capture-delete {
+  opacity: 1;
+}
+
+.capture-delete:hover {
+  background: #e63946;
+  transform: scale(1.1);
+}
+
+/* Modal plein écran */
+#cameraFullscreenModal .modal-content {
+  max-width: 95%;
+  max-height: 95vh;
+}
+
+#fullscreen-camera-img {
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+  border-radius: 10px;
+  margin-top: 15px;
+  object-fit: contain;
+  background: #000;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .cameras-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .capture-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+  
+  .capture-item img {
+    height: 80px;
+  }
+  
+  .camera-stream-img {
+    min-height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .camera-controls {
+    justify-content: center;
+  }
+  
+  .camera-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}
