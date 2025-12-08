@@ -1,19 +1,13 @@
 // ============================================
-// PRIVA Platform - JavaScript Complet et Corrigé
+// PRIVA Platform - JavaScript Complet CORRIGÉ
 // ============================================
 
-// ==================== CONFIGURATION ====================
-
 const COMMAND_API_URL = 'https://script.google.com/macros/s/AKfycbwA53tJWrpVpd6WeoAA09FYVe63aFvwy-liD_rQgb2gr_HZ2bYHC1sKajJ4wzwshMC6aA/exec';
-
 const AGRICULTURE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwJjy2KpJJ5X--C87zVuPjykAg9Fyc79zIxpdk1Dt0FvrxYw1Onfzt5wSHOVagvLry9uyyohzeN3h4/pub?output=csv";
-
 const SECURITY_CSV_URL = "https://docs.google.com/spreadsheets/d/12x5LRuFBaKeAfkSxc53uR-6Q3Xcu-OxZt2plY0GZSko/export?format=csv&gid=2127989880";
-
 const PROXY = 'https://api.allorigins.win/raw?url=';
 
 // ==================== VARIABLES GLOBALES ====================
-
 let climateChart, airChart;
 let allAgriData = [];
 let allSecurityData = [];
@@ -21,19 +15,28 @@ let devices = {};
 let currentModule = 'agriculture';
 let updateInterval;
 
-// Charger les appareils sauvegardés
+// Gestion ESP32-CAM
+let securityCameras = {};
+let securityCaptures = [];
+let currentFullscreenCamera = null;
+
+// Charger données sauvegardées
 const savedDevices = localStorage.getItem('priva_devices');
 if (savedDevices) devices = JSON.parse(savedDevices);
 
-// ==================== INITIALISATION ====================
+const savedCameras = localStorage.getItem('priva_security_cameras');
+if (savedCameras) securityCameras = JSON.parse(savedCameras);
 
+const savedCaptures = localStorage.getItem('priva_security_captures');
+if (savedCaptures) securityCaptures = JSON.parse(savedCaptures);
+
+// ==================== INITIALISATION ====================
 function init() {
-  console.log('🚀 Initialisation du système PRIVA...');
+  console.log('🚀 Initialisation PRIVA...');
   setupCharts();
   loadAgricultureData();
   loadSecurityData();
   
-  // Rafraîchir toutes les 10 secondes
   setInterval(() => {
     loadAgricultureData();
     loadSecurityData();
@@ -41,39 +44,24 @@ function init() {
   
   renderDevicesList();
   
-  // Démarrer les mises à jour du module actif
   const agriDevice = Object.values(devices).find(d => d.type === 'agriculture' && d.active);
   if (agriDevice) {
     updateModuleConfig('agriculture');
     startModuleUpdate('agriculture');
   }
   
-  showAlert('success', '✓ Système initialisé avec succès');
+  showAlert('success', '✓ Système initialisé');
 }
 
-// ==================== CONFIGURATION GRAPHIQUES ====================
-
+// ==================== GRAPHIQUES ====================
 function setupCharts() {
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { 
-      legend: { 
-        labels: { 
-          color: '#f8f9fa',
-          font: { size: 12 }
-        } 
-      } 
-    },
+    plugins: { legend: { labels: { color: '#f8f9fa', font: { size: 12 } } } },
     scales: {
-      x: { 
-        ticks: { color: '#9ca3af', maxRotation: 45, minRotation: 45 }, 
-        grid: { color: '#2d3142' } 
-      },
-      y: { 
-        ticks: { color: '#9ca3af' }, 
-        grid: { color: '#2d3142' } 
-      }
+      x: { ticks: { color: '#9ca3af', maxRotation: 45, minRotation: 45 }, grid: { color: '#2d3142' } },
+      y: { ticks: { color: '#9ca3af' }, grid: { color: '#2d3142' } }
     }
   };
 
@@ -82,24 +70,8 @@ function setupCharts() {
     data: {
       labels: [],
       datasets: [
-        { 
-          label: 'Température (°C)', 
-          data: [], 
-          borderColor: '#ef4444', 
-          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-          tension: 0.4, 
-          borderWidth: 3,
-          fill: true
-        },
-        { 
-          label: 'Humidité (%)', 
-          data: [], 
-          borderColor: '#3b82f6', 
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          tension: 0.4, 
-          borderWidth: 3,
-          fill: true
-        }
+        { label: 'Température (°C)', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', tension: 0.4, borderWidth: 3, fill: true },
+        { label: 'Humidité (%)', data: [], borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', tension: 0.4, borderWidth: 3, fill: true }
       ]
     },
     options: chartOptions
@@ -109,69 +81,33 @@ function setupCharts() {
     type: 'line',
     data: {
       labels: [],
-      datasets: [{ 
-        label: 'CO2 (ppm)', 
-        data: [], 
-        borderColor: '#10b981', 
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-        tension: 0.4, 
-        borderWidth: 3, 
-        fill: true 
-      }]
+      datasets: [{ label: 'CO2 (ppm)', data: [], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', tension: 0.4, borderWidth: 3, fill: true }]
     },
     options: chartOptions
   });
 }
 
-// ==================== CHARGEMENT DONNÉES AGRICULTURE ====================
-
+// ==================== DONNÉES AGRICULTURE ====================
 async function loadAgricultureData() {
   try {
     const res = await fetch(PROXY + encodeURIComponent(AGRICULTURE_CSV_URL));
     const csv = await res.text();
     const rows = csv.trim().split('\n').map(r => r.split(',').map(c => c.trim()));
     
-    // Ignorer la première ligne (en-têtes)
     allAgriData = rows.slice(1).filter(row => row.length >= 3);
     
     if (allAgriData.length > 0) {
       updateCharts();
       updateAgricultureTable();
       document.getElementById('dataCount').textContent = allAgriData.length;
-      document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
-      
-      // Mettre à jour les badges de statut
-      const lastRow = allAgriData[allAgriData.length - 1];
-      updateStatusBadges(lastRow);
     }
   } catch (err) {
-    console.error('❌ Erreur chargement données agriculture:', err);
-    showAlert('warning', '⚠️ Erreur chargement données agriculture');
+    console.error('❌ Erreur agriculture:', err);
   }
 }
-
-// ==================== CHARGEMENT DONNÉES SÉCURITÉ ====================
-
-async function loadSecurityData() {
-  try {
-    const res = await fetch(PROXY + encodeURIComponent(SECURITY_CSV_URL));
-    const csv = await res.text();
-    const rows = csv.trim().split('\n').map(r => r.split(',').map(c => c.trim()));
-    
-    allSecurityData = rows.slice(1).filter(row => row.length >= 3);
-    
-    if (allSecurityData.length > 0) {
-      updateSecurityTable();
-    }
-  } catch (err) {
-    console.error('❌ Erreur chargement données sécurité:', err);
-  }
-}
-
-// ==================== MISE À JOUR GRAPHIQUES ====================
 
 function updateCharts() {
-  const data = allAgriData.slice(-50); // Dernières 50 mesures
+  const data = allAgriData.slice(-50);
   
   climateChart.data.labels = data.map(r => formatDateTime(r[0]));
   climateChart.data.datasets[0].data = data.map(r => parseFloat(r[1]) || 0);
@@ -183,14 +119,12 @@ function updateCharts() {
   airChart.update('none');
 }
 
-// ==================== MISE À JOUR TABLEAU AGRICULTURE ====================
-
 function updateAgricultureTable() {
   const tableBody = document.getElementById('dataTable');
   const recentData = allAgriData.slice(-10).reverse();
   
   if (recentData.length === 0) {
-    tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Aucune donnée disponible</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Aucune donnée</td></tr>';
     return;
   }
   
@@ -205,14 +139,29 @@ function updateAgricultureTable() {
   `).join('');
 }
 
-// ==================== MISE À JOUR TABLEAU SÉCURITÉ ====================
+// ==================== DONNÉES SÉCURITÉ ====================
+async function loadSecurityData() {
+  try {
+    const res = await fetch(PROXY + encodeURIComponent(SECURITY_CSV_URL));
+    const csv = await res.text();
+    const rows = csv.trim().split('\n').map(r => r.split(',').map(c => c.trim()));
+    
+    allSecurityData = rows.slice(1).filter(row => row.length >= 3);
+    
+    if (allSecurityData.length > 0) {
+      updateSecurityTable();
+    }
+  } catch (err) {
+    console.error('❌ Erreur sécurité:', err);
+  }
+}
 
 function updateSecurityTable() {
   const tableBody = document.getElementById('securityTable');
   const recentData = allSecurityData.slice(-10).reverse();
   
   if (recentData.length === 0) {
-    tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Aucune donnée disponible</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Aucune donnée</td></tr>';
     return;
   }
   
@@ -232,61 +181,7 @@ function updateSecurityTable() {
   }).join('');
 }
 
-// ==================== MISE À JOUR BADGES DE STATUT ====================
-
-function updateStatusBadges(data) {
-  const temp = parseFloat(data[1]);
-  const humid = parseFloat(data[2]);
-  const gas = parseFloat(data[3]);
-  
-  // Badge température
-  const tempBadge = document.getElementById('tempBadge');
-  if (tempBadge) {
-    if (temp < 15 || temp > 35) {
-      tempBadge.className = 'status-badge danger';
-      tempBadge.textContent = 'Critique';
-    } else if (temp < 18 || temp > 28) {
-      tempBadge.className = 'status-badge warning';
-      tempBadge.textContent = 'Attention';
-    } else {
-      tempBadge.className = 'status-badge optimal';
-      tempBadge.textContent = 'Normal';
-    }
-  }
-  
-  // Badge humidité
-  const humidBadge = document.getElementById('humidBadge');
-  if (humidBadge) {
-    if (humid < 30 || humid > 90) {
-      humidBadge.className = 'status-badge danger';
-      humidBadge.textContent = 'Critique';
-    } else if (humid < 50 || humid > 80) {
-      humidBadge.className = 'status-badge warning';
-      humidBadge.textContent = 'Attention';
-    } else {
-      humidBadge.className = 'status-badge optimal';
-      humidBadge.textContent = 'Normal';
-    }
-  }
-  
-  // Badge gaz
-  const gasBadge = document.getElementById('gasBadge');
-  if (gasBadge) {
-    if (gas > 1000) {
-      gasBadge.className = 'status-badge danger';
-      gasBadge.textContent = 'Élevé';
-    } else if (gas > 600) {
-      gasBadge.className = 'status-badge warning';
-      gasBadge.textContent = 'Moyen';
-    } else {
-      gasBadge.className = 'status-badge optimal';
-      gasBadge.textContent = 'Normal';
-    }
-  }
-}
-
-// ==================== NAVIGATION MODULES ====================
-
+// ==================== NAVIGATION ====================
 function switchModule(module) {
   currentModule = module;
   document.querySelectorAll('.module').forEach(m => m.style.display = 'none');
@@ -299,13 +194,19 @@ function switchModule(module) {
     if (updateInterval) clearInterval(updateInterval);
     updateModuleConfig(module);
     startModuleUpdate(module);
+    
+    // IMPORTANT : Initialiser les caméras si module sécurité
+    if (module === 'security') {
+      setTimeout(() => {
+        initSecurityCameras();
+      }, 100);
+    }
   }
   
   showAlert('success', `📱 Module ${module === 'agriculture' ? 'Agriculture' : 'Sécurité'} activé`);
 }
 
 // ==================== CONFIGURATION MODULE ====================
-
 function updateModuleConfig(module) {
   const device = Object.values(devices).find(d => d.type === module && d.active);
   const configId = module === 'agriculture' ? 'agri-device-info' : 'sec-device-info';
@@ -314,26 +215,22 @@ function updateModuleConfig(module) {
   if (!configDiv) return;
   
   if (!device) {
-    configDiv.innerHTML = `
-      <div style="text-align: center; padding: 20px; opacity: 0.6;">
-        Aucun appareil actif. Ajoutez un ESP32 via l'onglet "🎛️ Appareils"
-      </div>
-    `;
+    configDiv.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.6;">Aucun appareil actif. Ajoutez un ESP32 via "🎛️ Appareils"</div>';
     return;
   }
   
   configDiv.innerHTML = `
-    <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
-      <div style="flex: 1;">
-        <div style="font-weight: 600; margin-bottom: 5px;">${getDeviceIcon(device.type)} ${device.name}</div>
-        <div style="font-size: 12px; opacity: 0.7;">📍 ${device.location}</div>
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+      <div style="flex:1;">
+        <div style="font-weight:600;margin-bottom:5px;">${getDeviceIcon(device.type)} ${device.name}</div>
+        <div style="font-size:12px;opacity:0.7;">📍 ${device.location}</div>
       </div>
-      <div style="flex: 2; display: flex; gap: 10px; align-items: center;">
-        <label style="font-weight: 600;">📡 IP:</label>
+      <div style="flex:2;display:flex;gap:10px;align-items:center;">
+        <label style="font-weight:600;">📡 IP:</label>
         <input type="text" id="edit-ip-${module}" value="${device.ip}" 
-               style="flex: 1; padding: 8px; background: #0f1117; border: 1px solid #2d3142; border-radius: 5px; color: white;">
-        <button class="btn btn-success btn-small" onclick="updateDeviceIP('${module}')">💾 Sauver</button>
-        <button class="btn btn-primary btn-small" onclick="testActiveDevice('${module}')">🔍 Tester</button>
+               style="flex:1;padding:8px;background:#0f1117;border:1px solid #2d3142;border-radius:5px;color:white;">
+        <button class="btn btn-success btn-small" onclick="updateDeviceIP('${module}')">💾</button>
+        <button class="btn btn-primary btn-small" onclick="testActiveDevice('${module}')">🔍</button>
       </div>
     </div>
   `;
@@ -349,9 +246,7 @@ function updateDeviceIP(module) {
     return;
   }
   
-  const deviceId = Object.keys(devices).find(key => devices[key] === device);
   device.ip = newIP;
-  
   localStorage.setItem('priva_devices', JSON.stringify(devices));
   showAlert('success', `✓ IP mise à jour: ${newIP}`);
   
@@ -367,21 +262,17 @@ async function testActiveDevice(module) {
   
   try {
     const res = await fetch(`http://${device.ip}/`, {mode: 'cors'});
-    const text = await res.text();
-    showAlert('success', `✓ Connexion réussie: ${text.substring(0, 50)}`);
+    await res.text();
+    showAlert('success', `✓ Connexion réussie`);
   } catch (err) {
     showAlert('danger', `❌ Connexion échouée`);
   }
 }
 
-// ==================== MISE À JOUR DONNÉES ESP32 ====================
-
+// ==================== MISE À JOUR ESP32 ====================
 function startModuleUpdate(module) {
   const device = Object.values(devices).find(d => d.type === module && d.active);
-  if (!device) {
-    console.log(`ℹ️ Aucun appareil ${module} actif`);
-    return;
-  }
+  if (!device) return;
   
   if (module === 'agriculture') {
     updateAgricultureData(device.ip);
@@ -397,40 +288,21 @@ async function updateAgricultureData(ip) {
     const res = await fetch(`http://${ip}/status`, {mode: 'cors'});
     const data = await res.json();
     
-    // Mettre à jour les valeurs des capteurs
     document.getElementById('tempValue').textContent = data.temperature.toFixed(1);
     document.getElementById('humidValue').textContent = data.humidity.toFixed(1);
     document.getElementById('gasValue').textContent = data.gas.toFixed(0);
     document.getElementById('dcValue').textContent = data.dc.toFixed(2);
     document.getElementById('modeDisplay').textContent = data.mode.toUpperCase();
     
-    // Mettre à jour l'état des actionneurs
     ['pompe', 'brumisateur', 'ventilateur', 'chauffage', 'eclairage', 'electrovanne'].forEach(d => 
       updateDeviceUI(d, data.devices[d])
     );
     
-    // Mettre à jour les paramètres
-    if (data.settings) {
-      document.getElementById('tempMin').value = data.settings.tempMin;
-      updateSlider('tempMin', data.settings.tempMin, '°C');
-      
-      document.getElementById('tempMax').value = data.settings.tempMax;
-      updateSlider('tempMax', data.settings.tempMax, '°C');
-      
-      document.getElementById('humidMin').value = data.settings.humMin;
-      updateSlider('humidMin', data.settings.humMin, '%');
-      
-      document.getElementById('humidMax').value = data.settings.humMax;
-      updateSlider('humidMax', data.settings.humMax, '%');
-    }
-    
-    // Statut de connexion
     document.getElementById('connectionStatus').className = 'status-dot connected';
     document.getElementById('connectionText').textContent = 'Connecté (Agriculture)';
   } catch (err) {
     document.getElementById('connectionStatus').className = 'status-dot disconnected';
     document.getElementById('connectionText').textContent = 'Déconnecté';
-    console.error('Erreur connexion ESP32 Agriculture:', err);
   }
 }
 
@@ -439,7 +311,6 @@ async function updateSecurityData(ip) {
     const res = await fetch(`http://${ip}/status`, {mode: 'cors'});
     const data = await res.json();
     
-    // Mettre à jour les capteurs
     document.getElementById('sec-door').textContent = data.doorOpen ? 'OUVERTE' : 'FERMÉE';
     document.getElementById('sec-door').style.color = data.doorOpen ? '#e63946' : '#00a651';
     
@@ -453,7 +324,6 @@ async function updateSecurityData(ip) {
       document.getElementById('sec-time').textContent = date.toLocaleTimeString();
     }
     
-    // Mettre à jour les actionneurs
     updateDeviceUI('lock', data.devices.lock);
     updateDeviceUI('alarm', data.devices.alarm);
     updateDeviceUI('lights', data.devices.lights);
@@ -463,12 +333,10 @@ async function updateSecurityData(ip) {
   } catch (err) {
     document.getElementById('connectionStatus').className = 'status-dot disconnected';
     document.getElementById('connectionText').textContent = 'Déconnecté';
-    console.error('Erreur connexion ESP32 Sécurité:', err);
   }
 }
 
-// ==================== MISE À JOUR UI ACTIONNEURS ====================
-
+// ==================== UI ACTIONNEURS ====================
 function updateDeviceUI(device, state) {
   const card = document.getElementById(device + 'Card');
   const status = document.getElementById(device + 'Status');
@@ -477,44 +345,28 @@ function updateDeviceUI(device, state) {
   if (state) {
     card.classList.add('active');
     const activeTexts = {
-      pompe: 'Actif',
-      brumisateur: 'Actif',
-      ventilateur: 'Actif',
-      chauffage: 'Actif',
-      eclairage: 'Allumé',
-      electrovanne: 'Ouverte',
-      lock: 'Déverrouillée',
-      alarm: 'Activée',
-      lights: 'Allumées'
+      pompe: 'Actif', brumisateur: 'Actif', ventilateur: 'Actif',
+      chauffage: 'Actif', eclairage: 'Allumé', electrovanne: 'Ouverte',
+      lock: 'Déverrouillée', alarm: 'Activée', lights: 'Allumées'
     };
     status.textContent = activeTexts[device] || 'Actif';
   } else {
     card.classList.remove('active');
     const inactiveTexts = {
-      pompe: 'Arrêté',
-      brumisateur: 'Arrêté',
-      ventilateur: 'Arrêté',
-      chauffage: 'Arrêté',
-      eclairage: 'Éteint',
-      electrovanne: 'Fermée',
-      lock: 'Verrouillée',
-      alarm: 'Désactivée',
-      lights: 'Éteintes'
+      pompe: 'Arrêté', brumisateur: 'Arrêté', ventilateur: 'Arrêté',
+      chauffage: 'Arrêté', eclairage: 'Éteint', electrovanne: 'Fermée',
+      lock: 'Verrouillée', alarm: 'Désactivée', lights: 'Éteintes'
     };
     status.textContent = inactiveTexts[device] || 'Arrêté';
   }
 }
 
 // ==================== CONTRÔLE ACTIONNEURS ====================
-
 async function toggleDevice(module, device) {
   const activeDevice = Object.values(devices).find(d => d.type === module && d.active);
   const card = document.getElementById(device + 'Card');
   const newState = !card.classList.contains('active');
   
-  console.log(`🔧 Toggle ${device} dans module ${module}: ${newState ? 'ON' : 'OFF'}`);
-  
-  // 1. Essayer via ESP32 local d'abord
   if (activeDevice) {
     try {
       const res = await fetch(`http://${activeDevice.ip}/control`, {
@@ -525,15 +377,12 @@ async function toggleDevice(module, device) {
       
       if (res.ok) {
         updateDeviceUI(device, newState);
-        showAlert('success', `✓ ${device} ${newState ? 'activé' : 'désactivé'} (local)`);
+        showAlert('success', `✓ ${device} ${newState ? 'activé' : 'désactivé'}`);
         return;
       }
-    } catch (err) {
-      console.log('❌ Local échoué, tentative via cloud...');
-    }
+    } catch (err) {}
   }
   
-  // 2. Essayer via Google Sheets
   try {
     const response = await fetch(COMMAND_API_URL, {
       method: 'POST',
@@ -546,28 +395,19 @@ async function toggleDevice(module, device) {
     });
     
     const result = await response.json();
-    console.log('📡 Réponse Google Sheets:', result);
     
     if (result.status === "success") {
       updateDeviceUI(device, newState);
       showAlert('success', `✓ ${device} ${newState ? 'activé' : 'désactivé'} (cloud)`);
-    } else {
-      showAlert('danger', '❌ Erreur: ' + result.message);
     }
   } catch (err) {
-    console.error('❌ Erreur cloud:', err);
-    showAlert('danger', '❌ Erreur de communication: ' + err.message);
+    showAlert('danger', '❌ Erreur commande');
   }
 }
-
-// ==================== CHANGER MODE AGRICULTURE ====================
 
 async function setMode(mode) {
   const activeDevice = Object.values(devices).find(d => d.type === 'agriculture' && d.active);
   
-  console.log(`🤖 Changement mode: ${mode}`);
-  
-  // 1. Essayer local
   if (activeDevice) {
     try {
       const res = await fetch(`http://${activeDevice.ip}/mode`, {
@@ -578,71 +418,14 @@ async function setMode(mode) {
       
       if (res.ok) {
         document.getElementById('modeDisplay').textContent = mode.toUpperCase();
-        showAlert('success', `✓ Mode ${mode} activé (local)`);
+        showAlert('success', `✓ Mode ${mode}`);
         return;
       }
-    } catch (err) {
-      console.log('❌ Local échoué, tentative via cloud...');
-    }
+    } catch (err) {}
   }
   
-  // 2. Essayer via Google Sheets
-  try {
-    const response = await fetch(COMMAND_API_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'text/plain;charset=utf-8'},
-      body: JSON.stringify({
-        cible: 'agriculture',
-        actionneur: 'mode',
-        etat: mode
-      })
-    });
-    
-    const result = await response.json();
-    
-    if (result.status === "success") {
-      document.getElementById('modeDisplay').textContent = mode.toUpperCase();
-      showAlert('success', `✓ Mode ${mode} activé (cloud)`);
-    } else {
-      showAlert('danger', '❌ Erreur mode');
-    }
-  } catch (err) {
-    showAlert('danger', '❌ Erreur changement mode');
-  }
+  showAlert('warning', '⚠️ Connectez un ESP32');
 }
-
-// ==================== CHANGER MODE SÉCURITÉ ====================
-
-async function setSecurityMode(mode) {
-  const activeDevice = Object.values(devices).find(d => d.type === 'security' && d.active);
-  
-  console.log(`🔒 Changement mode sécurité: ${mode}`);
-  
-  // Essayer via Google Sheets
-  try {
-    const response = await fetch(COMMAND_API_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'text/plain;charset=utf-8'},
-      body: JSON.stringify({
-        cible: 'securite',
-        actionneur: 'mode',
-        etat: mode
-      })
-    });
-    
-    const result = await response.json();
-    
-    if (result.status === "success") {
-      showAlert('success', `✓ Mode sécurité ${mode} activé`);
-    } else {
-      showAlert('danger', '❌ Erreur mode sécurité');
-    }
-  } catch (err) {
-    showAlert('danger', '❌ Erreur changement mode');
-  }
-}
-
-// ==================== ARRÊT D'URGENCE ====================
 
 async function emergencyStop() {
   if (!confirm('⚠️ CONFIRMER L\'ARRÊT D\'URGENCE ?')) return;
@@ -656,34 +439,13 @@ async function emergencyStop() {
       ['pompe', 'brumisateur', 'ventilateur', 'chauffage', 'eclairage', 'electrovanne'].forEach(d => 
         updateDeviceUI(d, false)
       );
-      document.getElementById('modeDisplay').textContent = 'MANUAL';
-      showAlert('danger', '🛑 ARRÊT D\'URGENCE ACTIVÉ');
+      showAlert('danger', '🛑 ARRÊT D\'URGENCE');
       return;
-    } catch (err) {
-      console.log('❌ Arrêt d\'urgence local échoué');
-    }
-  }
-  
-  // Désactiver via cloud
-  const devices_list = ['pompe', 'brumisateur', 'ventilateur', 'chauffage', 'eclairage', 'electrovanne'];
-  for (const device of devices_list) {
-    try {
-      await fetch(COMMAND_API_URL, {
-        method: 'POST',
-        headers: {'Content-Type': 'text/plain;charset=utf-8'},
-        body: JSON.stringify({
-          cible: 'agriculture',
-          actionneur: device,
-          etat: 0
-        })
-      });
     } catch (err) {}
   }
   
   showAlert('danger', '🛑 ARRÊT D\'URGENCE (cloud)');
 }
-
-// ==================== ENREGISTRER PARAMÈTRES ====================
 
 async function saveSettings() {
   const activeDevice = Object.values(devices).find(d => d.type === 'agriculture' && d.active);
@@ -705,22 +467,17 @@ async function saveSettings() {
       
       showAlert('success', '💾 Paramètres enregistrés');
       return;
-    } catch (err) {
-      console.log('❌ Sauvegarde locale échouée');
-    }
+    } catch (err) {}
   }
   
-  showAlert('warning', '⚠️ Connectez un ESP32 pour enregistrer les paramètres');
+  showAlert('warning', '⚠️ Connectez un ESP32');
 }
-
-// ==================== MISE À JOUR SLIDER ====================
 
 function updateSlider(id, val, unit) {
   document.getElementById(id + 'Val').textContent = val + unit;
 }
 
 // ==================== ALERTES ====================
-
 function showAlert(type, msg) {
   const alert = document.createElement('div');
   alert.className = `alert ${type}`;
@@ -729,8 +486,7 @@ function showAlert(type, msg) {
   setTimeout(() => alert.remove(), 5000);
 }
 
-// ==================== GESTIONNAIRE D'APPAREILS ====================
-
+// ==================== GESTIONNAIRE APPAREILS ====================
 function showDeviceManager() {
   document.querySelectorAll('.module').forEach(m => m.style.display = 'none');
   document.getElementById('deviceManager').style.display = 'block';
@@ -743,7 +499,7 @@ function renderDevicesList() {
   const list = document.getElementById('devicesList');
   
   if (Object.keys(devices).length === 0) {
-    list.innerHTML = '<div style="text-align:center;padding:40px;opacity:0.6;">🔧 Aucun appareil configuré. Cliquez sur "Ajouter ESP32" pour commencer.</div>';
+    list.innerHTML = '<div style="text-align:center;padding:40px;opacity:0.6;">Aucun appareil. Cliquez sur "Ajouter"</div>';
     return;
   }
   
@@ -751,19 +507,11 @@ function renderDevicesList() {
     <div class="device-item">
       <div class="device-info">
         <div class="device-name">${getDeviceIcon(dev.type)} ${dev.name}</div>
-        <div class="device-details">
-          📡 ${dev.ip} • 📍 ${dev.location} • 
-          <span style="color: ${dev.active ? '#00a651' : '#e63946'}; font-weight: bold;">
-            ${dev.active ? '✓ Actif' : '○ Inactif'}
-          </span>
-        </div>
+        <div class="device-details">📡 ${dev.ip} • 📍 ${dev.location} • <span style="color:${dev.active ? '#00a651' : '#e63946'};font-weight:bold;">${dev.active ? '✓ Actif' : '○ Inactif'}</span></div>
       </div>
       <div class="device-actions">
-        <button class="btn btn-small ${dev.active ? 'btn-danger' : 'btn-success'}" 
-                onclick="toggleDeviceActive('${id}')">
-          ${dev.active ? '⏸️' : '▶️'}
-        </button>
-        <button class="btn btn-small btn-primary" onclick="testDeviceConnection('${id}')">🔍 Test</button>
+        <button class="btn btn-small ${dev.active ? 'btn-danger' : 'btn-success'}" onclick="toggleDeviceActive('${id}')">${dev.active ? '⏸️' : '▶️'}</button>
+        <button class="btn btn-small btn-primary" onclick="testDeviceConnection('${id}')">🔍</button>
         <button class="btn btn-small btn-danger" onclick="deleteDevice('${id}')">🗑️</button>
       </div>
     </div>
@@ -796,15 +544,12 @@ function addDevice() {
   
   const id = 'dev_' + Date.now();
   devices[id] = {
-    name,
-    ip,
-    type,
+    name, ip, type,
     location: location || 'Non spécifié',
     active: true,
     addedAt: new Date().toISOString()
   };
   
-  // Désactiver les autres appareils du même type
   Object.entries(devices).forEach(([key, dev]) => {
     if (key !== id && dev.type === type) dev.active = false;
   });
@@ -813,14 +558,12 @@ function addDevice() {
   
   closeAddDeviceModal();
   renderDevicesList();
-  showAlert('success', `✓ ${name} ajouté avec succès`);
+  showAlert('success', `✓ ${name} ajouté`);
   
-  // Réinitialiser le formulaire
   document.getElementById('newDeviceName').value = '';
   document.getElementById('newDeviceIP').value = '';
   document.getElementById('newDeviceLocation').value = '';
   
-  // Basculer automatiquement vers le module correspondant
   if (type === 'agriculture' || type === 'security') {
     setTimeout(() => {
       const moduleBtn = document.querySelector(`.tab-btn[onclick*="switchModule('${type}')"]`);
@@ -833,14 +576,12 @@ function toggleDeviceActive(id) {
   const device = devices[id];
   
   if (!device.active) {
-    // Désactiver tous les autres appareils du même type
     Object.entries(devices).forEach(([key, dev]) => {
       if (dev.type === device.type) dev.active = false;
     });
     device.active = true;
     showAlert('success', `✓ ${device.name} activé`);
     
-    // Si on est déjà sur le module, redémarrer les mises à jour
     if (currentModule === device.type) {
       if (updateInterval) clearInterval(updateInterval);
       updateModuleConfig(device.type);
@@ -849,8 +590,6 @@ function toggleDeviceActive(id) {
   } else {
     device.active = false;
     showAlert('warning', `⏸️ ${device.name} désactivé`);
-    
-    // Arrêter les mises à jour si c'était l'appareil actif
     if (updateInterval) clearInterval(updateInterval);
   }
   
@@ -860,20 +599,19 @@ function toggleDeviceActive(id) {
 
 async function testDeviceConnection(id) {
   const device = devices[id];
-  showAlert('warning', `🔍 Test de connexion à ${device.name}...`);
+  showAlert('warning', `🔍 Test ${device.name}...`);
   
   try {
-    const res = await fetch(`http://${device.ip}/`, {mode: 'cors', timeout: 5000});
-    const text = await res.text();
-    showAlert('success', `✓ ${device.name} répond correctement`);
+    await fetch(`http://${device.ip}/`, {mode: 'cors', timeout: 5000});
+    showAlert('success', `✓ ${device.name} répond`);
   } catch (err) {
-    showAlert('danger', `❌ ${device.name} ne répond pas (vérifiez l'IP et le réseau)`);
+    showAlert('danger', `❌ ${device.name} ne répond pas`);
   }
 }
 
 function deleteDevice(id) {
   const device = devices[id];
-  if (!confirm(`Supprimer l'appareil "${device.name}" ?`)) return;
+  if (!confirm(`Supprimer "${device.name}" ?`)) return;
   
   delete devices[id];
   localStorage.setItem('priva_devices', JSON.stringify(devices));
@@ -881,100 +619,260 @@ function deleteDevice(id) {
   showAlert('success', `🗑️ ${device.name} supprimé`);
 }
 
-// ==================== UTILITAIRES ====================
+// ==================== ESP32-CAM SÉCURITÉ ====================
 
-function formatDateTime(dateStr) {
-  try {
-    const date = new Date(dateStr);
-    return date.toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
-  } catch {
-    return dateStr;
-  }
+function initSecurityCameras() {
+  console.log('📹 Initialisation caméras...', Object.keys(securityCameras).length, 'caméras');
+  renderSecurityCameras();
+  renderSecurityCaptures();
+  setInterval(checkCamerasStatus, 15000);
 }
 
-// ==================== DÉMARRAGE ====================
-
-window.addEventListener('DOMContentLoaded', init);
-// ==================== GESTION CAMÉRAS SÉCURITÉ ====================
-
-let securityCameras = {};
-let securityCaptures = [];
-let currentCameraForFullscreen = null;
-
-// Charger les données sauvegardées
-try {
-  const saved = localStorage.getItem('priva_security_cameras');
-  if (saved) securityCameras = JSON.parse(saved);
-  
-  const savedCaptures = localStorage.getItem('priva_security_captures');
-  if (savedCaptures) securityCaptures = JSON.parse(savedCaptures);
-} catch (e) {
-  console.error('Erreur chargement caméras:', e);
-}
-
-// Rendre les caméras
 function renderSecurityCameras() {
-  const container = document.getElementById('security-cameras-container');
-  if (!container) return;
+  const container = document.getElementById('security-cameras-grid');
+  if (!container) {
+    console.warn('⚠️ Container caméras introuvable');
+    return;
+  }
   
   const activeCameras = Object.entries(securityCameras).filter(([id, cam]) => cam.active);
   
   if (activeCameras.length === 0) {
-    container.innerHTML = '<div style="text-align: center; padding: 40px; opacity: 0.6; grid-column: 1/-1;">Aucune caméra configurée. Cliquez sur "➕ Ajouter Caméra"</div>';
+    container.innerHTML = '<div style="text-align:center;padding:40px;opacity:0.6;">Aucune caméra. Cliquez sur "➕ Ajouter Caméra"</div>';
     return;
   }
   
   container.innerHTML = activeCameras.map(([id, cam]) => `
-    <div style="background: #0f1117; border: 2px solid #2d3142; border-radius: 12px; padding: 15px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <div style="font-weight: 600;">📹 ${cam.name}</div>
+    <div class="security-camera-card" id="sec-cam-${id}">
+      <div class="camera-header">
+        <div class="camera-name">
+          📹 ${cam.name}
+          <div class="camera-status-indicator" id="sec-cam-status-${id}"></div>
+        </div>
         <button class="btn btn-small btn-danger" onclick="removeSecurityCamera('${id}')">🗑️</button>
       </div>
       
-      <img src="http://${cam.ip}:81/stream?t=${Date.now()}" 
-           style="width: 100%; border-radius: 8px; background: #000; min-height: 200px; cursor: pointer;"
-           onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')"
-           onerror="this.style.opacity='0.3'">
+      <img class="camera-stream-img" 
+           id="sec-cam-stream-${id}" 
+           src="http://${cam.ip}:81/stream?t=${Date.now()}"
+           onerror="handleCameraError('${id}')"
+           onload="handleCameraLoad('${id}')"
+           onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')">
       
-      <div style="display: flex; gap: 5px; margin-top: 10px; flex-wrap: wrap;">
-        <button class="btn btn-small btn-success" onclick="captureSecurityCamera('${id}', '${cam.name}', '${cam.ip}')">📸</button>
-        <button class="btn btn-small btn-primary" onclick="toggleCameraFlash('${id}', '${cam.ip}')">💡</button>
-      </div>
-      
-      <div style="font-size: 11px; opacity: 0.6; margin-top: 5px;">📍 ${cam.location} • ${cam.ip}</div>
-    </div>
-  `).join('');
+      <div class="camera-controls">
+        <button class="btn btn-small btn-success" onclick="captureSecurityCamera('${id}')">📸</button>
+        <button class="btn btn-small btn-primary" onclick="toggleSecurityFlash('${id}')">💡</button>
+        <button class="btn btn-small btn-primary" onclick="openCamera
+        // ==================== ESP32-CAM SÉCURITÉ - CODE CORRIGÉ ====================
+// Ajoutez ce code à la fin de votre app.js
+
+// Variables caméras
+let securityCameras = {};
+let securityCaptures = [];
+let currentFullscreenCamera = null;
+
+// Charger données sauvegardées
+try {
+  const savedCams = localStorage.getItem('priva_security_cameras');
+  if (savedCams) securityCameras = JSON.parse(savedCams);
+  
+  const savedCaps = localStorage.getItem('priva_security_captures');
+  if (savedCaps) securityCaptures = JSON.parse(savedCaps);
+} catch (e) {
+  console.error('Erreur chargement caméras:', e);
 }
 
-// Rendre les captures
-function renderSecurityCaptures() {
-  const container = document.getElementById('security-captures-container');
-  if (!container) return;
-  
-  if (securityCaptures.length === 0) {
-    container.innerHTML = '<div style="text-align: center; padding: 20px; opacity: 0.6; grid-column: 1/-1;">Aucune capture</div>';
+// Initialiser les caméras
+function initSecurityCameras() {
+  console.log('📹 Init caméras:', Object.keys(securityCameras).length);
+  renderSecurityCameras();
+  renderSecurityCaptures();
+  setInterval(checkCamerasStatus, 15000);
+}
+
+// Afficher les caméras
+function renderSecurityCameras() {
+  const grid = document.getElementById('security-cameras-grid');
+  if (!grid) {
+    console.warn('⚠️ Element security-cameras-grid introuvable!');
     return;
   }
   
-  container.innerHTML = securityCaptures.slice(0, 20).map((cap, idx) => `
-    <div style="position: relative; border-radius: 8px; overflow: hidden; cursor: pointer;" onclick="viewCapture(${idx})">
-      <img src="${cap.url}" style="width: 100%; height: 120px; object-fit: cover;">
-      <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); padding: 8px; font-size: 10px;">
-        ${cap.name}<br>${new Date(cap.timestamp).toLocaleTimeString()}
+  const active = Object.entries(securityCameras).filter(([id, cam]) => cam.active);
+  
+  if (active.length === 0) {
+    grid.innerHTML = '<div style="text-align:center;padding:40px;opacity:0.6;grid-column:1/-1;">Aucune caméra configurée</div>';
+    return;
+  }
+  
+  grid.innerHTML = active.map(([id, cam]) => `
+    <div class="security-camera-card" id="sec-cam-${id}">
+      <div class="camera-header">
+        <div class="camera-name">
+          📹 ${cam.name}
+          <div class="camera-status-indicator" id="status-${id}"></div>
+        </div>
+        <button class="btn btn-small btn-danger" onclick="removeSecurityCamera('${id}')">🗑️</button>
       </div>
-      <button onclick="event.stopPropagation(); deleteCapture(${idx})" 
-              style="position: absolute; top: 5px; right: 5px; background: rgba(230,57,70,0.95); border: none; border-radius: 50%; width: 25px; height: 25px; color: white; cursor: pointer;">✖</button>
+      
+      <img class="camera-stream-img" 
+           id="stream-${id}" 
+           src="http://${cam.ip}:81/stream?t=${Date.now()}"
+           onerror="handleCameraError('${id}')"
+           onload="handleCameraLoad('${id}')"
+           onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')"
+           alt="${cam.name}">
+      
+      <div class="camera-controls">
+        <button class="btn btn-small btn-success" onclick="captureCamera('${id}', '${cam.name}', '${cam.ip}')">📸</button>
+        <button class="btn btn-small btn-primary" onclick="toggleFlash('${id}', '${cam.ip}')">💡</button>
+        <button class="btn btn-small btn-primary" onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')">🔍</button>
+      </div>
+      
+      <div class="camera-info">📍 ${cam.location} • ${cam.ip}</div>
     </div>
   `).join('');
+  
+  console.log('✅ Caméras rendues:', active.length);
 }
 
-// Ouvrir modal ajout
+// Afficher captures
+function renderSecurityCaptures() {
+  const gallery = document.getElementById('security-captures-gallery');
+  if (!gallery) return;
+  
+  if (securityCaptures.length === 0) {
+    gallery.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.6;grid-column:1/-1;">Aucune capture</div>';
+    return;
+  }
+  
+  gallery.innerHTML = securityCaptures.slice(0, 20).map((cap, idx) => {
+    const date = new Date(cap.timestamp);
+    return `
+      <div class="capture-item" onclick="viewCapture(${idx})">
+        <img src="${cap.url}" alt="${cap.name}" loading="lazy">
+        <div class="capture-info">
+          <div>📹 ${cap.name}</div>
+          <div>⏰ ${date.toLocaleTimeString('fr-FR')}</div>
+        </div>
+        <button class="capture-delete" onclick="event.stopPropagation(); deleteCapture(${idx})">✖</button>
+      </div>
+    `;
+  }).join('');
+}
+
+// Gérer chargement image
+function handleCameraLoad(id) {
+  const indicator = document.getElementById(`status-${id}`);
+  const card = document.getElementById(`sec-cam-${id}`);
+  if (indicator) indicator.classList.remove('offline');
+  if (card) card.classList.remove('offline');
+}
+
+// Gérer erreur image
+function handleCameraError(id) {
+  const indicator = document.getElementById(`status-${id}`);
+  const card = document.getElementById(`sec-cam-${id}`);
+  if (indicator) indicator.classList.add('offline');
+  if (card) card.classList.add('offline');
+}
+
+// Vérifier statuts
+async function checkCamerasStatus() {
+  Object.entries(securityCameras).forEach(async ([id, cam]) => {
+    if (!cam.active) return;
+    
+    try {
+      const res = await fetch(`http://${cam.ip}/status`, {timeout: 5000});
+      if (res.ok) {
+        handleCameraLoad(id);
+      } else {
+        handleCameraError(id);
+      }
+    } catch (err) {
+      handleCameraError(id);
+    }
+  });
+}
+
+// Capturer photo
+function captureCamera(id, name, ip) {
+  showAlert('warning', '📸 Capture...');
+  
+  const captureUrl = `http://${ip}:81/capture?t=${Date.now()}`;
+  
+  const capture = {
+    id: 'cap_' + Date.now(),
+    cameraId: id,
+    name: name,
+    timestamp: new Date().toISOString(),
+    url: captureUrl
+  };
+  
+  securityCaptures.unshift(capture);
+  
+  if (securityCaptures.length > 100) {
+    securityCaptures = securityCaptures.slice(0, 100);
+  }
+  
+  localStorage.setItem('priva_security_captures', JSON.stringify(securityCaptures));
+  renderSecurityCaptures();
+  showAlert('success', `✅ Capturé: ${name}`);
+}
+
+// Capturer toutes
+function captureAllCameras() {
+  const active = Object.entries(securityCameras).filter(([id, cam]) => cam.active);
+  
+  if (active.length === 0) {
+    showAlert('warning', '⚠️ Aucune caméra');
+    return;
+  }
+  
+  showAlert('warning', `📸 Capture ${active.length} caméra(s)...`);
+  
+  active.forEach(([id, cam], idx) => {
+    setTimeout(() => captureCamera(id, cam.name, cam.ip), idx * 500);
+  });
+}
+
+// Toggle flash
+async function toggleFlash(id, ip) {
+  try {
+    await fetch(`http://${ip}/flash`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: 'state=1'
+    });
+    
+    setTimeout(async () => {
+      await fetch(`http://${ip}/flash`, {method: 'POST', body: 'state=0'});
+    }, 200);
+    
+    showAlert('success', '💡 Flash');
+  } catch (err) {
+    showAlert('danger', '❌ Erreur flash');
+  }
+}
+
+// Rafraîchir toutes
+function refreshAllCameras() {
+  Object.entries(securityCameras).forEach(([id, cam]) => {
+    const img = document.getElementById(`stream-${id}`);
+    if (img) {
+      img.src = `http://${cam.ip}:81/stream?t=${Date.now()}`;
+    }
+  });
+  showAlert('success', '🔄 Rafraîchi');
+}
+
+// Ouvrir modal ajout caméra
 function openAddCameraModal() {
   const modal = document.getElementById('addCameraModal');
   if (modal) modal.classList.add('active');
 }
 
-// Fermer modal ajout
+// Fermer modal ajout caméra
 function closeAddCameraModal() {
   const modal = document.getElementById('addCameraModal');
   if (modal) modal.classList.remove('active');
@@ -996,7 +894,8 @@ function addSecurityCamera() {
     name,
     ip,
     location: location || 'Non spécifié',
-    active: true
+    active: true,
+    addedAt: new Date().toISOString()
   };
   
   localStorage.setItem('priva_security_cameras', JSON.stringify(securityCameras));
@@ -1021,80 +920,10 @@ function removeSecurityCamera(id) {
   showAlert('success', `🗑️ ${cam.name} supprimée`);
 }
 
-// Capturer photo
-function captureSecurityCamera(id, name, ip) {
-  const captureUrl = `http://${ip}:81/capture?t=${Date.now()}`;
-  
-  securityCaptures.unshift({
-    id: 'cap_' + Date.now(),
-    name: name,
-    url: captureUrl,
-    timestamp: new Date().toISOString()
-  });
-  
-  if (securityCaptures.length > 100) securityCaptures = securityCaptures.slice(0, 100);
-  
-  localStorage.setItem('priva_security_captures', JSON.stringify(securityCaptures));
-  renderSecurityCaptures();
-  showAlert('success', `📸 ${name} capturée`);
-}
-
-// Capturer toutes
-function captureAllSecurityCameras() {
-  const active = Object.entries(securityCameras).filter(([id, cam]) => cam.active);
-  
-  if (active.length === 0) {
-    showAlert('warning', '⚠️ Aucune caméra');
-    return;
-  }
-  
-  active.forEach(([id, cam]) => {
-    setTimeout(() => captureSecurityCamera(id, cam.name, cam.ip), 300);
-  });
-  
-  showAlert('success', `📸 ${active.length} caméra(s)`);
-}
-
-// Toggle flash
-async function toggleCameraFlash(id, ip) {
-  try {
-    await fetch(`http://${ip}/flash`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: 'state=1'
-    });
-    
-    setTimeout(async () => {
-      await fetch(`http://${ip}/flash`, { method: 'POST', body: 'state=0' });
-    }, 200);
-    
-    showAlert('success', '💡 Flash');
-  } catch (e) {
-    showAlert('danger', '❌ Erreur flash');
-  }
-}
-
-// Rafraîchir toutes
-function refreshAllSecurityCameras() {
-  renderSecurityCameras();
-  showAlert('success', '🔄 Rafraîchi');
-}
-
-// Vider captures
-function clearAllSecurityCaptures() {
-  if (!confirm('Vider toutes les captures ?')) return;
-  
-  securityCaptures = [];
-  localStorage.setItem('priva_security_captures', JSON.stringify(securityCaptures));
-  renderSecurityCaptures();
-  showAlert('success', '🗑️ Vidé');
-}
-
 // Voir capture
 function viewCapture(idx) {
   const cap = securityCaptures[idx];
   if (!cap) return;
-  
   openCameraFullscreen(null, cap.name, null, cap.url);
 }
 
@@ -1106,17 +935,50 @@ function deleteCapture(idx) {
   showAlert('success', '🗑️ Supprimée');
 }
 
-// Plein écran
+// Vider captures
+function clearSecurityCaptures() {
+  if (!confirm('Vider toutes les captures ?')) return;
+  
+  securityCaptures = [];
+  localStorage.setItem('priva_security_captures', JSON.stringify(securityCaptures));
+  renderSecurityCaptures();
+  showAlert('success', '🗑️ Galerie vidée');
+}
+
+// Changer vue caméras
+function setCameraView(mode) {
+  const grid = document.getElementById('security-cameras-grid');
+  if (!grid) return;
+  
+  if (mode === 'single') {
+    grid.className = 'cameras-single';
+  } else {
+    grid.className = 'cameras-grid';
+  }
+  showAlert('success', `📺 Vue ${mode === 'single' ? 'simple' : 'grille'}`);
+}
+
+// Plein écran caméra
 function openCameraFullscreen(id, name, ip, captureUrl = null) {
   const modal = document.getElementById('cameraFullscreenModal');
-  const img = document.getElementById('fullscreen-camera-image');
-  const title = document.getElementById('fullscreen-camera-title');
+  const img = document.getElementById('fullscreen-camera-img');
+  const title = document.getElementById('fullscreen-camera-name');
   
-  if (!modal || !img || !title) return;
+  if (!modal || !img || !title) {
+    console.warn('⚠️ Elements modal introuvables');
+    return;
+  }
   
   title.textContent = `📹 ${name}`;
-  img.src = captureUrl || `http://${ip}:81/stream?t=${Date.now()}`;
-  currentCameraForFullscreen = captureUrl ? null : { id, name, ip };
+  
+  if (captureUrl) {
+    img.src = captureUrl;
+    currentFullscreenCamera = null;
+  } else {
+    img.src = `http://${ip}:81/stream?t=${Date.now()}`;
+    currentFullscreenCamera = {id, name, ip};
+  }
+  
   modal.classList.add('active');
 }
 
@@ -1124,41 +986,33 @@ function openCameraFullscreen(id, name, ip, captureUrl = null) {
 function closeCameraFullscreen() {
   const modal = document.getElementById('cameraFullscreenModal');
   if (modal) modal.classList.remove('active');
-  currentCameraForFullscreen = null;
+  currentFullscreenCamera = null;
 }
 
 // Capturer depuis plein écran
 function captureFromFullscreen() {
-  if (currentCameraForFullscreen) {
-    const { id, name, ip } = currentCameraForFullscreen;
-    captureSecurityCamera(id, name, ip);
+  if (currentFullscreenCamera) {
+    const {id, name, ip} = currentFullscreenCamera;
+    captureCamera(id, name, ip);
   }
 }
 
 // Flash depuis plein écran
-function toggleFlashFromFullscreen() {
-  if (currentCameraForFullscreen) {
-    toggleCameraFlash(currentCameraForFullscreen.id, currentCameraForFullscreen.ip);
+function toggleFlashFullscreen() {
+  if (currentFullscreenCamera) {
+    toggleFlash(currentFullscreenCamera.id, currentFullscreenCamera.ip);
   }
 }
 
-// Initialiser au chargement du module sécurité
-const originalSwitchModule = switchModule;
-switchModule = function(module) {
-  originalSwitchModule(module);
+// Télécharger capture
+function downloadCapture() {
+  const img = document.getElementById('fullscreen-camera-img');
+  if (!img) return;
   
-  if (module === 'security') {
-    setTimeout(() => {
-      renderSecurityCameras();
-      renderSecurityCaptures();
-    }, 100);
-  }
-};
+  const link = document.createElement('a');
+  link.href = img.src;
+  link.download = `capture_${Date.now()}.jpg`;
+  link.click();
+}
 
-// Initialiser au chargement de la page
-window.addEventListener('DOMContentLoaded', () => {
-  if (Object.keys(securityCameras).length > 0) {
-    renderSecurityCameras();
-    renderSecurityCaptures();
-  }
-});
+console.log('✅ Code ESP32-CAM chargé');
