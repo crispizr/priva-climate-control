@@ -627,14 +627,21 @@ function initSecurityCameras() {
   renderSecurityCaptures();
   setInterval(checkCamerasStatus, 15000);
 }
+// ===== RENDU CAMÉRAS AVEC REFRESH AUTOMATIQUE =====
+// Remplacez la fonction renderSecurityCameras() dans votre app.js
 
-// ===== RENDU CAMÉRAS =====
+let cameraRefreshIntervals = {};
+
 function renderSecurityCameras() {
   const grid = document.getElementById('security-cameras-grid');
   if (!grid) {
     console.error('❌ Element security-cameras-grid introuvable!');
     return;
   }
+  
+  // Nettoyer les anciens intervals
+  Object.values(cameraRefreshIntervals).forEach(interval => clearInterval(interval));
+  cameraRefreshIntervals = {};
   
   const active = Object.entries(securityCameras).filter(([id, cam]) => cam.active);
   
@@ -653,13 +660,22 @@ function renderSecurityCameras() {
         <button class="btn btn-small btn-danger" onclick="removeSecurityCamera('${id}')">🗑️</button>
       </div>
       
-      <img class="camera-stream-img" 
-           id="stream-${id}" 
-           src="http://${cam.ip}:81/stream?t=${Date.now()}"
-           onerror="handleCameraError('${id}')"
-           onload="handleCameraLoad('${id}')"
-           onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')"
-           alt="${cam.name}">
+      <!-- CHANGEMENT : Utiliser un conteneur pour l'image -->
+      <div style="position: relative; background: #000; border-radius: 8px; min-height: 250px; overflow: hidden;">
+        <img class="camera-stream-img" 
+             id="stream-${id}" 
+             src="http://${cam.ip}:81/capture?t=${Date.now()}"
+             onerror="handleCameraError('${id}')"
+             onload="handleCameraLoad('${id}')"
+             onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')"
+             alt="${cam.name}"
+             style="width: 100%; height: 100%; object-fit: cover;">
+        
+        <!-- Indicateur de chargement -->
+        <div id="loading-${id}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; display: none;">
+          ⏳ Chargement...
+        </div>
+      </div>
       
       <div class="camera-controls">
         <button class="btn btn-small btn-success" onclick="captureCamera('${id}', '${cam.name}', '${cam.ip}')">📸 Capturer</button>
@@ -667,12 +683,89 @@ function renderSecurityCameras() {
         <button class="btn btn-small btn-primary" onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')">🔍 Zoom</button>
       </div>
       
-      <div class="camera-info">📍 ${cam.location} • 🔗 ${cam.ip}</div>
+      <div class="camera-info">
+        📍 ${cam.location} • 🔗 ${cam.ip} • 
+        <span style="font-size: 10px; opacity: 0.6;">FPS: <span id="fps-${id}">--</span></span>
+      </div>
     </div>
   `).join('');
   
   console.log('✅ Caméras rendues:', active.length);
+  
+  // Démarrer le refresh automatique pour chaque caméra
+  active.forEach(([id, cam]) => {
+    startCameraAutoRefresh(id, cam.ip);
+  });
 }
+
+// ===== REFRESH AUTOMATIQUE DES CAMÉRAS =====
+function startCameraAutoRefresh(id, ip) {
+  let frameCount = 0;
+  let lastTime = Date.now();
+  
+  // Rafraîchir toutes les 500ms (2 FPS)
+  // Vous pouvez changer pour 333ms (3 FPS) ou 200ms (5 FPS)
+  cameraRefreshIntervals[id] = setInterval(() => {
+    const img = document.getElementById(`stream-${id}`);
+    if (img) {
+      const timestamp = Date.now();
+      img.src = `http://${ip}:81/capture?t=${timestamp}`;
+      
+      // Calculer FPS
+      frameCount++;
+      const now = Date.now();
+      if (now - lastTime >= 1000) {
+        const fps = Math.round(frameCount * 1000 / (now - lastTime));
+        const fpsElement = document.getElementById(`fps-${id}`);
+        if (fpsElement) fpsElement.textContent = fps;
+        frameCount = 0;
+        lastTime = now;
+      }
+    } else {
+      clearInterval(cameraRefreshIntervals[id]);
+    }
+  }, 500); // 500ms = 2 FPS
+}
+
+// ===== GESTION ERREUR =====
+function handleCameraError(id) {
+  const indicator = document.getElementById(`status-${id}`);
+  const card = document.getElementById(`sec-cam-${id}`);
+  const loading = document.getElementById(`loading-${id}`);
+  
+  if (indicator) indicator.classList.add('offline');
+  if (card) card.classList.add('offline');
+  if (loading) {
+    loading.style.display = 'block';
+    loading.textContent = '❌ Hors ligne';
+  }
+}
+
+// ===== GESTION CHARGEMENT =====
+function handleCameraLoad(id) {
+  const indicator = document.getElementById(`status-${id}`);
+  const card = document.getElementById(`sec-cam-${id}`);
+  const loading = document.getElementById(`loading-${id}`);
+  
+  if (indicator) indicator.classList.remove('offline');
+  if (card) card.classList.remove('offline');
+  if (loading) loading.style.display = 'none';
+}
+
+// ===== NETTOYAGE LORS DU CHANGEMENT DE MODULE =====
+const originalSwitchModule = window.switchModule;
+window.switchModule = function(module) {
+  // Nettoyer les intervals quand on quitte le module sécurité
+  if (currentModule === 'security' && module !== 'security') {
+    Object.values(cameraRefreshIntervals).forEach(interval => clearInterval(interval));
+    cameraRefreshIntervals = {};
+  }
+  
+  // Appeler la fonction originale
+  originalSwitchModule(module);
+};
+
+console.log('✅ Code caméra avec auto-refresh chargé');
 
 // ===== RENDU CAPTURES =====
 function renderSecurityCaptures() {
