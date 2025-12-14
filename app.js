@@ -724,7 +724,7 @@ function startCameraAutoRefresh(id, ip) {
     } else {
       clearInterval(cameraRefreshIntervals[id]);
     }
-  }, 200); // 500ms = 2 FPS
+  }, 800); // 500ms = 2 FPS
 }
 
 // ===== GESTION ERREUR =====
