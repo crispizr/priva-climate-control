@@ -893,3 +893,183 @@ document.addEventListener('visibilitychange', () => {
 });
 
 console.log('✅ Code caméra corrigé chargé');
+
+// ==================== ENREGISTRER DANS GALERIE ====================
+// Ajoutez ces fonctions à votre app.js
+
+// ===== FONCTION 1 : CAPTURER ET PARTAGER (POUR GALERIE) =====
+async function captureAndSaveToGallery(id, name, ip) {
+  showAlert('warning', '📸 Capture en cours...');
+  
+  try {
+    const captureUrl = `http://${ip}:81/capture?t=${Date.now()}`;
+    
+    // Télécharger l'image en blob
+    const response = await fetch(captureUrl);
+    const blob = await response.blob();
+    
+    // Créer un fichier
+    const date = new Date();
+    const dateStr = date.toLocaleDateString('fr-FR').replace(/\//g, '-');
+    const timeStr = date.toLocaleTimeString('fr-FR').replace(/:/g, '-');
+    const filename = `${name}_${dateStr}_${timeStr}.jpg`;
+    
+    const file = new File([blob], filename, { type: 'image/jpeg' });
+    
+    // Vérifier si l'API Web Share est disponible
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      // Utiliser l'API de partage native
+      await navigator.share({
+        files: [file],
+        title: 'Photo PRIVA',
+        text: `Photo de ${name}`
+      });
+      
+      showAlert('success', '✅ Photo partagée ! Enregistrez-la dans votre galerie');
+      
+      // Sauvegarder aussi dans la galerie de l'app
+      const capture = {
+        id: 'cap_' + Date.now(),
+        cameraId: id,
+        name: name,
+        timestamp: new Date().toISOString(),
+        url: captureUrl
+      };
+      
+      securityCaptures.unshift(capture);
+      if (securityCaptures.length > 100) {
+        securityCaptures = securityCaptures.slice(0, 100);
+      }
+      
+      localStorage.setItem('priva_security_captures', JSON.stringify(securityCaptures));
+      renderSecurityCaptures();
+      
+    } else {
+      // Fallback : téléchargement classique
+      console.warn('⚠️ Web Share API non disponible, téléchargement classique');
+      downloadImageFromUrl(captureUrl, filename);
+      showAlert('info', '📥 Photo téléchargée. Déplacez-la manuellement dans votre galerie.');
+    }
+    
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      showAlert('warning', '⚠️ Partage annulé');
+    } else {
+      console.error('Erreur:', error);
+      showAlert('danger', '❌ Erreur lors du partage');
+    }
+  }
+}
+
+// ===== FONCTION 2 : SAUVEGARDER DEPUIS LA GALERIE =====
+async function saveToGalleryFromCaptures(captureIndex) {
+  const capture = securityCaptures[captureIndex];
+  if (!capture) return;
+  
+  showAlert('warning', '📸 Préparation...');
+  
+  try {
+    // Télécharger l'image
+    const response = await fetch(capture.url);
+    const blob = await response.blob();
+    
+    const date = new Date(capture.timestamp);
+    const dateStr = date.toLocaleDateString('fr-FR').replace(/\//g, '-');
+    const timeStr = date.toLocaleTimeString('fr-FR').replace(/:/g, '-');
+    const filename = `${capture.name}_${dateStr}_${timeStr}.jpg`;
+    
+    const file = new File([blob], filename, { type: 'image/jpeg' });
+    
+    // Vérifier si Web Share est disponible
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: 'Photo PRIVA',
+        text: `Photo de ${capture.name}`
+      });
+      
+      showAlert('success', '✅ Photo partagée ! Enregistrez-la dans votre galerie');
+    } else {
+      // Téléchargement classique
+      downloadImageFromUrl(capture.url, filename);
+      showAlert('info', '📥 Photo téléchargée');
+    }
+    
+  } catch (error) {
+    if (error.name !== 'AbortError') {
+      console.error('Erreur:', error);
+      showAlert('danger', '❌ Erreur lors du partage');
+    }
+  }
+}
+
+// ===== FONCTION 3 : TÉLÉCHARGER TOUTES VERS GALERIE =====
+async function saveAllToGallery() {
+  if (securityCaptures.length === 0) {
+    showAlert('warning', '⚠️ Aucune capture à partager');
+    return;
+  }
+  
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  
+  if (!isMobile) {
+    showAlert('info', '📱 Cette fonction est optimisée pour mobile. Utilisez "Télécharger Tout" sur ordinateur.');
+    return;
+  }
+  
+  showAlert('info', `📸 Partage de ${securityCaptures.length} photo(s)...`);
+  
+  // Sur mobile, on ne peut partager qu'une image à la fois
+  for (let i = 0; i < Math.min(securityCaptures.length, 10); i++) {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    try {
+      const capture = securityCaptures[i];
+      const response = await fetch(capture.url);
+      const blob = await response.blob();
+      
+      const date = new Date(capture.timestamp);
+      const filename = `${capture.name}_${date.toLocaleDateString('fr-FR').replace(/\//g, '-')}.jpg`;
+      const file = new File([blob], filename, { type: 'image/jpeg' });
+      
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: `Photo ${i + 1}/${Math.min(securityCaptures.length, 10)}`
+        });
+      }
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        showAlert('warning', '⚠️ Partage annulé');
+        break;
+      }
+    }
+  }
+  
+  showAlert('success', '✅ Partage terminé');
+}
+
+// ===== FONCTION 4 : VÉRIFIER COMPATIBILITÉ =====
+function checkGalleryFeatureSupport() {
+  const hasWebShare = 'share' in navigator && 'canShare' in navigator;
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  
+  if (hasWebShare && isMobile) {
+    console.log('✅ Web Share API disponible - Fonction Galerie activée');
+    return true;
+  } else {
+    console.log('⚠️ Web Share API non disponible - Fallback téléchargement');
+    return false;
+  }
+}
+
+// Vérifier au chargement
+document.addEventListener('DOMContentLoaded', () => {
+  const supported = checkGalleryFeatureSupport();
+  
+  if (supported) {
+    showAlert('success', '✅ Fonction "Sauvegarder dans Galerie" activée');
+  }
+});
+
+console.log('✅ Fonctions Galerie chargées');
