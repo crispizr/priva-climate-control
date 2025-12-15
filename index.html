@@ -306,7 +306,156 @@
             </div>
           </div>
         </div>
+        
+  <!-- ========================================= -->
+    <!-- 309 Ajout -->
+    <!-- ========================================= -->
+// ==================== RENDU CAMÉRAS AVEC BOUTON GALERIE ====================
+// Remplacez votre fonction renderSecurityCameras
 
+function renderSecurityCameras() {
+  const grid = document.getElementById('security-cameras-grid');
+  if (!grid) {
+    console.error('❌ Element security-cameras-grid introuvable!');
+    return;
+  }
+  
+  // Nettoyer les anciens intervals
+  Object.values(cameraRefreshIntervals).forEach(interval => clearInterval(interval));
+  cameraRefreshIntervals = {};
+  
+  const active = Object.entries(securityCameras).filter(([id, cam]) => cam.active);
+  
+  if (active.length === 0) {
+    grid.innerHTML = '<div style="text-align:center;padding:40px;opacity:0.6;">Aucune caméra configurée. Cliquez sur "➕ Ajouter Caméra"</div>';
+    return;
+  }
+  
+  // Vérifier si Web Share est disponible
+  const hasWebShare = 'share' in navigator && 'canShare' in navigator;
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const showGalleryButton = hasWebShare && isMobile;
+  
+  grid.innerHTML = active.map(([id, cam]) => `
+    <div class="security-camera-card" id="sec-cam-${id}">
+      <div class="camera-header">
+        <div class="camera-name">
+          📹 ${cam.name}
+          <div class="camera-status-indicator" id="status-${id}"></div>
+        </div>
+        <button class="btn btn-small btn-danger" onclick="removeSecurityCamera('${id}')">🗑️</button>
+      </div>
+      
+      <!-- Conteneur image -->
+      <div style="position: relative; background: #000; border-radius: 8px; min-height: 250px; overflow: hidden;">
+        <img class="camera-stream-img" 
+             id="stream-${id}" 
+             src="http://${cam.ip}:81/capture?t=${Date.now()}"
+             onerror="handleCameraError('${id}')"
+             onload="handleCameraLoad('${id}')"
+             onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')"
+             alt="${cam.name}"
+             style="width: 100%; height: 100%; object-fit: cover;">
+        
+        <div id="loading-${id}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; display: none;">
+          ⏳ Chargement...
+        </div>
+      </div>
+      
+      <!-- Contrôles avec bouton galerie -->
+      <div class="camera-controls">
+        <button class="btn btn-small btn-success" onclick="captureCamera('${id}', '${cam.name}', '${cam.ip}')">
+          📸
+        </button>
+        
+        ${showGalleryButton ? `
+          <button class="btn btn-small btn-success" onclick="captureAndSaveToGallery('${id}', '${cam.name}', '${cam.ip}')" title="Enregistrer dans la galerie">
+            📱 Galerie
+          </button>
+        ` : `
+          <button class="btn btn-small btn-info" onclick="captureAndDownload('${id}', '${cam.name}', '${cam.ip}')" title="Capturer et télécharger">
+            📥 DL
+          </button>
+        `}
+        
+        <button class="btn btn-small btn-primary" onclick="toggleFlash('${id}', '${cam.ip}')">
+          💡
+        </button>
+        <button class="btn btn-small btn-primary" onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')">
+          🔍
+        </button>
+      </div>
+      
+      <div class="camera-info">
+        📍 ${cam.location} • 🔗 ${cam.ip} • 
+        <span style="font-size: 10px; opacity: 0.6;">FPS: <span id="fps-${id}">--</span></span>
+      </div>
+    </div>
+  `).join('');
+  
+  console.log('✅ Caméras rendues:', active.length, showGalleryButton ? '(avec bouton Galerie)' : '');
+  
+  // Démarrer le refresh automatique
+  active.forEach(([id, cam]) => {
+    startCameraAutoRefresh(id, cam.ip);
+  });
+}
+
+// ==================== RENDU CAPTURES AVEC BOUTON GALERIE ====================
+// Remplacez votre fonction renderSecurityCaptures
+
+function renderSecurityCaptures() {
+  const gallery = document.getElementById('security-captures-gallery');
+  if (!gallery) return;
+  
+  if (securityCaptures.length === 0) {
+    gallery.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.6;">Aucune capture</div>';
+    return;
+  }
+  
+  // Vérifier si Web Share est disponible
+  const hasWebShare = 'share' in navigator && 'canShare' in navigator;
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const showGalleryButton = hasWebShare && isMobile;
+  
+  gallery.innerHTML = securityCaptures.slice(0, 20).map((cap, idx) => {
+    const date = new Date(cap.timestamp);
+    return `
+      <div class="capture-item" onclick="viewCapture(${idx})">
+        <img src="${cap.url}" alt="${cap.name}" loading="lazy">
+        <div class="capture-info">
+          <div>📹 ${cap.name}</div>
+          <div>⏰ ${date.toLocaleTimeString('fr-FR')}</div>
+        </div>
+        
+        ${showGalleryButton ? `
+          <!-- Bouton Galerie (mobile) -->
+          <button class="capture-gallery" 
+                  onclick="event.stopPropagation(); saveToGalleryFromCaptures(${idx})"
+                  title="Enregistrer dans galerie">
+            📱
+          </button>
+        ` : `
+          <!-- Bouton Télécharger (desktop) -->
+          <button class="capture-download" 
+                  onclick="event.stopPropagation(); downloadCaptureFromGallery(${idx})"
+                  title="Télécharger">
+            ⬇️
+          </button>
+        `}
+        
+        <!-- Bouton supprimer -->
+        <button class="capture-delete" 
+                onclick="event.stopPropagation(); deleteCapture(${idx})"
+                title="Supprimer">
+          ✖
+        </button>
+      </div>
+    `;
+  }).join('');
+}
+        
+        
         <!-- Tableau des événements sécurité -->
         <div class="card">
           <div class="card-header"><div class="card-title">📋 Événements Récents</div></div>
