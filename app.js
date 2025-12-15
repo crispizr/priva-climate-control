@@ -618,335 +618,235 @@ function deleteDevice(id) {
   renderDevicesList();
   showAlert('success', `🗑️ ${device.name} supprimé`);
 }
-// ==================== CODE ESP32-CAM À AJOUTER À LA FIN DE app.js ====================
 
-// ===== INITIALISATION CAMÉRAS =====
-function initSecurityCameras() {
-  console.log('📹 Initialisation caméras:', Object.keys(securityCameras).length);
-  renderSecurityCameras();
-  renderSecurityCaptures();
-  setInterval(checkCamerasStatus, 15000);
-}
-// ===== RENDU CAMÉRAS AVEC REFRESH AUTOMATIQUE =====
-// Remplacez la fonction renderSecurityCameras() dans votre app.js
+// ==================== CORRECTION RAFRAÎCHISSEMENT CAMÉRAS ====================
+// Remplacez ces fonctions dans votre app.js
 
 let cameraRefreshIntervals = {};
+let fullscreenRefreshInterval = null;
+let isSecurityModuleActive = false;
 
-function renderSecurityCameras() {
-  const grid = document.getElementById('security-cameras-grid');
-  if (!grid) {
-    console.error('❌ Element security-cameras-grid introuvable!');
-    return;
-  }
-  
-  // Nettoyer les anciens intervals
-  Object.values(cameraRefreshIntervals).forEach(interval => clearInterval(interval));
-  cameraRefreshIntervals = {};
-  
-  const active = Object.entries(securityCameras).filter(([id, cam]) => cam.active);
-  
-  if (active.length === 0) {
-    grid.innerHTML = '<div style="text-align:center;padding:40px;opacity:0.6;">Aucune caméra configurée. Cliquez sur "➕ Ajouter Caméra"</div>';
-    return;
-  }
-  
-  grid.innerHTML = active.map(([id, cam]) => `
-    <div class="security-camera-card" id="sec-cam-${id}">
-      <div class="camera-header">
-        <div class="camera-name">
-          📹 ${cam.name}
-          <div class="camera-status-indicator" id="status-${id}"></div>
-        </div>
-        <button class="btn btn-small btn-danger" onclick="removeSecurityCamera('${id}')">🗑️</button>
-      </div>
-      
-      <!-- CHANGEMENT : Utiliser un conteneur pour l'image -->
-      <div style="position: relative; background: #000; border-radius: 8px; min-height: 250px; overflow: hidden;">
-        <img class="camera-stream-img" 
-             id="stream-${id}" 
-             src="http://${cam.ip}:81/capture?t=${Date.now()}"
-             onerror="handleCameraError('${id}')"
-             onload="handleCameraLoad('${id}')"
-             onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')"
-             alt="${cam.name}"
-             style="width: 100%; height: 100%; object-fit: cover;">
-        
-        <!-- Indicateur de chargement -->
-        <div id="loading-${id}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; display: none;">
-          ⏳ Chargement...
-        </div>
-      </div>
-      
-      <div class="camera-controls">
-        <button class="btn btn-small btn-success" onclick="captureCamera('${id}', '${cam.name}', '${cam.ip}')">📸 Capturer</button>
-        <button class="btn btn-small btn-primary" onclick="toggleFlash('${id}', '${cam.ip}')">💡 Flash</button>
-        <button class="btn btn-small btn-primary" onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')">🔍 Zoom</button>
-      </div>
-      
-      <div class="camera-info">
-        📍 ${cam.location} • 🔗 ${cam.ip} • 
-        <span style="font-size: 10px; opacity: 0.6;">FPS: <span id="fps-${id}">--</span></span>
-      </div>
-    </div>
-  `).join('');
-  
-  console.log('✅ Caméras rendues:', active.length);
-  
-  // Démarrer le refresh automatique pour chaque caméra
-  active.forEach(([id, cam]) => {
-    startCameraAutoRefresh(id, cam.ip);
-  });
-}
-
-// ===== REFRESH AUTOMATIQUE DES CAMÉRAS =====
+// ===== DÉMARRAGE REFRESH AUTOMATIQUE (CORRIGÉ) =====
 function startCameraAutoRefresh(id, ip) {
+  // Nettoyer l'ancien interval s'il existe
+  if (cameraRefreshIntervals[id]) {
+    clearInterval(cameraRefreshIntervals[id]);
+  }
+  
   let frameCount = 0;
   let lastTime = Date.now();
+  let errorCount = 0;
+  const MAX_ERRORS = 3;
   
-  // Rafraîchir toutes les 500ms (2 FPS)
-  // Vous pouvez changer pour 333ms (3 FPS) ou 200ms (5 FPS)
-  cameraRefreshIntervals[id] = setInterval(() => {
-    const img = document.getElementById(`stream-${id}`);
-    if (img) {
-      const timestamp = Date.now();
-      img.src = `http://${ip}:81/capture?t=${timestamp}`;
-      
-      // Calculer FPS
-      frameCount++;
-      const now = Date.now();
-      if (now - lastTime >= 1000) {
-        const fps = Math.round(frameCount * 1000 / (now - lastTime));
-        const fpsElement = document.getElementById(`fps-${id}`);
-        if (fpsElement) fpsElement.textContent = fps;
-        frameCount = 0;
-        lastTime = now;
-      }
-    } else {
+  console.log(`📹 Démarrage auto-refresh: ${id}`);
+  
+  // Fonction de rafraîchissement
+  const refreshFrame = async () => {
+    // Vérifier que le module sécurité est toujours actif
+    if (!isSecurityModuleActive) {
+      console.log(`⏸️ Module sécurité inactif, arrêt refresh ${id}`);
       clearInterval(cameraRefreshIntervals[id]);
+      return;
     }
-  }, 300); // 500ms = 2 FPS
-}
-
-// ===== GESTION ERREUR =====
-function handleCameraError(id) {
-  const indicator = document.getElementById(`status-${id}`);
-  const card = document.getElementById(`sec-cam-${id}`);
-  const loading = document.getElementById(`loading-${id}`);
-  
-  if (indicator) indicator.classList.add('offline');
-  if (card) card.classList.add('offline');
-  if (loading) {
-    loading.style.display = 'block';
-    loading.textContent = '❌ Hors ligne';
-  }
-}
-
-// ===== GESTION CHARGEMENT =====
-function handleCameraLoad(id) {
-  const indicator = document.getElementById(`status-${id}`);
-  const card = document.getElementById(`sec-cam-${id}`);
-  const loading = document.getElementById(`loading-${id}`);
-  
-  if (indicator) indicator.classList.remove('offline');
-  if (card) card.classList.remove('offline');
-  if (loading) loading.style.display = 'none';
-}
-
-// ===== NETTOYAGE LORS DU CHANGEMENT DE MODULE =====
-const originalSwitchModule = window.switchModule;
-window.switchModule = function(module) {
-  // Nettoyer les intervals quand on quitte le module sécurité
-  if (currentModule === 'security' && module !== 'security') {
-    Object.values(cameraRefreshIntervals).forEach(interval => clearInterval(interval));
-    cameraRefreshIntervals = {};
-  }
-  
-  // Appeler la fonction originale
-  originalSwitchModule(module);
-};
-
-console.log('✅ Code caméra avec auto-refresh chargé');
-
-// ===== RENDU CAPTURES =====
-function renderSecurityCaptures() {
-  const gallery = document.getElementById('security-captures-gallery');
-  if (!gallery) return;
-  
-  if (securityCaptures.length === 0) {
-    gallery.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.6;">Aucune capture</div>';
-    return;
-  }
-  
-  gallery.innerHTML = securityCaptures.slice(0, 20).map((cap, idx) => {
-    const date = new Date(cap.timestamp);
-    return `
-      <div class="capture-item" onclick="viewCapture(${idx})">
-        <img src="${cap.url}" alt="${cap.name}" loading="lazy">
-        <div class="capture-info">
-          <div>📹 ${cap.name}</div>
-          <div>⏰ ${date.toLocaleTimeString('fr-FR')}</div>
-        </div>
-        <button class="capture-delete" onclick="event.stopPropagation(); deleteCapture(${idx})">✖</button>
-      </div>
-    `;
-  }).join('');
-}
-
-// ===== GESTION CHARGEMENT IMAGE =====
-function handleCameraLoad(id) {
-  const indicator = document.getElementById(`status-${id}`);
-  const card = document.getElementById(`sec-cam-${id}`);
-  if (indicator) indicator.classList.remove('offline');
-  if (card) card.classList.remove('offline');
-}
-
-function handleCameraError(id) {
-  const indicator = document.getElementById(`status-${id}`);
-  const card = document.getElementById(`sec-cam-${id}`);
-  if (indicator) indicator.classList.add('offline');
-  if (card) card.classList.add('offline');
-}
-
-// ===== VÉRIFICATION STATUTS =====
-async function checkCamerasStatus() {
-  Object.entries(securityCameras).forEach(async ([id, cam]) => {
-    if (!cam.active) return;
+    
+    const img = document.getElementById(`stream-${id}`);
+    if (!img) {
+      console.log(`❌ Image ${id} introuvable, arrêt refresh`);
+      clearInterval(cameraRefreshIntervals[id]);
+      delete cameraRefreshIntervals[id];
+      return;
+    }
     
     try {
-      const res = await fetch(`http://${cam.ip}/status`, {timeout: 5000});
-      if (res.ok) handleCameraLoad(id);
-      else handleCameraError(id);
-    } catch (err) {
-      handleCameraError(id);
+      const timestamp = Date.now();
+      const newSrc = `http://${ip}:81/capture?t=${timestamp}`;
+      
+      // Créer une nouvelle image pour tester
+      const testImg = new Image();
+      
+      testImg.onload = () => {
+        // Succès : mettre à jour l'image principale
+        img.src = newSrc;
+        errorCount = 0; // Reset compteur erreurs
+        
+        // Calculer FPS
+        frameCount++;
+        const now = Date.now();
+        if (now - lastTime >= 1000) {
+          const fps = Math.round(frameCount * 1000 / (now - lastTime));
+          const fpsElement = document.getElementById(`fps-${id}`);
+          if (fpsElement) fpsElement.textContent = fps;
+          frameCount = 0;
+          lastTime = now;
+        }
+      };
+      
+      testImg.onerror = () => {
+        errorCount++;
+        console.warn(`⚠️ Erreur chargement ${id} (${errorCount}/${MAX_ERRORS})`);
+        
+        if (errorCount >= MAX_ERRORS) {
+          console.error(`❌ Trop d'erreurs pour ${id}, arrêt refresh`);
+          handleCameraError(id);
+          clearInterval(cameraRefreshIntervals[id]);
+          delete cameraRefreshIntervals[id];
+        }
+      };
+      
+      testImg.src = newSrc;
+      
+    } catch (error) {
+      console.error(`❌ Erreur refresh ${id}:`, error);
+      errorCount++;
+      
+      if (errorCount >= MAX_ERRORS) {
+        clearInterval(cameraRefreshIntervals[id]);
+        delete cameraRefreshIntervals[id];
+      }
     }
-  });
-}
-
-// ===== CAPTURE PHOTO =====
-function captureCamera(id, name, ip) {
-  showAlert('warning', '📸 Capture en cours...');
-  
-  const captureUrl = `http://${ip}:81/capture?t=${Date.now()}`;
-  
-  const capture = {
-    id: 'cap_' + Date.now(),
-    cameraId: id,
-    name: name,
-    timestamp: new Date().toISOString(),
-    url: captureUrl
   };
   
-  securityCaptures.unshift(capture);
+  // Premier refresh immédiat
+  refreshFrame();
   
-  if (securityCaptures.length > 100) {
-    securityCaptures = securityCaptures.slice(0, 100);
-  }
-  
-  localStorage.setItem('priva_security_captures', JSON.stringify(securityCaptures));
-  renderSecurityCaptures();
-  showAlert('success', `✅ Photo capturée: ${name}`);
+  // Puis refresh régulier toutes les 800ms
+  cameraRefreshIntervals[id] = setInterval(refreshFrame, 800);
 }
 
-// ===== CAPTURER TOUTES =====
-function captureAllCameras() {
-  const active = Object.entries(securityCameras).filter(([id, cam]) => cam.active);
+// ===== ARRÊT DES REFRESH (CORRIGÉ) =====
+function stopAllCameraRefresh() {
+  console.log('🛑 Arrêt de tous les refresh caméras');
   
-  if (active.length === 0) {
-    showAlert('warning', '⚠️ Aucune caméra active');
-    return;
-  }
-  
-  showAlert('warning', `📸 Capture de ${active.length} caméra(s)...`);
-  
-  active.forEach(([id, cam], idx) => {
-    setTimeout(() => captureCamera(id, cam.name, cam.ip), idx * 500);
-  });
-}
-
-// ===== TOGGLE FLASH =====
-async function toggleFlash(id, ip) {
-  try {
-    await fetch(`http://${ip}/flash`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: 'state=1'
-    });
-    
-    setTimeout(async () => {
-      await fetch(`http://${ip}/flash`, {method: 'POST', body: 'state=0'});
-    }, 200);
-    
-    showAlert('success', '💡 Flash activé');
-  } catch (err) {
-    showAlert('danger', '❌ Erreur flash');
-  }
-}
-
-// ===== RAFRAÎCHIR TOUTES =====
-function refreshAllCameras() {
-  Object.entries(securityCameras).forEach(([id, cam]) => {
-    const img = document.getElementById(`stream-${id}`);
-    if (img) {
-      img.src = `http://${cam.ip}:81/stream?t=${Date.now()}`;
+  Object.keys(cameraRefreshIntervals).forEach(id => {
+    if (cameraRefreshIntervals[id]) {
+      clearInterval(cameraRefreshIntervals[id]);
+      delete cameraRefreshIntervals[id];
     }
   });
-  showAlert('success', '🔄 Caméras rafraîchies');
-}
-
-// ===== MODAL AJOUT CAMÉRA =====
-function openAddCameraModal() {
-  console.log('📹 Ouverture modal ajout caméra');
-  const modal = document.getElementById('addCameraModal');
-  if (modal) {
-    modal.classList.add('active');
-  } else {
-    console.error('❌ Modal addCameraModal introuvable!');
+  
+  if (fullscreenRefreshInterval) {
+    clearInterval(fullscreenRefreshInterval);
+    fullscreenRefreshInterval = null;
   }
 }
 
-function closeAddCameraModal() {
-  const modal = document.getElementById('addCameraModal');
-  if (modal) modal.classList.remove('active');
-}
-
-// ===== AJOUTER CAMÉRA =====
-function addSecurityCamera() {
-  const name = document.getElementById('newCameraName').value.trim();
-  const ip = document.getElementById('newCameraIP').value.trim();
-  const location = document.getElementById('newCameraLocation').value.trim();
+// ===== SWITCH MODULE (CORRIGÉ) =====
+// Remplacez votre fonction switchModule par celle-ci
+function switchModule(module) {
+  console.log(`🔄 Changement module: ${currentModule} → ${module}`);
   
-  if (!name || !ip) {
-    showAlert('warning', '⚠️ Nom et IP requis');
-    return;
+  currentModule = module;
+  isSecurityModuleActive = (module === 'security');
+  
+  // Arrêter tous les refresh si on quitte le module sécurité
+  if (module !== 'security') {
+    stopAllCameraRefresh();
   }
   
-  const id = 'cam_' + Date.now();
-  securityCameras[id] = {
-    name,
-    ip,
-    location: location || 'Non spécifié',
-    active: true,
-    addedAt: new Date().toISOString()
-  };
+  document.querySelectorAll('.module').forEach(m => m.style.display = 'none');
+  document.getElementById('deviceManager').style.display = 'none';
+  document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
   
-  localStorage.setItem('priva_security_cameras', JSON.stringify(securityCameras));
+  if (module !== 'devices') {
+    document.getElementById(module).style.display = 'block';
+    if (updateInterval) clearInterval(updateInterval);
+    updateModuleConfig(module);
+    startModuleUpdate(module);
+    
+    // CRUCIAL : Initialiser les caméras
+    if (module === 'security') {
+      console.log('📹 Chargement module sécurité...');
+      setTimeout(() => {
+        initSecurityCameras();
+      }, 100);
+    }
+  }
   
-  console.log('✅ Caméra ajoutée:', securityCameras[id]);
+  showAlert('success', `📱 Module ${module === 'agriculture' ? 'Agriculture' : 'Sécurité'} activé`);
+}
+
+// ===== INIT CAMÉRAS (CORRIGÉ) =====
+function initSecurityCameras() {
+  console.log('📹 Init caméras:', Object.keys(securityCameras).length);
   
-  closeAddCameraModal();
+  isSecurityModuleActive = true;
+  
+  // Arrêter les anciens refresh avant de redémarrer
+  stopAllCameraRefresh();
+  
   renderSecurityCameras();
-  showAlert('success', `✅ ${name} ajoutée avec succès`);
-  
-  // Réinitialiser formulaire
-  document.getElementById('newCameraName').value = '';
-  document.getElementById('newCameraIP').value = '';
-  document.getElementById('newCameraLocation').value = '';
+  renderSecurityCaptures();
 }
 
-// ===== SUPPRIMER CAMÉRA =====
+// ===== PLEIN ÉCRAN (CORRIGÉ) =====
+function openCameraFullscreen(id, name, ip, captureUrl = null) {
+  const modal = document.getElementById('cameraFullscreenModal');
+  const img = document.getElementById('fullscreen-camera-img');
+  const title = document.getElementById('fullscreen-camera-name');
+  
+  if (!modal || !img || !title) {
+    console.error('❌ Elements modal introuvables');
+    return;
+  }
+  
+  title.textContent = `📹 ${name}`;
+  
+  // Arrêter l'ancien interval plein écran s'il existe
+  if (fullscreenRefreshInterval) {
+    clearInterval(fullscreenRefreshInterval);
+    fullscreenRefreshInterval = null;
+  }
+  
+  if (captureUrl) {
+    // Afficher une capture figée
+    img.src = captureUrl;
+    currentFullscreenCamera = null;
+  } else {
+    // Stream en direct
+    img.src = `http://${ip}:81/capture?t=${Date.now()}`;
+    currentFullscreenCamera = {id, name, ip};
+    
+    // Auto-refresh en plein écran
+    console.log('📹 Démarrage refresh plein écran');
+    fullscreenRefreshInterval = setInterval(() => {
+      if (document.getElementById('cameraFullscreenModal').classList.contains('active')) {
+        img.src = `http://${ip}:81/capture?t=${Date.now()}`;
+      } else {
+        // Modal fermé, arrêter le refresh
+        clearInterval(fullscreenRefreshInterval);
+        fullscreenRefreshInterval = null;
+      }
+    }, 800);
+  }
+  
+  modal.classList.add('active');
+}
+
+// ===== FERMER PLEIN ÉCRAN (CORRIGÉ) =====
+function closeCameraFullscreen() {
+  const modal = document.getElementById('cameraFullscreenModal');
+  if (modal) modal.classList.remove('active');
+  currentFullscreenCamera = null;
+  
+  // Arrêter le refresh plein écran
+  if (fullscreenRefreshInterval) {
+    console.log('🛑 Arrêt refresh plein écran');
+    clearInterval(fullscreenRefreshInterval);
+    fullscreenRefreshInterval = null;
+  }
+}
+
+// ===== SUPPRIMER CAMÉRA (CORRIGÉ) =====
 function removeSecurityCamera(id) {
   const cam = securityCameras[id];
   if (!confirm(`Supprimer "${cam.name}" ?`)) return;
+  
+  // Arrêter le refresh de cette caméra
+  if (cameraRefreshIntervals[id]) {
+    clearInterval(cameraRefreshIntervals[id]);
+    delete cameraRefreshIntervals[id];
+  }
   
   delete securityCameras[id];
   localStorage.setItem('priva_security_cameras', JSON.stringify(securityCameras));
@@ -954,97 +854,42 @@ function removeSecurityCamera(id) {
   showAlert('success', `🗑️ ${cam.name} supprimée`);
 }
 
-// ===== VOIR CAPTURE =====
-function viewCapture(idx) {
-  const cap = securityCaptures[idx];
-  if (!cap) return;
-  openCameraFullscreen(null, cap.name, null, cap.url);
-}
+// ===== VÉRIFICATION PÉRIODIQUE (NOUVEAU) =====
+// Relancer les refresh toutes les 5 minutes si besoin
+setInterval(() => {
+  if (isSecurityModuleActive) {
+    const activeCameras = Object.entries(securityCameras).filter(([id, cam]) => cam.active);
+    
+    activeCameras.forEach(([id, cam]) => {
+      // Vérifier si l'interval existe toujours
+      if (!cameraRefreshIntervals[id]) {
+        console.warn(`⚠️ Refresh ${id} manquant, redémarrage...`);
+        startCameraAutoRefresh(id, cam.ip);
+      }
+    });
+  }
+}, 5 * 60 * 1000); // Toutes les 5 minutes
 
-// ===== SUPPRIMER CAPTURE =====
-function deleteCapture(idx) {
-  securityCaptures.splice(idx, 1);
-  localStorage.setItem('priva_security_captures', JSON.stringify(securityCaptures));
-  renderSecurityCaptures();
-  showAlert('success', '🗑️ Capture supprimée');
-}
-
-// ===== VIDER CAPTURES =====
-function clearSecurityCaptures() {
-  if (!confirm('Vider toutes les captures ?')) return;
-  
-  securityCaptures = [];
-  localStorage.setItem('priva_security_captures', JSON.stringify(securityCaptures));
-  renderSecurityCaptures();
-  showAlert('success', '🗑️ Galerie vidée');
-}
-
-// ===== CHANGER VUE =====
-function setCameraView(mode) {
-  const grid = document.getElementById('security-cameras-grid');
-  if (!grid) return;
-  
-  if (mode === 'single') {
-    grid.className = 'cameras-single';
+// ===== DÉTECTION CHANGEMENT VISIBILITÉ PAGE (NOUVEAU) =====
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    console.log('👁️ Page cachée, pause refresh');
+    // Ne pas arrêter complètement, juste noter
   } else {
-    grid.className = 'cameras-grid';
+    console.log('👁️ Page visible, vérification refresh');
+    
+    // Relancer les refresh si nécessaire
+    if (isSecurityModuleActive) {
+      const activeCameras = Object.entries(securityCameras).filter(([id, cam]) => cam.active);
+      
+      activeCameras.forEach(([id, cam]) => {
+        if (!cameraRefreshIntervals[id]) {
+          console.log(`🔄 Relance refresh ${id}`);
+          startCameraAutoRefresh(id, cam.ip);
+        }
+      });
+    }
   }
-  showAlert('success', `📺 Vue ${mode === 'single' ? 'simple' : 'grille'}`);
-}
+});
 
-// ===== PLEIN ÉCRAN =====
-function openCameraFullscreen(id, name, ip, captureUrl = null) {
-  const modal = document.getElementById('cameraFullscreenModal');
-  const img = document.getElementById('fullscreen-camera-img');
-  const title = document.getElementById('fullscreen-camera-name');
-  
-  if (!modal || !img || !title) {
-    console.error('❌ Elements modal plein écran introuvables');
-    return;
-  }
-  
-  title.textContent = `📹 ${name}`;
-  
-  if (captureUrl) {
-    img.src = captureUrl;
-    currentFullscreenCamera = null;
-  } else {
-    img.src = `http://${ip}:81/stream?t=${Date.now()}`;
-    currentFullscreenCamera = {id, name, ip};
-  }
-  
-  modal.classList.add('active');
-}
-
-function closeCameraFullscreen() {
-  const modal = document.getElementById('cameraFullscreenModal');
-  if (modal) modal.classList.remove('active');
-  currentFullscreenCamera = null;
-}
-
-function captureFromFullscreen() {
-  if (currentFullscreenCamera) {
-    const {id, name, ip} = currentFullscreenCamera;
-    captureCamera(id, name, ip);
-  }
-}
-
-function toggleFlashFullscreen() {
-  if (currentFullscreenCamera) {
-    toggleFlash(currentFullscreenCamera.id, currentFullscreenCamera.ip);
-  }
-}
-
-function downloadCapture() {
-  const img = document.getElementById('fullscreen-camera-img');
-  if (!img) return;
-  
-  const link = document.createElement('a');
-  link.href = img.src;
-  link.download = `capture_${Date.now()}.jpg`;
-  link.click();
-  showAlert('success', '⬇️ Téléchargement...');
-}
-
-console.log('✅ Code ESP32-CAM chargé - Caméras disponibles:', Object.keys(securityCameras).length);
-
+console.log('✅ Code caméra corrigé chargé');
