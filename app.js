@@ -168,6 +168,8 @@ function loadAgricultureData(){
 }
 
 function parseAgricultureCSV(csv){
+  const recentData = data.slice(0, 10); // Prend seulement les 10 premières lignes
+
   const lines = csv.split('\n');
   const tbody = document.getElementById('dataTable');
   tbody.innerHTML = '';
