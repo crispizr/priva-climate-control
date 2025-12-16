@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#667eea">
+  <link rel="manifest" href="manifest.json">
   <title>Sagitarius-Nova</title>
   <link rel="stylesheet" href="styles.css?v=7">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
@@ -24,24 +26,12 @@
 <!-- PLATEFORME PRINCIPALE -->
 <div id="platform" style="display:none;">
   <div class="header">
-    <div class="logo">
-      <span style="font-size:36px;">🌍</span>
-      <h1>Sagitarius-Nova</h1>
-    </div>
+    <div class="logo"><span style="font-size:36px;">🌍</span> Sagitarius-Nova</div>
     <div class="status-bar">
-      <div class="status-item">
-        <div class="status-dot connected" id="connectionStatus"></div>
-        <span id="connectionText">Démarrage...</span>
-      </div>
-      <div class="status-item">
-        <span>🤖 Mode: <strong id="modeDisplay">--</strong></span>
-      </div>
-      <div class="status-item">
-        <span>📡 <strong id="dataCount">0</strong> mesures</span>
-      </div>
-      <div class="status-item">
-        <button onclick="returnHome()">🏠 Accueil</button>
-      </div>
+      <div class="status-item"><span id="connectionText">Démarrage...</span></div>
+      <div class="status-item">Mode: <span id="modeDisplay">--</span></div>
+      <div class="status-item">Mesures: <span id="dataCount">0</span></div>
+      <div class="status-item"><button onclick="returnHome()">🏠 Accueil</button></div>
     </div>
     <div class="tabs">
       <button class="tab-btn active" onclick="switchModule('agriculture')">🌱 Agriculture</button>
@@ -64,142 +54,162 @@
 
     <!-- MODULE AGRICULTURE -->
     <div id="agriculture" class="module active">
-      <div class="card">
-        <div class="card-header"><div class="card-title">⚙️ Configuration ESP32 Agriculture</div></div>
-        <div id="agri-device-info" style="text-align:center; opacity:0.6;">Aucun appareil actif.</div>
+      <div class="card" id="agri-config">
+        <div class="card-header">⚙️ Configuration ESP32 Agriculture</div>
+        <div id="agri-device-info">Aucun appareil actif. Ajoutez un ESP32 via l'onglet "🎛️ Appareils"</div>
       </div>
 
-      <div class="grid-2">
-        <div class="sensor-card">
-          <div class="sensor-icon">🌡️</div>
-          <div class="sensor-value"><span id="tempValue">--</span>°C</div>
-          <div><span class="status-badge optimal">Normal</span></div>
+      <div class="sensor-row">
+        <div class="sensor-card"><div>🌡️ Temp</div><div id="tempValue">--</div></div>
+        <div class="sensor-card"><div>💧 Humidité</div><div id="humidValue">--</div></div>
+      </div>
+
+      <div class="sensor-row">
+        <div class="sensor-card"><div>🔬 CO2</div><div id="gasValue">--</div></div>
+        <div class="sensor-card"><div>⚡ DC</div><div id="dcValue">--</div></div>
+      </div>
+
+      <div class="device-grid">
+        <div class="device-card" id="pompeCard" onclick="toggleDevice('agriculture','pompe')">
+          💧 Irrigation <small id="pompeStatus">Arrêté</small>
         </div>
-        <div class="sensor-card">
-          <div class="sensor-icon">💧</div>
-          <div class="sensor-value"><span id="humidValue">--</span>%</div>
-          <div><span class="status-badge optimal">Normal</span></div>
+        <div class="device-card" id="brumisateurCard" onclick="toggleDevice('agriculture','brumisateur')">
+          💦 Brumisation <small id="brumisateurStatus">Arrêté</small>
+        </div>
+        <div class="device-card" id="ventilateurCard" onclick="toggleDevice('agriculture','ventilateur')">
+          🌀 Ventilation <small id="ventilateurStatus">Arrêté</small>
+        </div>
+        <div class="device-card" id="chauffageCard" onclick="toggleDevice('agriculture','chauffage')">
+          🔥 Chauffage <small id="chauffageStatus">Arrêté</small>
+        </div>
+        <div class="device-card" id="eclairageCard" onclick="toggleDevice('agriculture','eclairage')">
+          💡 Éclairage <small id="eclairageStatus">Arrêté</small>
+        </div>
+        <div class="device-card" id="electrovanneCard" onclick="toggleDevice('agriculture','electrovanne')">
+          🚰 Électrovanne <small id="electrovanneStatus">Fermée</small>
         </div>
       </div>
 
-      <div class="grid-4">
-        <div class="sensor-card">
-          <div class="sensor-icon">🔬</div>
-          <div class="sensor-value"><span id="gasValue">--</span>ppm</div>
-        </div>
-        <div class="sensor-card">
-          <div class="sensor-icon">⚡</div>
-          <div class="sensor-value"><span id="dcValue">--</span>V</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header"><div class="card-title">⚙️ Équipements</div></div>
-        <div class="device-grid">
-          <div class="device-card" id="pompeCard" onclick="toggleDevice('agriculture','pompe')">💧<br>Irrigation<br><small id="pompeStatus">Arrêté</small></div>
-          <div class="device-card" id="brumisateurCard" onclick="toggleDevice('agriculture','brumisateur')">💦<br>Brumisation<br><small id="brumisateurStatus">Arrêté</small></div>
-          <div class="device-card" id="ventilateurCard" onclick="toggleDevice('agriculture','ventilateur')">🌀<br>Ventilation<br><small id="ventilateurStatus">Arrêté</small></div>
-          <div class="device-card" id="chauffageCard" onclick="toggleDevice('agriculture','chauffage')">🔥<br>Chauffage<br><small id="chauffageStatus">Arrêté</small></div>
-          <div class="device-card" id="eclairageCard" onclick="toggleDevice('agriculture','eclairage')">💡<br>Éclairage<br><small id="eclairageStatus">Arrêté</small></div>
-          <div class="device-card" id="electrovanneCard" onclick="toggleDevice('agriculture','electrovanne')">🚰<br>Électrovanne<br><small id="electrovanneStatus">Fermée</small></div>
-        </div>
+      <div class="mode-buttons">
         <button onclick="setMode('auto')">🤖 Auto</button>
         <button onclick="setMode('manual')">✋ Manuel</button>
-        <button onclick="emergencyStop()">🛑 Arrêt</button>
       </div>
 
-      <div class="grid-2">
-        <div class="card"><canvas id="climateChart"></canvas></div>
-        <div class="card"><canvas id="airChart"></canvas></div>
+      <div class="charts">
+        <canvas id="climateChart"></canvas>
+        <canvas id="airChart"></canvas>
+      </div>
+
+      <div class="card">
+        <div class="card-header">📋 Données Récentes</div>
+        <table>
+          <thead><tr><th>Date</th><th>Temp</th><th>Humid</th><th>CO2</th><th>DC</th></tr></thead>
+          <tbody id="dataTable"><tr><td colspan="5">Chargement...</td></tr></tbody>
+        </table>
       </div>
     </div>
 
-    <!-- MODULE SECURITE -->
+    <!-- MODULE SÉCURITÉ -->
     <div id="security" class="module" style="display:none;">
-      <div class="card">
-        <div class="card-header"><div class="card-title">⚙️ Configuration ESP32 Sécurité</div></div>
-        <div id="sec-device-info" style="text-align:center; opacity:0.6;">Aucun appareil actif.</div>
+      <div class="card" id="sec-config">
+        <div class="card-header">⚙️ Configuration ESP32 Sécurité</div>
+        <div id="sec-device-info">Aucun appareil actif. Ajoutez un ESP32 via l'onglet "🎛️ Appareils"</div>
       </div>
 
-      <div class="grid-4">
-        <div class="sensor-card">🚪<br><span id="sec-door">--</span><br>État Porte</div>
-        <div class="sensor-card">👁️<br><span id="sec-motion">--</span><br>Mouvement</div>
-        <div class="sensor-card">🔑<br><span id="sec-badge">--</span><br>Dernier Badge</div>
-        <div class="sensor-card">⏰<br><span id="sec-time">--</span><br>Dernier Accès</div>
+      <div class="sensor-row">
+        <div class="sensor-card">🚪 Porte <div id="sec-door">--</div></div>
+        <div class="sensor-card">👁️ Mouvement <div id="sec-motion">--</div></div>
+        <div class="sensor-card">🔑 Badge <div id="sec-badge">--</div></div>
+        <div class="sensor-card">⏰ Dernier Accès <div id="sec-time">--</div></div>
       </div>
 
-      <div class="card">
-        <div class="device-grid">
-          <div class="device-card" id="lockCard" onclick="toggleSecurityDevice('lock')">🔓<br>Serrure<br><small id="lockStatus">Verrouillée</small></div>
-          <div class="device-card" id="alarmCard" onclick="toggleSecurityDevice('alarm')">🚨<br>Alarme<br><small id="alarmStatus">Désactivée</small></div>
-          <div class="device-card" id="lightsCard" onclick="toggleSecurityDevice('lights')">💡<br>Lumières<br><small id="lightsStatus">Éteintes</small></div>
+      <div class="device-grid">
+        <div class="device-card" id="lockCard" onclick="toggleDevice('security','lock')">
+          🔓 Serrure <small id="lockStatus">Verrouillée</small>
+        </div>
+        <div class="device-card" id="alarmCard" onclick="toggleDevice('security','alarm')">
+          🚨 Alarme <small id="alarmStatus">Désactivée</small>
+        </div>
+        <div class="device-card" id="lightsCard" onclick="toggleDevice('security','lights')">
+          💡 Lumières <small id="lightsStatus">Éteintes</small>
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" id="security-cameras">
         <div class="card-header">
-          <div class="card-title">📹 Caméras ESP32-CAM</div>
+          📹 Caméras de Surveillance
           <button onclick="openAddCameraModal()">➕ Ajouter Caméra</button>
         </div>
-        <div id="security-cameras-grid" class="cameras-grid">
-          <div style="text-align:center; padding:40px; opacity:0.6;">Aucune caméra configurée.</div>
+        <div id="security-cameras-grid">
+          <div style="text-align:center;padding:40px;opacity:0.6;">Aucune caméra configurée</div>
         </div>
       </div>
+
+      <div class="card" id="security-captures">
+        <div class="card-header">📸 Captures Récentes <button onclick="clearSecurityCaptures()">🗑️ Vider</button></div>
+        <div id="security-captures-gallery" style="text-align:center;padding:20px;opacity:0.6;">Aucune capture</div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">📋 Événements Récents</div>
+        <table>
+          <thead><tr><th>Date</th><th>Badge</th><th>Porte</th><th>Mouvement</th><th>Auth</th><th>Action</th></tr></thead>
+          <tbody id="securityTable"><tr><td colspan="6">Chargement...</td></tr></tbody>
+        </table>
+      </div>
     </div>
+
   </div>
 
-  <!-- MODAL AJOUT APPAREIL -->
+  <!-- MODALS -->
   <div id="addDeviceModal" class="modal">
     <div class="modal-content">
-      <h2>➕ Ajouter un ESP32</h2>
-      <label>Nom:</label><input id="newDeviceName" placeholder="Serre 1">
-      <label>IP:</label><input id="newDeviceIP" placeholder="192.168.1.100">
+      <h2>➕ Ajouter ESP32</h2>
+      <button onclick="closeAddDeviceModal()">✖</button>
+      <label>Nom:</label><input type="text" id="newDeviceName">
+      <label>IP:</label><input type="text" id="newDeviceIP">
       <label>Type:</label>
       <select id="newDeviceType">
         <option value="agriculture">🌱 Agriculture</option>
         <option value="security">🔒 Sécurité</option>
         <option value="custom">⚙️ Personnalisé</option>
       </select>
-      <label>Lieu:</label><input id="newDeviceLocation" placeholder="Zone A">
+      <label>Lieu:</label><input type="text" id="newDeviceLocation">
       <button onclick="addDevice()">💾 Ajouter</button>
-      <button onclick="closeAddDeviceModal()">✖ Fermer</button>
     </div>
   </div>
 
-  <!-- MODAL AJOUT CAMERA -->
   <div id="addCameraModal" class="modal">
     <div class="modal-content">
       <h2>➕ Ajouter ESP32-CAM</h2>
-      <label>Nom:</label><input id="newCameraName" placeholder="Caméra Entrée">
-      <label>IP:</label><input id="newCameraIP" placeholder="192.168.1.200">
-      <label>Position:</label><input id="newCameraLocation" placeholder="Entrée principale">
+      <button onclick="closeAddCameraModal()">✖</button>
+      <label>Nom:</label><input type="text" id="newCameraName">
+      <label>IP:</label><input type="text" id="newCameraIP">
+      <label>Position:</label><input type="text" id="newCameraLocation">
       <button onclick="addSecurityCamera()">💾 Ajouter Caméra</button>
-      <button onclick="closeAddCameraModal()">✖ Fermer</button>
     </div>
   </div>
 
-  <!-- MODAL PLEIN ECRAN CAM -->
   <div id="cameraFullscreenModal" class="modal">
     <div class="modal-content">
       <h2 id="fullscreen-camera-name">📹 Caméra</h2>
       <button onclick="closeCameraFullscreen()">✖ Fermer</button>
-      <img id="fullscreen-camera-img" style="width:100%; border-radius:10px;">
+      <img id="fullscreen-camera-img" style="width:100%; height:auto;">
     </div>
   </div>
+
 </div>
 
 <script src="app.js?v=5"></script>
 <script>
-function enterPlatform(){
-  document.getElementById('homepage').style.display='none';
-  document.getElementById('platform').style.display='block';
+function enterPlatform() {
+  document.getElementById('homepage').style.display = 'none';
+  document.getElementById('platform').style.display = 'block';
   if(typeof init==='function') init();
 }
-function returnHome(){
-  if(confirm('Voulez-vous retourner à l\'accueil ?')){
-    document.getElementById('platform').style.display='none';
-    document.getElementById('homepage').style.display='flex';
-  }
+function returnHome() {
+  document.getElementById('platform').style.display = 'none';
+  document.getElementById('homepage').style.display = 'flex';
 }
 </script>
 
