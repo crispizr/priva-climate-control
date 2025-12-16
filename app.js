@@ -184,12 +184,42 @@ function parseAgricultureCSV(csv){
 // =========================================
 // GESTION SECURITE
 // =========================================
-function loadSecurityData(){
-  fetch(PROXY + encodeURIComponent(SECURITY_CSV_URL))
-    .then(r => r.text())
-    .then(csv => parseSecurityCSV(csv))
-    .catch(err => console.error('Erreur CSV Sécurité:', err));
+// Exemple de fonction pour charger les données agriculture
+async function loadAgricultureData() {
+    try {
+        const response = await fetch(PROXY + AGRICULTURE_CSV_URL);
+        const csvText = await response.text();
+        const rows = csvText.split("\n").slice(1); // ignorer l'entête
+
+        // Limiter à 10 dernières données
+        const recentRows = rows.slice(-10);
+
+        let tableHtml = `
+            <tr>
+                <th>Date</th>
+                <th>Capteur</th>
+                <th>Valeur</th>
+            </tr>
+        `;
+
+        recentRows.forEach(row => {
+            const cols = row.split(",");
+            tableHtml += `
+                <tr>
+                    <td>${cols[0]}</td>
+                    <td>${cols[1]}</td>
+                    <td>${cols[2]}</td>
+                </tr>
+            `;
+        });
+
+        document.getElementById("agri-table").innerHTML = tableHtml;
+
+    } catch (error) {
+        console.error("Erreur chargement données agriculture :", error);
+    }
 }
+
 
 function parseSecurityCSV(csv){
   const lines = csv.split('\n');
