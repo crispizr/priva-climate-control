@@ -191,7 +191,7 @@ async function loadAgricultureData() {
     try {
         const response = await fetch(PROXY + AGRICULTURE_CSV_URL);
         const csvText = await response.text();
-        const rows = csvText.split("\n").slice(1); // ignorer l'entête
+        const rows = csvText.split("\n").slice(0); // ignorer l'entête
 
         // Limiter à 10 dernières données
         const recentRows = rows.slice(-10);
