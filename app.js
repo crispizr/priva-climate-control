@@ -1,5 +1,5 @@
 // ============================================
-// PRIVA Platform - JavaScript Refactorisé v2.0
+// PRIVA Platform - JavaScript Optimisé v3.0
 // ============================================
 
 // ==================== CONFIGURATION ====================
@@ -10,198 +10,23 @@ const CONFIG = {
   PROXY: 'https://api.allorigins.win/raw?url=',
   CAMERA_REFRESH_RATE: 800,
   MAX_CAPTURES: 100,
-  FETCH_TIMEOUT: 5000
+  FETCH_TIMEOUT: 5000,
+  ESP32_PORT: 81
 };
 
 // ==================== ÉTAT GLOBAL ====================
 const State = {
-  // Données
   allAgriData: [],
   allSecurityData: [],
   devices: {},
   securityCameras: {},
   securityCaptures: [],
-  
-  // UI
   currentModule: 'agriculture',
   climateChart: null,
   airChart: null,
-  
-  // Intervals
   dataUpdateInterval: null,
   moduleUpdateInterval: null,
-  
-  // Initialisation
   isInitialized: false
-};
-
-// ==================== GESTIONNAIRE CAMÉRAS ====================
-const CameraManager = {
-  intervals: {},
-  fullscreenInterval: null,
-  isActive: false,
-  frameCounters: {},
-  
-  init() {
-    console.log('📹 Initialisation CameraManager');
-    this.isActive = false;
-    this.stopAll();
-  },
-  
-  startRefresh(id, ip) {
-    // Nettoyer l'ancien interval
-    this.stopRefresh(id);
-    
-    if (!this.isActive) {
-      console.log('⏸️ CameraManager inactif, refresh non démarré');
-      return;
-    }
-    
-    console.log(`📹 Démarrage refresh caméra: ${id}`);
-    
-    let errorCount = 0;
-    const MAX_ERRORS = 3;
-    
-    // Initialiser compteur FPS
-    this.frameCounters[id] = { count: 0, lastTime: Date.now() };
-    
-    const refreshFrame = async () => {
-      if (!this.isActive) {
-        console.log(`⏸️ Module inactif, arrêt refresh ${id}`);
-        this.stopRefresh(id);
-        return;
-      }
-      
-      const img = document.getElementById(`stream-${id}`);
-      if (!img) {
-        console.log(`❌ Image ${id} introuvable, arrêt refresh`);
-        this.stopRefresh(id);
-        return;
-      }
-      
-      try {
-        const timestamp = Date.now();
-        const newSrc = `http://${ip}:81/capture?t=${timestamp}`;
-        
-        // Pré-charger l'image
-        const testImg = new Image();
-        
-        testImg.onload = () => {
-          img.src = newSrc;
-          errorCount = 0;
-          this.updateCameraStatus(id, 'online');
-          this.updateFPS(id);
-        };
-        
-        testImg.onerror = () => {
-          errorCount++;
-          console.warn(`⚠️ Erreur chargement ${id} (${errorCount}/${MAX_ERRORS})`);
-          
-          if (errorCount >= MAX_ERRORS) {
-            console.error(`❌ Trop d'erreurs pour ${id}, arrêt refresh`);
-            this.updateCameraStatus(id, 'offline');
-            this.stopRefresh(id);
-          }
-        };
-        
-        testImg.src = newSrc;
-        
-      } catch (error) {
-        console.error(`❌ Erreur refresh ${id}:`, error);
-        errorCount++;
-        
-        if (errorCount >= MAX_ERRORS) {
-          this.stopRefresh(id);
-        }
-      }
-    };
-    
-    // Premier refresh immédiat
-    refreshFrame();
-    
-    // Puis refresh régulier
-    this.intervals[id] = setInterval(refreshFrame, CONFIG.CAMERA_REFRESH_RATE);
-  },
-  
-  stopRefresh(id) {
-    if (this.intervals[id]) {
-      clearInterval(this.intervals[id]);
-      delete this.intervals[id];
-      console.log(`🛑 Arrêt refresh: ${id}`);
-    }
-  },
-  
-  stopAll() {
-    console.log('🛑 Arrêt de tous les refresh caméras');
-    
-    Object.keys(this.intervals).forEach(id => this.stopRefresh(id));
-    
-    if (this.fullscreenInterval) {
-      clearInterval(this.fullscreenInterval);
-      this.fullscreenInterval = null;
-    }
-    
-    this.frameCounters = {};
-  },
-  
-  startFullscreen(ip) {
-    if (this.fullscreenInterval) {
-      clearInterval(this.fullscreenInterval);
-    }
-    
-    const img = document.getElementById('fullscreen-camera-img');
-    if (!img) return;
-    
-    const refresh = () => {
-      const modal = document.getElementById('cameraFullscreenModal');
-      if (!modal || !modal.classList.contains('active')) {
-        clearInterval(this.fullscreenInterval);
-        this.fullscreenInterval = null;
-        return;
-      }
-      
-      img.src = `http://${ip}:81/capture?t=${Date.now()}`;
-    };
-    
-    refresh();
-    this.fullscreenInterval = setInterval(refresh, CONFIG.CAMERA_REFRESH_RATE);
-  },
-  
-  updateCameraStatus(id, status) {
-    const indicator = document.getElementById(`status-${id}`);
-    const card = document.getElementById(`sec-cam-${id}`);
-    const loading = document.getElementById(`loading-${id}`);
-    
-    if (status === 'online') {
-      indicator?.classList.remove('offline');
-      card?.classList.remove('offline');
-      if (loading) loading.style.display = 'none';
-    } else {
-      indicator?.classList.add('offline');
-      card?.classList.add('offline');
-      if (loading) {
-        loading.style.display = 'block';
-        loading.textContent = '❌ Hors ligne';
-      }
-    }
-  },
-  
-  updateFPS(id) {
-    const counter = this.frameCounters[id];
-    if (!counter) return;
-    
-    counter.count++;
-    const now = Date.now();
-    
-    if (now - counter.lastTime >= 1000) {
-      const fps = Math.round(counter.count * 1000 / (now - counter.lastTime));
-      const fpsElement = document.getElementById(`fps-${id}`);
-      if (fpsElement) fpsElement.textContent = fps;
-      
-      counter.count = 0;
-      counter.lastTime = now;
-    }
-  }
 };
 
 // ==================== UTILITAIRES ====================
@@ -252,6 +77,213 @@ const Utils = {
       console.error('Erreur chargement localStorage:', error);
       return defaultValue;
     }
+  },
+  
+  validateIP(ip) {
+    const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+    if (!ipRegex.test(ip)) return false;
+    
+    return ip.split('.').every(octet => {
+      const num = parseInt(octet, 10);
+      return num >= 0 && num <= 255;
+    });
+  },
+  
+  buildCameraUrl(ip, endpoint = 'capture') {
+    return `http://${ip}:${CONFIG.ESP32_PORT}/${endpoint}?t=${Date.now()}`;
+  }
+};
+
+// ==================== GESTIONNAIRE CAMÉRAS ====================
+const CameraManager = {
+  intervals: {},
+  fullscreenInterval: null,
+  isActive: false,
+  frameCounters: {},
+  
+  init() {
+    console.log('📹 Initialisation CameraManager');
+    this.isActive = false;
+    this.stopAll();
+  },
+  
+  startRefresh(id, ip) {
+    if (!Utils.validateIP(ip)) {
+      console.error(`❌ IP invalide pour caméra ${id}: ${ip}`);
+      return;
+    }
+    
+    this.stopRefresh(id);
+    
+    if (!this.isActive) {
+      console.log('⏸️ CameraManager inactif, refresh non démarré');
+      return;
+    }
+    
+    console.log(`📹 Démarrage refresh caméra: ${id}`);
+    
+    let errorCount = 0;
+    const MAX_ERRORS = 3;
+    
+    this.frameCounters[id] = { count: 0, lastTime: Date.now() };
+    
+    const refreshFrame = async () => {
+      if (!this.isActive) {
+        console.log(`⏸️ Module inactif, arrêt refresh ${id}`);
+        this.stopRefresh(id);
+        return;
+      }
+      
+      const img = document.getElementById(`stream-${id}`);
+      if (!img) {
+        console.log(`❌ Image ${id} introuvable, arrêt refresh`);
+        this.stopRefresh(id);
+        return;
+      }
+      
+      try {
+        const newSrc = Utils.buildCameraUrl(ip, 'capture');
+        const testImg = new Image();
+        
+        testImg.onload = () => {
+          img.src = newSrc;
+          errorCount = 0;
+          this.updateCameraStatus(id, 'online');
+          this.updateFPS(id);
+        };
+        
+        testImg.onerror = () => {
+          errorCount++;
+          console.warn(`⚠️ Erreur chargement ${id} (${errorCount}/${MAX_ERRORS})`);
+          
+          if (errorCount >= MAX_ERRORS) {
+            console.error(`❌ Trop d'erreurs pour ${id}, arrêt refresh`);
+            this.updateCameraStatus(id, 'offline');
+            this.stopRefresh(id);
+          }
+        };
+        
+        testImg.src = newSrc;
+        
+      } catch (error) {
+        console.error(`❌ Erreur refresh ${id}:`, error);
+        errorCount++;
+        
+        if (errorCount >= MAX_ERRORS) {
+          this.stopRefresh(id);
+        }
+      }
+    };
+    
+    refreshFrame();
+    this.intervals[id] = setInterval(refreshFrame, CONFIG.CAMERA_REFRESH_RATE);
+  },
+  
+  stopRefresh(id) {
+    if (this.intervals[id]) {
+      clearInterval(this.intervals[id]);
+      delete this.intervals[id];
+      console.log(`🛑 Arrêt refresh: ${id}`);
+    }
+  },
+  
+  stopAll() {
+    console.log('🛑 Arrêt de tous les refresh caméras');
+    
+    Object.keys(this.intervals).forEach(id => this.stopRefresh(id));
+    
+    if (this.fullscreenInterval) {
+      clearInterval(this.fullscreenInterval);
+      this.fullscreenInterval = null;
+    }
+    
+    this.frameCounters = {};
+  },
+  
+  startFullscreen(ip) {
+    if (this.fullscreenInterval) {
+      clearInterval(this.fullscreenInterval);
+    }
+    
+    const img = document.getElementById('fullscreen-camera-img');
+    if (!img) return;
+    
+    const refresh = () => {
+      const modal = document.getElementById('cameraFullscreenModal');
+      if (!modal || !modal.classList.contains('active')) {
+        clearInterval(this.fullscreenInterval);
+        this.fullscreenInterval = null;
+        return;
+      }
+      
+      img.src = Utils.buildCameraUrl(ip, 'capture');
+    };
+    
+    refresh();
+    this.fullscreenInterval = setInterval(refresh, CONFIG.CAMERA_REFRESH_RATE);
+  },
+  
+  updateCameraStatus(id, status) {
+    const indicator = document.getElementById(`status-${id}`);
+    const card = document.getElementById(`sec-cam-${id}`);
+    const loading = document.getElementById(`loading-${id}`);
+    
+    if (status === 'online') {
+      indicator?.classList.remove('offline');
+      card?.classList.remove('offline');
+      if (loading) loading.style.display = 'none';
+    } else {
+      indicator?.classList.add('offline');
+      card?.classList.add('offline');
+      if (loading) {
+        loading.style.display = 'block';
+        loading.textContent = '❌ Hors ligne';
+      }
+    }
+  },
+  
+  updateFPS(id) {
+    const counter = this.frameCounters[id];
+    if (!counter) return;
+    
+    counter.count++;
+    const now = Date.now();
+    
+    if (now - counter.lastTime >= 1000) {
+      const fps = Math.round(counter.count * 1000 / (now - counter.lastTime));
+      const fpsElement = document.getElementById(`fps-${id}`);
+      if (fpsElement) fpsElement.textContent = fps;
+      
+      counter.count = 0;
+      counter.lastTime = now;
+    }
+  },
+  
+  async detectWithCamera(ip) {
+    if (!Utils.validateIP(ip)) {
+      showAlert('danger', '❌ IP invalide');
+      return null;
+    }
+    
+    showAlert('warning', '🔍 Détection en cours...');
+    
+    try {
+      const res = await Utils.fetchWithTimeout(Utils.buildCameraUrl(ip, 'detect'));
+      const data = await res.json();
+      
+      if (data.success) {
+        const message = `✅ ${data.detected} (${data.confidence.toFixed(1)}%)`;
+        showAlert('success', message);
+        return data;
+      } else {
+        showAlert('warning', '⚠️ Aucune détection');
+        return null;
+      }
+    } catch (error) {
+      console.error('Erreur détection:', error);
+      showAlert('danger', '❌ Erreur de connexion');
+      return null;
+    }
   }
 };
 
@@ -277,28 +309,21 @@ function init() {
   
   console.log('🚀 Initialisation PRIVA...');
   
-  // Charger données sauvegardées
   State.devices = Utils.loadFromLocalStorage('priva_devices', {});
   State.securityCameras = Utils.loadFromLocalStorage('priva_security_cameras', {});
   State.securityCaptures = Utils.loadFromLocalStorage('priva_security_captures', []);
   
-  // Initialiser graphiques
   setupCharts();
-  
-  // Charger données
   loadAgricultureData();
   loadSecurityData();
   
-  // Mise à jour périodique des données CSV
   State.dataUpdateInterval = setInterval(() => {
     loadAgricultureData();
     loadSecurityData();
   }, 10000);
   
-  // Afficher liste appareils
   renderDevicesList();
   
-  // Activer module agriculture par défaut
   const agriDevice = Object.values(State.devices).find(d => d.type === 'agriculture' && d.active);
   if (agriDevice) {
     updateModuleConfig('agriculture');
@@ -501,7 +526,6 @@ function updateSecurityTable() {
 function switchModule(module) {
   console.log(`🔄 Changement module: ${State.currentModule} → ${module}`);
   
-  // Nettoyer ancien module
   if (State.moduleUpdateInterval) {
     clearInterval(State.moduleUpdateInterval);
     State.moduleUpdateInterval = null;
@@ -512,10 +536,8 @@ function switchModule(module) {
     CameraManager.stopAll();
   }
   
-  // Mettre à jour état
   State.currentModule = module;
   
-  // UI
   document.querySelectorAll('.module').forEach(m => m.style.display = 'none');
   document.getElementById('deviceManager').style.display = 'none';
   document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
@@ -598,7 +620,7 @@ function updateDeviceIP(module) {
   const input = document.getElementById(`edit-ip-${module}`);
   const newIP = input?.value.trim();
   
-  if (!newIP) {
+  if (!newIP || !Utils.validateIP(newIP)) {
     showAlert('warning', '⚠️ IP invalide');
     return;
   }
@@ -696,6 +718,10 @@ async function updateSecurityData(ip) {
     }
     
     updateDeviceUI('lock', data.devices.lock);
+
+  // ==================== SUITE DE app.js (PARTIE 2) ====================
+
+// Continuation de updateSecurityData()
     updateDeviceUI('alarm', data.devices.alarm);
     updateDeviceUI('lights', data.devices.lights);
     
@@ -724,24 +750,25 @@ function updateDeviceUI(device, state) {
   const status = document.getElementById(device + 'Status');
   if (!card || !status) return;
   
-  const activeTexts = {
-    pompe: 'Actif', brumisateur: 'Actif', ventilateur: 'Actif',
-    chauffage: 'Actif', eclairage: 'Allumé', electrovanne: 'Ouverte',
-    lock: 'Déverrouillée', alarm: 'Activée', lights: 'Allumées'
-  };
-  
-  const inactiveTexts = {
-    pompe: 'Arrêté', brumisateur: 'Arrêté', ventilateur: 'Arrêté',
-    chauffage: 'Arrêté', eclairage: 'Éteint', electrovanne: 'Fermée',
-    lock: 'Verrouillée', alarm: 'Désactivée', lights: 'Éteintes'
+  const texts = {
+    active: {
+      pompe: 'Actif', brumisateur: 'Actif', ventilateur: 'Actif',
+      chauffage: 'Actif', eclairage: 'Allumé', electrovanne: 'Ouverte',
+      lock: 'Déverrouillée', alarm: 'Activée', lights: 'Allumées'
+    },
+    inactive: {
+      pompe: 'Arrêté', brumisateur: 'Arrêté', ventilateur: 'Arrêté',
+      chauffage: 'Arrêté', eclairage: 'Éteint', electrovanne: 'Fermée',
+      lock: 'Verrouillée', alarm: 'Désactivée', lights: 'Éteintes'
+    }
   };
   
   if (state) {
     card.classList.add('active');
-    status.textContent = activeTexts[device] || 'Actif';
+    status.textContent = texts.active[device] || 'Actif';
   } else {
     card.classList.remove('active');
-    status.textContent = inactiveTexts[device] || 'Arrêté';
+    status.textContent = texts.inactive[device] || 'Arrêté';
   }
 }
 
@@ -920,6 +947,11 @@ function addDevice() {
     return;
   }
   
+  if (!Utils.validateIP(ip)) {
+    showAlert('warning', '⚠️ Format IP invalide');
+    return;
+  }
+  
   const id = 'dev_' + Date.now();
   State.devices[id] = {
     name, 
@@ -930,7 +962,6 @@ function addDevice() {
     addedAt: new Date().toISOString()
   };
   
-  // Désactiver les autres appareils du même type
   Object.entries(State.devices).forEach(([key, dev]) => {
     if (key !== id && dev.type === type) dev.active = false;
   });
@@ -941,13 +972,11 @@ function addDevice() {
   renderDevicesList();
   showAlert('success', `✓ ${name} ajouté`);
   
-  // Réinitialiser formulaire
   ['newDeviceName', 'newDeviceIP', 'newDeviceLocation'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
   
-  // Basculer vers le module approprié
   if (type === 'agriculture' || type === 'security') {
     setTimeout(() => {
       const moduleBtn = document.querySelector(`.tab-btn[onclick*="switchModule('${type}')"]`);
@@ -961,14 +990,12 @@ function toggleDeviceActive(id) {
   if (!device) return;
   
   if (!device.active) {
-    // Désactiver les autres du même type
     Object.entries(State.devices).forEach(([key, dev]) => {
       if (dev.type === device.type) dev.active = false;
     });
     device.active = true;
     showAlert('success', `✓ ${device.name} activé`);
     
-    // Redémarrer le module si actif
     if (State.currentModule === device.type) {
       if (State.moduleUpdateInterval) clearInterval(State.moduleUpdateInterval);
       updateModuleConfig(device.type);
@@ -1047,7 +1074,7 @@ function renderSecurityCameras() {
       <div style="position: relative; background: #000; border-radius: 8px; min-height: 250px; overflow: hidden;">
         <img class="camera-stream-img" 
              id="stream-${id}" 
-             src="http://${cam.ip}:81/capture?t=${Date.now()}"
+             src="${Utils.buildCameraUrl(cam.ip, 'capture')}"
              onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')"
              alt="${cam.name}"
              style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;">
@@ -1058,9 +1085,10 @@ function renderSecurityCameras() {
       </div>
       
       <div class="camera-controls">
-        <button class="btn btn-small btn-success" onclick="captureCamera('${id}', '${cam.name}', '${cam.ip}')">📸 Capturer</button>
-        <button class="btn btn-small btn-primary" onclick="toggleFlash('${id}', '${cam.ip}')">💡 Flash</button>
-        <button class="btn btn-small btn-primary" onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')">🔍 Zoom</button>
+        <button class="btn btn-small btn-success" onclick="captureCamera('${id}', '${cam.name}', '${cam.ip}')">📸</button>
+        <button class="btn btn-small btn-primary" onclick="toggleFlash('${id}', '${cam.ip}')">💡</button>
+        <button class="btn btn-small btn-primary" onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')">🔍</button>
+        <button class="btn btn-small btn-warning" onclick="CameraManager.detectWithCamera('${cam.ip}')">🔍 Détecter</button>
       </div>
       
       <div class="camera-info">
@@ -1072,52 +1100,12 @@ function renderSecurityCameras() {
   
   console.log('✅ Caméras rendues:', active.length);
   
-  // Démarrer refresh automatique
   if (CameraManager.isActive) {
     active.forEach(([id, cam]) => {
       CameraManager.startRefresh(id, cam.ip);
     });
   }
 }
-
-// Dans app.js - Déjà compatible !
-async function detectWithCamera(ip) {
-  const res = await Utils.fetchWithTimeout(`http://${ip}:81/detect`);
-  const data = await res.json();
-  
-  showAlert('success', `✅ ${data.detected} (${data.confidence.toFixed(1)}%)`);
-}
-```
-
----
-
-## 🔥 **Résultat attendu dans le moniteur série**
-```
-========================================
-   ESP32-CAM PRIVA (Sans fd_forward.h)
-========================================
-✅ PSRAM détecté
-📹 Initialisation caméra...
-✅ Caméra initialisée
-📡 Connexion WiFi...
-..
-✅ WiFi connecté!
-📡 IP: http://192.168.1.100:81/
-📶 Signal: -45 dBm
-
-🔗 URLs disponibles:
-   http://192.168.1.100:81/ (Page d'accueil)
-   http://192.168.1.100:81/stream (Stream vidéo)
-   http://192.168.1.100:81/capture (Capture photo)
-   http://192.168.1.100:81/detect (Détection)
-========================================
-✅ ESP32-CAM prêt pour PRIVA!
-========================================
-
-🚀 Démarrage serveur HTTP sur port 81
-✅ Serveur HTTP démarré
-💓 Uptime: 30 s | WiFi: -45 dBm | Détections: 0 | Dernière: Rien (0.0%)
-
 
 function renderSecurityCaptures() {
   const gallery = document.getElementById('security-captures-gallery');
@@ -1144,9 +1132,14 @@ function renderSecurityCaptures() {
 }
 
 function captureCamera(id, name, ip) {
+  if (!Utils.validateIP(ip)) {
+    showAlert('danger', '❌ IP invalide');
+    return;
+  }
+  
   showAlert('warning', '📸 Capture en cours...');
   
-  const captureUrl = `http://${ip}:81/capture?t=${Date.now()}`;
+  const captureUrl = Utils.buildCameraUrl(ip, 'capture');
   
   const capture = {
     id: 'cap_' + Date.now(),
@@ -1184,14 +1177,14 @@ function captureAllCameras() {
 
 async function toggleFlash(id, ip) {
   try {
-    await Utils.fetchWithTimeout(`http://${ip}/flash`, {
+    await Utils.fetchWithTimeout(`http://${ip}:${CONFIG.ESP32_PORT}/flash`, {
       method: 'POST',
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: 'state=1'
     });
     
     setTimeout(async () => {
-      await Utils.fetchWithTimeout(`http://${ip}/flash`, {
+      await Utils.fetchWithTimeout(`http://${ip}:${CONFIG.ESP32_PORT}/flash`, {
         method: 'POST',
         body: 'state=0'
       });
@@ -1207,7 +1200,7 @@ function refreshAllCameras() {
   Object.entries(State.securityCameras).forEach(([id, cam]) => {
     const img = document.getElementById(`stream-${id}`);
     if (img) {
-      img.src = `http://${cam.ip}:81/capture?t=${Date.now()}`;
+      img.src = Utils.buildCameraUrl(cam.ip, 'capture');
     }
   });
   showAlert('success', '🔄 Caméras rafraîchies');
@@ -1233,6 +1226,11 @@ function addSecurityCamera() {
     return;
   }
   
+  if (!Utils.validateIP(ip)) {
+    showAlert('warning', '⚠️ Format IP invalide');
+    return;
+  }
+  
   const id = 'cam_' + Date.now();
   State.securityCameras[id] = {
     name,
@@ -1248,7 +1246,6 @@ function addSecurityCamera() {
   renderSecurityCameras();
   showAlert('success', `✅ ${name} ajoutée`);
   
-  // Réinitialiser formulaire
   ['newCameraName', 'newCameraIP', 'newCameraLocation'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
@@ -1308,12 +1305,10 @@ function openCameraFullscreen(id, name, ip, captureUrl = null) {
   
   title.textContent = `📹 ${name}`;
   
-  CameraManager.fullscreenInterval = null;
-  
   if (captureUrl) {
     img.src = captureUrl;
   } else if (ip) {
-    img.src = `http://${ip}:81/capture?t=${Date.now()}`;
+    img.src = Utils.buildCameraUrl(ip, 'capture');
     CameraManager.startFullscreen(ip);
   }
   
@@ -1331,7 +1326,6 @@ function closeCameraFullscreen() {
 }
 
 function captureFromFullscreen() {
-  // Récupérer l'URL actuelle de l'image plein écran
   const img = document.getElementById('fullscreen-camera-img');
   if (!img || !img.src) return;
   
@@ -1370,93 +1364,26 @@ function downloadCapture() {
   showAlert('success', '⬇️ Téléchargement...');
 }
 
-// ==================== FONCTIONS GALERIE MOBILE ====================
-async function captureAndSaveToGallery(id, name, ip) {
-  showAlert('warning', '📸 Capture en cours...');
-  
-  try {
-    const captureUrl = `http://${ip}:81/capture?t=${Date.now()}`;
-    const response = await Utils.fetchWithTimeout(captureUrl);
-    const blob = await response.blob();
-    
-    const date = new Date();
-    const dateStr = date.toLocaleDateString('fr-FR').replace(/\//g, '-');
-    const timeStr = date.toLocaleTimeString('fr-FR').replace(/:/g, '-');
-    const filename = `${name}_${dateStr}_${timeStr}.jpg`;
-    
-    const file = new File([blob], filename, { type: 'image/jpeg' });
-    
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({
-        files: [file],
-        title: 'Photo PRIVA',
-        text: `Photo de ${name}`
-      });
-      
-      showAlert('success', '✅ Photo partagée !');
-      
-      // Sauvegarder aussi dans l'app
-      const capture = {
-        id: 'cap_' + Date.now(),
-        cameraId: id,
-        name: name,
-        timestamp: new Date().toISOString(),
-        url: captureUrl
-      };
-      
-      State.securityCaptures.unshift(capture);
-      if (State.securityCaptures.length > CONFIG.MAX_CAPTURES) {
-        State.securityCaptures = State.securityCaptures.slice(0, CONFIG.MAX_CAPTURES);
-      }
-      
-      Utils.saveToLocalStorage('priva_security_captures', State.securityCaptures);
-      renderSecurityCaptures();
-      
-    } else {
-      downloadImageFromUrl(captureUrl, filename);
-      showAlert('info', '📥 Photo téléchargée');
-    }
-    
-  } catch (error) {
-    if (error.name !== 'AbortError') {
-      showAlert('danger', '❌ Erreur lors du partage');
-    }
-  }
-}
-
-function downloadImageFromUrl(url, filename) {
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  link.click();
-}
-
 // ==================== ÉVÉNEMENTS ====================
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) {
-    console.log('👁️ Page cachée');
-  } else {
-    console.log('👁️ Page visible');
+  if (!document.hidden && CameraManager.isActive && State.currentModule === 'security') {
+    console.log('👁️ Page visible - Relance refresh caméras');
     
-    // Relancer les refresh si nécessaire
-    if (CameraManager.isActive && State.currentModule === 'security') {
-      const active = Object.entries(State.securityCameras).filter(([id, cam]) => cam.active);
-      
-      active.forEach(([id, cam]) => {
-        if (!CameraManager.intervals[id]) {
-          console.log(`🔄 Relance refresh ${id}`);
-          CameraManager.startRefresh(id, cam.ip);
-        }
-      });
-    }
+    const active = Object.entries(State.securityCameras).filter(([id, cam]) => cam.active);
+    
+    active.forEach(([id, cam]) => {
+      if (!CameraManager.intervals[id]) {
+        console.log(`🔄 Relance refresh ${id}`);
+        CameraManager.startRefresh(id, cam.ip);
+      }
+    });
   }
 });
 
-// ==================== NETTOYAGE ====================
 window.addEventListener('beforeunload', () => {
   if (State.dataUpdateInterval) clearInterval(State.dataUpdateInterval);
   if (State.moduleUpdateInterval) clearInterval(State.moduleUpdateInterval);
   CameraManager.stopAll();
 });
 
-console.log('✅ PRIVA JavaScript chargé - Version Refactorisée 2.0');
+console.log('✅ PRIVA JavaScript chargé - Version Optimisée 3.0');
