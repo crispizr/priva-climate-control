@@ -1080,6 +1080,45 @@ function renderSecurityCameras() {
   }
 }
 
+// Dans app.js - Déjà compatible !
+async function detectWithCamera(ip) {
+  const res = await Utils.fetchWithTimeout(`http://${ip}:81/detect`);
+  const data = await res.json();
+  
+  showAlert('success', `✅ ${data.detected} (${data.confidence.toFixed(1)}%)`);
+}
+```
+
+---
+
+## 🔥 **Résultat attendu dans le moniteur série**
+```
+========================================
+   ESP32-CAM PRIVA (Sans fd_forward.h)
+========================================
+✅ PSRAM détecté
+📹 Initialisation caméra...
+✅ Caméra initialisée
+📡 Connexion WiFi...
+..
+✅ WiFi connecté!
+📡 IP: http://192.168.1.100:81/
+📶 Signal: -45 dBm
+
+🔗 URLs disponibles:
+   http://192.168.1.100:81/ (Page d'accueil)
+   http://192.168.1.100:81/stream (Stream vidéo)
+   http://192.168.1.100:81/capture (Capture photo)
+   http://192.168.1.100:81/detect (Détection)
+========================================
+✅ ESP32-CAM prêt pour PRIVA!
+========================================
+
+🚀 Démarrage serveur HTTP sur port 81
+✅ Serveur HTTP démarré
+💓 Uptime: 30 s | WiFi: -45 dBm | Détections: 0 | Dernière: Rien (0.0%)
+
+
 function renderSecurityCaptures() {
   const gallery = document.getElementById('security-captures-gallery');
   if (!gallery) return;
