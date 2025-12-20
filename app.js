@@ -8,7 +8,7 @@ const CONFIG = {
   AGRICULTURE_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwJjy2KpJJ5X--C87zVuPjykAg9Fyc79zIxpdk1Dt0FvrxYw1Onfzt5wSHOVagvLry9uyyohzeN3h4/pub?output=csv",
   SECURITY_CSV_URL: "https://docs.google.com/spreadsheets/d/12x5LRuFBaKeAfkSxc53uR-6Q3Xcu-OxZt2plY0GZSko/export?format=csv&gid=2127989880",
   PROXY: 'https://api.allorigins.win/raw?url=',
-  CAMERA_REFRESH_RATE: 800,
+  CAMERA_REFRESH_RATE: 1500,
   MAX_CAPTURES: 100,
   FETCH_TIMEOUT: 5000,
   ESP32_PORT: 81
