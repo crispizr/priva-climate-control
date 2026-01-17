@@ -1,4 +1,4 @@
 flask
-tensorflow
 pillow
 numpy
+tensorflow==2.13.0
