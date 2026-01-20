@@ -222,7 +222,47 @@
             Aucun appareil actif. Ajoutez un ESP32 via l'onglet "🎛️ Appareils"
           </div>
         </div>
+<div class="card" style="background: linear-gradient(135deg, #1a1d29, #252836); border: 2px solid #667eea;">
+  <div class="card-header" style="border-bottom: 2px solid #667eea;">
+    <div class="card-title">🤖 Intelligence Artificielle</div>
+    <div style="display: flex; gap: 10px;">
+      <button id="toggle-auto-detect-btn" class="btn btn-secondary btn-small" onclick="toggleAutoDetect()">
+        🤖 Auto: OFF
+      </button>
+      <button class="btn btn-primary btn-small" onclick="testAIServer()">
+        🔍 Tester Serveur
+      </button>
+      <button class="btn btn-info btn-small" onclick="getAIModelInfo()">
+        ℹ️ Info Modèle
+      </button>
+    </div>
+  </div>
 
+  <!-- Infos modèle -->
+  <div id="ai-model-info" style="margin-bottom: 15px;">
+    <div style="text-align: center; padding: 10px; opacity: 0.6;">
+      Cliquez sur "ℹ️ Info Modèle" pour voir les détails
+    </div>
+  </div>
+  
+  <!-- Statistiques IA -->
+  <div id="ai-stats">
+    <div style="text-align: center; padding: 20px; opacity: 0.6;">
+      Aucune détection pour le moment
+    </div>
+  </div>
+  
+  <!-- Actions -->
+  <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+    <button class="btn btn-danger btn-small" onclick="AIManager.clearHistory()">
+      🗑️ Vider Historique
+    </button>
+  </div>
+</div>
+
+<!-- Conteneur résultats IA (créé dynamiquement) -->
+<div id="ai-results-container"></div>
+        
         <!-- NOUVEAU : Panneau de contrôle IA -->
         <div class="card" style="background: linear-gradient(135deg, #1a1d29, #252836); border: 2px solid #667eea;">
           <div class="card-header" style="border-bottom: 2px solid #667eea;">
@@ -335,7 +375,54 @@
             </div>
           </div>
         </div>
-
+<div class="security-camera-card" id="sec-cam-${id}">
+    <div class="camera-header">
+      <div class="camera-name">
+        📹 ${cam.name}
+        <div class="camera-status-indicator" id="status-${id}"></div>
+      </div>
+      <button class="btn btn-small btn-danger" onclick="removeSecurityCamera('${id}')">🗑️</button>
+    </div>
+    
+    <div style="position: relative; background: #000; border-radius: 8px; min-height: 250px; overflow: hidden;">
+      <img class="camera-stream-img" 
+           id="stream-${id}" 
+           src="${Utils.buildCameraUrl(cam.ip, 'capture')}"
+           onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')"
+           alt="${cam.name}"
+           style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;">
+      
+      <div id="loading-${id}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; display: none;">
+        ⏳ Chargement...
+      </div>
+    </div>
+    
+    <div class="camera-controls">
+      <button class="btn btn-small btn-success" onclick="captureCamera('${id}', '${cam.name}', '${cam.ip}')">
+        📸 Capturer
+      </button>
+      
+      <!-- NOUVEAU : Boutons IA -->
+      <button class="btn btn-small btn-warning" onclick="captureCameraAndDetect('${id}', '${cam.name}', '${cam.ip}')" 
+              style="background: linear-gradient(135deg, #667eea, #764ba2);">
+        🤖 IA
+      </button>
+      
+      <button class="btn btn-small btn-info" onclick="detectWithESP32Camera('${id}', '${cam.name}', '${cam.ip}')">
+        🔍 ESP32
+      </button>
+      <!-- FIN NOUVEAU -->
+      
+      <button class="btn btn-small btn-primary" onclick="toggleFlash('${id}', '${cam.ip}')">💡</button>
+      <button class="btn btn-small btn-primary" onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')">🔍</button>
+    </div>
+    
+    <div class="camera-info">
+      📍 ${cam.location} • 🔗 ${cam.ip} • 
+      <span style="font-size: 10px; opacity: 0.6;">FPS: <span id="fps-${id}">--</span></span>
+    </div>
+  </div>
+`).join('');
         <!-- Galerie des captures -->
         <div class="card">
           <div class="card-header">
@@ -576,5 +663,29 @@
       console.log('🚀 PWA en mode standalone');
     }
   </script>
+    <script>
+    //Initialiser le module IA au chargement
+  document.addEventListener('DOMContentLoaded', function() {
+    // Attendre que init() soit appelé
+    setTimeout(() => {
+      if (typeof initAI === 'function') {
+        initAI();
+        console.log('✅ Module IA initialisé');
+      }
+    }, 1000);
+  });
+  
+  // Tester le serveur IA toutes les 5 minutes
+  setInterval(async () => {
+    try {
+      const response = await fetch('https://priva-climate-control.onrender.com/health');
+      if (response.ok) {
+        console.log('✅ Serveur IA: OK');
+      }
+    } catch (e) {
+      console.warn('⚠️ Serveur IA: Injoignable');
+    }
+  }, 300000); // 5 minutes
+</script>
 </body>
 </html>
