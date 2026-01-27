@@ -15,102 +15,140 @@
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
   <title>Sagitarius-Nova (PRIVA)</title>
 
-  <!-- Optional: keep your existing stylesheet -->
   <link rel="stylesheet" href="styles.css?v=A2">
-
-  <!-- Chart.js (if used) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 
   <style>
-    /* Minimal styles so the essential UI is usable */
+    /* Minimal styles */
     .hidden { display: none; }
-    #platform { padding: 12px; }
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; padding:12px; background:#071023; color:#e6eef8; }
+    .header { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
+    .status-bar { display:flex; gap:12px; align-items:center; }
+    .tabs { display:flex; gap:8px; margin-bottom:12px; }
+    .btn { background:#1f2937; color:#e6eef8; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; }
+    .btn.active { background:#64748b; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
+    .panel { background:#0f172a; padding:10px; border-radius:8px; }
     #alertContainer .alert { padding:8px 12px; margin:6px 0; border-radius:6px; color:#fff; }
     .alert.warning { background:#f59e0b; }
     .alert.success { background:#10b981; }
     .alert.danger { background:#ef4444; }
-    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
-    .status-bar { display:flex; gap:12px; align-items:center; }
-    .tabs { margin-top:12px; }
-    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
-    .security-camera-card { background:#0f172a; color:#fff; padding:8px; border-radius:8px; }
     .modal { position:fixed; top:0; left:0; right:0; bottom:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); z-index:1000; }
-    .modal .dialog { background:#fff; color:#000; padding:16px; border-radius:8px; width:320px; max-width:90%; }
+    .dialog { background:#fff; color:#000; padding:16px; border-radius:8px; width:360px; max-width:90%; }
     .modal.hidden { display:none; }
-    #cameraFullscreenModal img { max-width:90vw; max-height:70vh; display:block; margin:0 auto; }
-    .btn { padding:6px 8px; border-radius:6px; cursor:pointer; }
-    .btn-small { padding:4px 6px; font-size:14px; }
+    .camera-stream-img { width:100%; height:160px; object-fit:cover; border-radius:6px; background:#000; }
+    table { width:100%; border-collapse:collapse; color:#e6eef8; }
+    table th, table td { padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.04); text-align:left; font-size:13px; }
   </style>
 </head>
 <body>
-  <!-- Homepage -->
-  <div id="homepage">
-    <div style="padding:40px; text-align:center;">
-      <h1>🌍 Sagitarius-Nova</h1>
-      <p>Bienvenue — Plateforme PRIVA</p>
-      <button class="btn" onclick="enterPlatform()">Accéder à la plateforme</button>
+  <!-- Header -->
+  <div class="header">
+    <div>
+      <h2 style="margin:0">🌍 Sagitarius-Nova</h2>
+      <div style="font-size:12px; color:#9fb0cc;">PRIVA - agriculture & sécurité</div>
+    </div>
+    <div class="status-bar">
+      <div><span id="connectionText">Démarrage...</span></div>
+      <div>🤖 Mode: <strong id="modeDisplay">--</strong></div>
+      <div>📡 <strong id="dataCount">0</strong> mesures</div>
+      <div><button class="btn" onclick="returnHome()">🏠 Accueil</button></div>
     </div>
   </div>
 
-  <!-- Platform -->
-  <div id="platform" class="hidden">
-    <div class="header">
-      <div class="logo">
-        <h2>🌍 Sagitarius-Nova</h2>
-      </div>
+  <!-- Alerts -->
+  <div id="alertContainer" aria-live="polite"></div>
 
-      <div class="status-bar">
-        <div>
-          <span id="connectionText">Démarrage...</span>
-        </div>
-        <div>
-          <span>🤖 Mode: <strong id="modeDisplay">--</strong></span>
-        </div>
-        <div>
-          <span>📡 <strong id="dataCount">0</strong> mesures</span>
-        </div>
-        <div>
-          <button class="btn btn-small" onclick="returnHome()">🏠 Accueil</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Alerts -->
-    <div id="alertContainer" aria-live="polite"></div>
-
-    <!-- Controls -->
-    <div style="display:flex; gap:8px; margin:8px 0; flex-wrap:wrap;">
-      <button id="toggle-auto-detect-btn" class="btn" onclick="toggleAutoDetect()">🤖 Auto: OFF</button>
-      <button class="btn" onclick="Priva?.captureAllCameras ? Priva.captureAllCameras() : alert('Priva non chargé')">📸 Capture toutes</button>
-      <button class="btn" onclick="Priva?.testAIServer ? Priva.testAIServer() : alert('Priva non chargé')">🔍 Tester IA</button>
-      <button class="btn" onclick="openAddCameraModal()">➕ Ajouter Caméra</button>
-    </div>
-
-    <!-- IA Info & Stats -->
-    <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:12px; flex-wrap:wrap;">
-      <div id="ai-model-info" style="flex:1; min-width:220px;"></div>
-      <div id="ai-stats" style="flex:1; min-width:220px;"></div>
-      <div id="ai-results-container" style="flex:1; min-width:220px;"></div>
-    </div>
-
-    <!-- Cameras grid -->
-    <h3>Caméras</h3>
-    <div id="security-cameras-grid" class="grid"></div>
-
-    <!-- Captures gallery -->
-    <h3>Captures récentes</h3>
-    <div id="security-captures-gallery" class="grid"></div>
+  <!-- Tabs -->
+  <div class="tabs">
+    <button id="tab-agri" class="btn active" onclick="showModule('agriculture')">🌾 Agriculture</button>
+    <button id="tab-sec" class="btn" onclick="showModule('security')">📹 Sécurité</button>
+    <button class="btn" onclick="Priva && Priva.testAIServer ? Priva.testAIServer() : alert('Priva non chargé')">🔍 Tester IA</button>
+    <button class="btn" onclick="Priva && Priva.toggleAutoDetect ? Priva.toggleAutoDetect() : alert('Priva non chargé')">🤖 Auto</button>
   </div>
 
-  <!-- Add Camera Modal -->
+  <!-- MODULE: AGRICULTURE -->
+  <div id="module-agriculture" class="panel">
+    <h3 style="margin-top:0">🌾 Données Agriculture</h3>
+
+    <!-- Quick stats -->
+    <div style="display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
+      <div class="panel" style="flex:1; min-width:160px;">
+        <div style="font-size:12px; color:#9fb0cc;">Dernière mesure</div>
+        <div id="agri-latest" style="font-weight:600; margin-top:6px;">—</div>
+      </div>
+      <div class="panel" style="flex:1; min-width:160px;">
+        <div style="font-size:12px; color:#9fb0cc;">Humidité moyenne</div>
+        <div id="agri-humidity" style="font-weight:600; margin-top:6px;">—</div>
+      </div>
+      <div class="panel" style="flex:1; min-width:160px;">
+        <div style="font-size:12px; color:#9fb0cc;">Température moyenne</div>
+        <div id="agri-temperature" style="font-weight:600; margin-top:6px;">—</div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div style="display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
+      <div class="panel" style="flex:1; min-width:260px;">
+        <h4 style="margin:6px 0">📈 Température</h4>
+        <canvas id="climateChartCanvas" width="400" height="200"></canvas>
+      </div>
+      <div class="panel" style="flex:1; min-width:260px;">
+        <h4 style="margin:6px 0">💧 Humidité</h4>
+        <canvas id="airChartCanvas" width="400" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- Table / raw data -->
+    <div class="panel">
+      <h4 style="margin:6px 0">Données brutes</h4>
+      <div style="max-height:320px; overflow:auto;">
+        <table id="agri-data-table">
+          <thead><tr><th>Timestamp</th><th>Temp (°C)</th><th>Humid (%)</th><th>Capteur</th></tr></thead>
+          <tbody><!-- rempli dynamiquement --></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODULE: SECURITY -->
+  <div id="module-security" class="panel hidden">
+    <h3 style="margin-top:0">📹 Sécurité</h3>
+
+    <div style="display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
+      <div style="flex:1">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="btn" onclick="openAddCameraModal()">➕ Ajouter Caméra</button>
+          <button class="btn" onclick="Priva && Priva.refreshAllCameras ? Priva.refreshAllCameras() : alert('Priva non chargé')">🔄 Rafraîchir</button>
+          <button class="btn" onclick="Priva && Priva.captureAllCameras ? Priva.captureAllCameras() : alert('Priva non chargé')">📸 Capturer toutes</button>
+        </div>
+        <div id="security-cameras-grid" class="grid" style="margin-top:10px;"></div>
+      </div>
+
+      <div style="flex:1; min-width:280px;">
+        <div class="panel" style="margin-bottom:12px;">
+          <h4 style="margin:6px 0">Historique IA</h4>
+          <div id="ai-model-info" style="font-size:13px; color:#9fb0cc;"></div>
+          <div id="ai-stats" style="margin-top:8px;"></div>
+        </div>
+
+        <div class="panel">
+          <h4 style="margin:6px 0">Captures récentes</h4>
+          <div id="security-captures-gallery" class="grid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modals (Add Camera, Fullscreen) -->
   <div id="addCameraModal" class="modal hidden" aria-hidden="true">
     <div class="dialog">
       <h3>Ajouter une caméra</h3>
-      <div style="display:flex; flex-direction:column; gap:8px;">
+      <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
         <input id="newCameraName" placeholder="Nom de la caméra" />
         <input id="newCameraIP" placeholder="Adresse IP (ex: 192.168.0.10)" />
         <input id="newCameraLocation" placeholder="Emplacement (optionnel)" />
-        <div style="display:flex; gap:8px; justify-content:flex-end;">
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
           <button class="btn" onclick="submitAddCamera()">Ajouter</button>
           <button class="btn" onclick="closeAddCameraModal()">Annuler</button>
         </div>
@@ -118,11 +156,10 @@
     </div>
   </div>
 
-  <!-- Fullscreen Camera Modal -->
   <div id="cameraFullscreenModal" class="modal hidden" aria-hidden="true">
     <div class="dialog" style="max-width:900px; width:90%;">
       <h3 id="fullscreen-camera-name">📹</h3>
-      <img id="fullscreen-camera-img" src="" alt="Camera fullscreen" />
+      <img id="fullscreen-camera-img" src="" alt="Camera fullscreen" style="max-width:100%; border-radius:6px;" />
       <div style="display:flex; gap:8px; justify-content:center; margin-top:8px;">
         <button class="btn" onclick="captureFromFullscreen()">📸</button>
         <button class="btn" onclick="toggleFlashFullscreen()">💡</button>
@@ -132,34 +169,37 @@
     </div>
   </div>
 
-  <!-- Your (refactored) app script - adjust path if needed -->
+  <!-- Load app script (assure-toi que app.js est la version refactorée exposant window.Priva) -->
   <script src="app.js"></script>
 
-  <!-- Small glue script to manage simple UI actions and bridge to Priva -->
+  <!-- Glue: show/hide modules + render agriculture if Priva.State present -->
   <script>
-    // Show/hide homepage/platform
-    function enterPlatform() {
-      document.getElementById('homepage').classList.add('hidden');
-      document.getElementById('platform').classList.remove('hidden');
+    function returnHome() {
+      // simple behavior: show agriculture by default
+      showModule('agriculture');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 
-      // Initialize Priva if available
-      if (window.Priva && typeof window.Priva.init === 'function') {
-        window.Priva.init().then(() => {
-          window.Priva.initAI && window.Priva.initAI();
-          // render current data to DOM
-          window.Priva.renderSecurityCameras && window.Priva.renderSecurityCameras();
-          window.Priva.renderSecurityCaptures && window.Priva.renderSecurityCaptures();
-        });
-      } else {
-        console.warn('Priva module non disponible (app.js manquant ou non chargé).');
+    function showModule(name) {
+      document.getElementById('module-agriculture').classList.toggle('hidden', name !== 'agriculture');
+      document.getElementById('module-security').classList.toggle('hidden', name !== 'security');
+      document.getElementById('tab-agri').classList.toggle('active', name === 'agriculture');
+      document.getElementById('tab-sec').classList.toggle('active', name === 'security');
+
+      // notify Priva (if needed)
+      if (window.Priva && window.Priva.State) {
+        window.Priva.State.currentModule = name;
+      }
+
+      // Render module-specific UI
+      if (name === 'agriculture') renderAgricultureUI();
+      if (name === 'security') {
+        window.Priva && window.Priva.renderSecurityCameras && window.Priva.renderSecurityCameras();
+        window.Priva && window.Priva.renderSecurityCaptures && window.Priva.renderSecurityCaptures();
       }
     }
 
-    function returnHome() {
-      document.getElementById('platform').classList.add('hidden');
-      document.getElementById('homepage').classList.remove('hidden');
-    }
-
+    // Add camera modal helpers (bridge to Priva)
     function openAddCameraModal() {
       document.getElementById('addCameraModal').classList.remove('hidden');
       document.getElementById('addCameraModal').ariaHidden = "false";
@@ -172,13 +212,10 @@
       const name = document.getElementById('newCameraName').value.trim();
       const ip = document.getElementById('newCameraIP').value.trim();
       const location = document.getElementById('newCameraLocation').value.trim();
-
       if (!name || !ip) {
         showLocalAlert('warning', 'Nom et IP requis');
         return;
       }
-
-      // Prefer using Priva API if available (mobile-friendly adapter)
       if (window.Priva && typeof window.Priva.addSecurityCameraFromParams === 'function') {
         window.Priva.addSecurityCameraFromParams(name, ip, location);
         closeAddCameraModal();
@@ -187,7 +224,7 @@
       }
     }
 
-    // Local DOM alert helper (also kept for compatibility with event bridge)
+    // Local alert
     function showLocalAlert(type, msg) {
       const container = document.getElementById('alertContainer');
       if (!container) return;
@@ -198,88 +235,175 @@
       setTimeout(() => div.remove(), 5000);
     }
 
-    // Event bridge: listen to Priva EventBus custom events and update DOM
+    // Fullscreen helpers: delegate to Priva if available
+    function captureFromFullscreen() { window.Priva && window.Priva.captureFromFullscreen && window.Priva.captureFromFullscreen(); }
+    function toggleFlashFullscreen() { window.Priva && window.Priva.toggleFlashFullscreen && window.Priva.toggleFlashFullscreen(); }
+    function downloadCapture() { window.Priva && window.Priva.downloadCapture && window.Priva.downloadCapture(); }
+    function closeCameraFullscreen() {
+      document.getElementById('cameraFullscreenModal').classList.add('hidden');
+      if (window.Priva && window.Priva.closeCameraFullscreen) window.Priva.closeCameraFullscreen();
+    }
+
+    // AGRICULTURE: try to render data using Priva.State.allAgriData
+    let climateChart = null, airChart = null;
+    async function renderAgricultureUI() {
+      const latestEl = document.getElementById('agri-latest');
+      const humEl = document.getElementById('agri-humidity');
+      const tempEl = document.getElementById('agri-temperature');
+      const tbody = document.querySelector('#agri-data-table tbody');
+
+      let data = [];
+      if (window.Priva && window.Priva.State && Array.isArray(window.Priva.State.allAgriData)) {
+        data = window.Priva.State.allAgriData.slice().reverse(); // last first
+      }
+
+      // Simple fallback: try loading from storage via Priva.Utils if available
+      if ((!data || data.length === 0) && window.Priva && window.Priva.Utils && window.Priva.Utils.loadFromStorage) {
+        try {
+          const loaded = await window.Priva.Utils.loadFromStorage('priva_agri_data', []);
+          if (Array.isArray(loaded)) data = loaded.slice().reverse();
+        } catch (e) { /* ignore */ }
+      }
+
+      // Update quick stats
+      if (data.length > 0) {
+        const latest = data[0];
+        latestEl.textContent = (new Date(latest.timestamp)).toLocaleString();
+        const avgHum = (data.reduce((s, r) => s + (parseFloat(r.humidity || 0) || 0), 0) / data.length).toFixed(1);
+        const avgTemp = (data.reduce((s, r) => s + (parseFloat(r.temperature || 0) || 0), 0) / data.length).toFixed(1);
+        humEl.textContent = avgHum + ' %';
+        tempEl.textContent = avgTemp + ' °C';
+      } else {
+        latestEl.textContent = '—';
+        humEl.textContent = '—';
+        tempEl.textContent = '—';
+      }
+
+      // Table render
+      tbody.innerHTML = '';
+      (data || []).slice(0, 200).forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${new Date(row.timestamp).toLocaleString()}</td>
+                        <td>${row.temperature ?? '—'}</td>
+                        <td>${row.humidity ?? '—'}</td>
+                        <td>${row.sensor ?? '—'}</td>`;
+        tbody.appendChild(tr);
+      });
+
+      // Charts (temperature & humidity)
+      const tempLabels = (data || []).map(d => new Date(d.timestamp).toLocaleTimeString()).reverse();
+      const temps = (data || []).map(d => parseFloat(d.temperature || 0)).reverse();
+      const hums = (data || []).map(d => parseFloat(d.humidity || 0)).reverse();
+
+      // Temperature chart
+      const tc = document.getElementById('climateChartCanvas').getContext ? document.getElementById('climateChartCanvas').getContext('2d') : null;
+      if (tc) {
+        if (climateChart) climateChart.destroy();
+        climateChart = new Chart(tc, {
+          type: 'line',
+          data: { labels: tempLabels, datasets: [{ label: 'Temp (°C)', data: temps, borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.12)', fill:true, tension:0.2 }] },
+          options: { responsive:true, maintainAspectRatio:false, scales:{ x:{ display:false } } }
+        });
+      }
+
+      // Humidity chart
+      const ac = document.getElementById('airChartCanvas').getContext ? document.getElementById('airChartCanvas').getContext('2d') : null;
+      if (ac) {
+        if (airChart) airChart.destroy();
+        airChart = new Chart(ac, {
+          type: 'line',
+          data: { labels: tempLabels, datasets: [{ label: 'Humidité (%)', data: hums, borderColor: '#06b6d4', backgroundColor: 'rgba(6,182,212,0.12)', fill:true, tension:0.2 }] },
+          options: { responsive:true, maintainAspectRatio:false, scales:{ x:{ display:false } } }
+        });
+      }
+    }
+
+    // Event bridge: subscribe to Priva events to keep UI in sync when available
     (function attachPrivaListeners() {
       if (!window.Priva || !window.Priva.EventBus) return;
-
       try {
         const bus = window.Priva.EventBus;
 
-        // Alerts emitted by the library
+        // Alerts
         bus.addEventListener && bus.addEventListener('priva:alert', (e) => {
           const detail = e.detail || e;
           showLocalAlert(detail.type, detail.msg);
         });
 
-        // AI detection results
-        bus.addEventListener && bus.addEventListener('priva:detection', (e) => {
-          const d = e.detail || e;
-          const container = document.getElementById('ai-results-container');
-          if (!container) return;
-          const el = document.createElement('div');
-          el.style = "background:#111827;color:#fff;padding:8px;border-radius:6px;margin:6px 0;";
-          el.innerHTML = `<strong>${d.cameraName}</strong> — ${d.label} (${(d.confidence||0).toFixed(1)}%)<br><small>${new Date(d.timestamp).toLocaleString()}</small>`;
-          container.insertBefore(el, container.firstChild);
-        });
-
-        // Render cameras list (mobile UI)
+        // When camera rendering requested
         bus.addEventListener && bus.addEventListener('priva:render-cameras', (e) => {
           const list = e.detail || e;
           const grid = document.getElementById('security-cameras-grid');
           if (!grid) return;
           grid.innerHTML = '';
-          list.forEach(cam => {
+          (list || []).forEach(cam => {
             const card = document.createElement('div');
-            card.className = 'security-camera-card';
-            card.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;">
-                                <div><strong>📹 ${cam.name}</strong><div style="font-size:12px;color:#9ca3af">${cam.location} • ${cam.ip}</div></div>
-                                <div style="display:flex;flex-direction:column;gap:6px">
-                                  <button class="btn btn-small" onclick="Priva.captureCamera('${cam.id}','${cam.name}','${cam.ip}')">📸</button>
-                                  <button class="btn btn-small" onclick="Priva.captureCameraAndDetect('${cam.id}','${cam.name}','${cam.ip}')">🤖</button>
-                                </div>
-                              </div>`;
+            card.className = 'panel';
+            card.innerHTML = `
+              <div style="display:flex; gap:8px; align-items:flex-start;">
+                <div style="flex:1;">
+                  <div style="font-weight:600">${cam.name}</div>
+                  <div style="font-size:12px;color:#9fb0cc">${cam.location} • ${cam.ip}</div>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:6px;">
+                  <button class="btn btn-small" onclick="Priva.captureCamera('${cam.id}','${cam.name}','${cam.ip}')">📸</button>
+                  <button class="btn btn-small" onclick="Priva.captureCameraAndDetect('${cam.id}','${cam.name}','${cam.ip}')">🤖</button>
+                </div>
+              </div>
+            `;
             grid.appendChild(card);
           });
         });
 
-        // Camera frame update (mobile: load image url)
-        bus.addEventListener && bus.addEventListener('priva:camera-frame', (e) => {
-          const { id, url } = e.detail || e;
-          // If there's an <img id="stream-..."> update it, otherwise ignore (mobile UI should fetch)
-          const img = document.getElementById('stream-' + id);
-          if (img) img.src = url;
-        });
-
-        // Render captures
+        // Renders for captures
         bus.addEventListener && bus.addEventListener('priva:render-captures', (e) => {
           const captures = e.detail || e;
           const gallery = document.getElementById('security-captures-gallery');
           if (!gallery) return;
           gallery.innerHTML = '';
-          (captures || []).slice(0,20).forEach((cap, idx) => {
+          (captures || []).slice(0,20).forEach((cap) => {
             const el = document.createElement('div');
-            el.className = 'capture-item';
-            el.style = 'background:#fff;padding:8px;border-radius:6px;';
-            el.innerHTML = `<div><img src="${cap.url}" alt="${cap.name}" style="width:100%;height:auto;"/></div>
-                            <div style="font-size:12px;margin-top:6px;">📹 ${cap.name} • ${(new Date(cap.timestamp)).toLocaleTimeString()}</div>`;
+            el.className = 'panel';
+            el.innerHTML = `<img src="${cap.url}" alt="${cap.name}" style="width:100%;height:120px;object-fit:cover;border-radius:6px;"/><div style="font-size:12px;margin-top:6px;">${cap.name} • ${(new Date(cap.timestamp)).toLocaleTimeString()}</div>`;
             gallery.appendChild(el);
           });
+        });
+
+        // When agricultural data changed, re-render agriculture UI
+        bus.addEventListener && bus.addEventListener('priva:agri-update', (e) => {
+          // custom event that your backend code can dispatch when agri data updates
+          renderAgricultureUI();
+        });
+
+        // Initial attempt: when Priva ready, render
+        bus.addEventListener && bus.addEventListener('priva:ready', (e) => {
+          renderAgricultureUI();
+          // render security parts
+          window.Priva && window.Priva.renderSecurityCameras && window.Priva.renderSecurityCameras();
+          window.Priva && window.Priva.renderSecurityCaptures && window.Priva.renderSecurityCaptures();
         });
       } catch (err) {
         console.warn('Impossible d\'attacher les listeners Priva:', err);
       }
     })();
 
-    // If app.js is loaded after DOMContentLoaded, try to init automatically
+    // If Priva is not loaded immediately, periodically attempt initialization join
     window.addEventListener('load', () => {
-      if (document.getElementById('platform') && !document.getElementById('platform').classList.contains('hidden')) {
-        // already in platform view
-        if (window.Priva && typeof window.Priva.init === 'function') {
-          window.Priva.init();
+      if (window.Priva && typeof window.Priva.init === 'function') {
+        window.Priva.init().then(() => {
           window.Priva.initAI && window.Priva.initAI();
-        }
+          renderAgricultureUI();
+          window.Priva.renderSecurityCameras && window.Priva.renderSecurityCameras();
+          window.Priva.renderSecurityCaptures && window.Priva.renderSecurityCaptures();
+        }).catch(() => { /* ignore init errors here */ });
+      } else {
+        // fallback: try render agriculture UI from any saved storage
+        setTimeout(renderAgricultureUI, 500);
       }
     });
+
+    // Default to agriculture view on first load
+    showModule('agriculture');
   </script>
 </body>
 </html>
