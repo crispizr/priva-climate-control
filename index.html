@@ -117,14 +117,20 @@
   <!-- DEVICES MODULE -->
   <div id="module-devices" class="panel hidden">
     <h3 style="margin-top:0">🔌 Appareils</h3>
-    <div style="display:flex; gap:8px; margin-bottom:8px;">
-      <input id="newDeviceName" placeholder="Nom appareil" style="flex:1;" />
-      <select id="newDeviceType" style="width:140px;">
-        <option value="sensor">Capteur</option>
-        <option value="camera">Caméra</option>
-        <option value="other">Autre</option>
-      </select>
-      <button id="addDeviceBtn" class="btn">Ajouter</button>
+    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:8px;">
+      <div style="display:flex; gap:8px;">
+        <input id="newDeviceName" placeholder="Nom appareil" style="flex:1;" />
+        <select id="newDeviceType" style="width:140px;">
+          <option value="sensor">Capteur</option>
+          <option value="camera">Caméra</option>
+          <option value="other">Autre</option>
+        </select>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <input id="newDeviceIP" placeholder="IP (optionnel)" style="flex:1;" />
+        <input id="newDeviceLocation" placeholder="Section/Emplacement (optionnel)" style="flex:1;" />
+      </div>
+      <button id="addDeviceBtn" class="btn" style="align-self:flex-start;">Ajouter</button>
     </div>
     <div id="devices-list"></div>
   </div>
@@ -148,10 +154,17 @@
     document.getElementById('addDeviceBtn')?.addEventListener('click', () => {
       const name = document.getElementById('newDeviceName').value.trim();
       const type = document.getElementById('newDeviceType').value;
+      const ip = document.getElementById('newDeviceIP').value.trim();
+      const location = document.getElementById('newDeviceLocation').value.trim();
       if (!name) { alert('Nom requis'); return; }
       if (window.Priva && window.Priva.addDeviceFromParams) {
-        window.Priva.addDeviceFromParams(name, type, null, {});
+        const config = {};
+        if (ip) config.ip = ip;
+        if (location) config.location = location;
+        window.Priva.addDeviceFromParams(name, type, null, config);
         document.getElementById('newDeviceName').value = '';
+        document.getElementById('newDeviceIP').value = '';
+        document.getElementById('newDeviceLocation').value = '';
       } else alert('Module Priva non chargé');
     });
 
