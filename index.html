@@ -101,7 +101,6 @@
     <div style="display:flex; gap:8px; margin-top:12px;">
       <button class="btn" onclick="Priva && Priva.refreshAllCameras && Priva.refreshAllCameras()">🔄 Rafraîchir</button>
       <button class="btn" onclick="Priva && Priva.captureAllCameras && Priva.captureAllCameras()">📸 Capturer toutes</button>
-      <button class="btn" onclick="openAddCameraModal()">➕ Ajouter Caméra</button>
     </div>
 
     <div id="security-cameras-grid" class="grid" style="margin-top:12px;"></div>
@@ -130,26 +129,13 @@
     <div id="devices-list"></div>
   </div>
 
-  <!-- Add camera modal -->
-  <div id="addCameraModal" class="modal hidden" style="position:fixed; inset:0; display:flex;align-items:center;justify-content:center;">
-    <div class="panel" style="width:360px; background:#fff; color:#000;">
-      <h3>Ajouter caméra</h3>
-      <input id="newCameraName" placeholder="Nom" style="width:100%; padding:8px; margin-bottom:8px;" />
-      <input id="newCameraIP" placeholder="IP (ex: 192.168.0.10 or 192.168.0.10:81 or http://host:81)" style="width:100%; padding:8px; margin-bottom:8px;" />
-      <input id="newCameraLocation" placeholder="Emplacement (optionnel)" style="width:100%; padding:8px; margin-bottom:8px;" />
-      <label class="small"><input id="newCameraAutoDetect" type="checkbox" /> Détection auto (si capture)</label>
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
-        <button id="addCameraConfirmBtn" class="btn">Ajouter</button>
-        <button id="addCameraCancelBtn" class="btn">Annuler</button>
-      </div>
-    </div>
-  </div>
+
 
   <!-- app.js (main logic) -->
   <script src="app.js"></script>
 
   <script>
-    // UI glue: no prompt() anywhere. We listen to Priva EventBus to prefill the add-camera modal when promoting a device.
+    // UI glue: no prompt() anywhere.
     function showModule(name) {
       document.getElementById('module-agriculture').classList.toggle('hidden', name !== 'agriculture');
       document.getElementById('module-security').classList.toggle('hidden', name !== 'security');
@@ -169,51 +155,7 @@
       } else alert('Module Priva non chargé');
     });
 
-    // Add camera modal handlers
-    const addModal = document.getElementById('addCameraModal');
-    document.getElementById('addCameraCancelBtn')?.addEventListener('click', () => {
-      addModal.classList.add('hidden');
-      // clear any pending promotion
-      window.__priva_promote = null;
-    });
 
-    // Confirm add camera: if this was triggered as part of a device promotion, link device automatically
-    document.getElementById('addCameraConfirmBtn')?.addEventListener('click', () => {
-      const name = document.getElementById('newCameraName').value.trim();
-      const ip = document.getElementById('newCameraIP').value.trim();
-      const loc = document.getElementById('newCameraLocation').value.trim();
-      const auto = document.getElementById('newCameraAutoDetect').checked;
-      if (!name || !ip) { alert('Nom et IP requis'); return; }
-      if (!window.Priva || !window.Priva.addSecurityCameraFromParams) { alert('Priva non chargé'); return; }
-
-      const camId = window.Priva.addSecurityCameraFromParams(name, ip, loc || 'Non spécifié');
-      if (camId) {
-        // set autoDetect if needed
-        window.Priva.State.securityCameras[camId].autoDetect = !!auto;
-        window.Priva.Utils.saveToStorage('priva_security_cameras', window.Priva.State.securityCameras);
-      }
-
-      // If a promotion was in progress, link device to this camera
-      const promo = window.__priva_promote;
-      if (promo && promo.deviceId && window.Priva && window.Priva.State && window.Priva.State.devices[promo.deviceId]) {
-        window.Priva.State.devices[promo.deviceId].linkedCameraId = camId;
-        window.Priva.Utils.saveToStorage('priva_devices', window.Priva.State.devices);
-        window.Priva.renderDevices && window.Priva.renderDevices();
-        window.__priva_promote = null;
-      }
-
-      addModal.classList.add('hidden');
-      // refresh cameras UI
-      window.Priva && window.Priva.renderSecurityCameras && window.Priva.renderSecurityCameras();
-    });
-
-    function openAddCameraModal(prefill={}) {
-      document.getElementById('newCameraName').value = prefill.name || '';
-      document.getElementById('newCameraIP').value = prefill.ip || '';
-      document.getElementById('newCameraLocation').value = prefill.location || '';
-      document.getElementById('newCameraAutoDetect').checked = !!prefill.autoDetect;
-      addModal.classList.remove('hidden');
-    }
 
     // Phone camera bindings
     document.getElementById('startPhoneCamBtn')?.addEventListener('click', () => {
@@ -228,17 +170,10 @@
       else window.Priva.stopPhoneCameraAutoDetect && window.Priva.stopPhoneCameraAutoDetect();
     });
 
-    // Listen to Priva EventBus to open the add-camera modal when promoting a device
+    // Listen to Priva EventBus for initial render
     (function attachPrivaListeners(){
       if (!window.Priva || !window.Priva.EventBus) return;
       const bus = window.Priva.EventBus;
-      bus.addEventListener && bus.addEventListener('priva:open-add-camera', (e) => {
-        const detail = e.detail || {};
-        // store promotion info globally so confirm handler can link device
-        window.__priva_promote = { deviceId: detail.deviceId || null };
-        // prefill modal fields with device details if present
-        openAddCameraModal({ name: detail.name || '', ip: detail.ip || '', location: detail.location || '', autoDetect: detail.autoDetect || false });
-      });
       // trigger initial render when ready
       bus.addEventListener && bus.addEventListener('priva:ready', () => {
         window.Priva && window.Priva.renderDevices && window.Priva.renderDevices();
