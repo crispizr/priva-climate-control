@@ -8,11 +8,10 @@
 
   <link rel="stylesheet" href="styles.css?v=A2">
 
-  <!-- Chart.js (optionnel pour agriculture) -->
+  <!-- Chart.js (optional for agriculture charts) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 
   <style>
-    /* Minimal UI styles */
     body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin:0; padding:12px; background:#071023; color:#e6eef8; }
     .header { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
     .btn { background:#1f2937; color:#e6eef8; border:0; padding:8px 10px; border-radius:8px; cursor:pointer; }
@@ -21,20 +20,23 @@
     #alertContainer .alert { padding:8px; margin:6px 0; border-radius:6px; color:#fff; }
     .alert.warning { background:#f59e0b; } .alert.success { background:#10b981; } .alert.danger { background:#ef4444; }
     video { border-radius:8px; background:#000; }
-    canvas { display:none; }
     .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; }
     input, select { padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.06); background:#0b1220; color:#e6eef8; }
+    .small { font-size:13px; color:#9fb0cc; }
+    .camera-controls { display:flex; gap:6px; margin-top:8px; }
+    .device-footer { display:flex; gap:6px; align-items:center; }
+    .cam-settings { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
   </style>
 </head>
 <body>
   <div class="header">
     <div>
       <h2 style="margin:0">🌍 Sagitarius-Nova (PRIVA)</h2>
-      <div style="font-size:12px;color:#9fb0cc">Agriculture & Sécurité</div>
+      <div class="small">Agriculture & Sécurité</div>
     </div>
     <div style="display:flex; gap:10px; align-items:center;">
-      <div>🤖 Mode: <strong id="modeDisplay">--</strong></div>
-      <div>📡 <strong id="dataCount">0</strong></div>
+      <div class="small">🤖 Mode: <strong id="modeDisplay">--</strong></div>
+      <div class="small">📡 <strong id="dataCount">0</strong></div>
       <button class="btn" onclick="returnHome()">🏠 Accueil</button>
     </div>
   </div>
@@ -48,48 +50,20 @@
     <button id="tab-dev" class="btn" onclick="showModule('devices')">🔌 Appareils</button>
   </div>
 
-  <!-- MODULE: AGRICULTURE -->
+  <!-- AGRICULTURE MODULE (unchanged simplified) -->
   <div id="module-agriculture" class="panel">
     <h3 style="margin-top:0">🌾 Données Agriculture</h3>
-
-    <div style="display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
-      <div class="panel" style="flex:1; min-width:160px;">
-        <div style="font-size:12px; color:#9fb0cc;">Dernière mesure</div>
-        <div id="agri-latest" style="font-weight:600; margin-top:6px;">—</div>
-      </div>
-      <div class="panel" style="flex:1; min-width:160px;">
-        <div style="font-size:12px; color:#9fb0cc;">Humidité moyenne</div>
-        <div id="agri-humidity" style="font-weight:600; margin-top:6px;">—</div>
-      </div>
-      <div class="panel" style="flex:1; min-width:160px;">
-        <div style="font-size:12px; color:#9fb0cc;">Température moyenne</div>
-        <div id="agri-temperature" style="font-weight:600; margin-top:6px;">—</div>
-      </div>
+    <div class="panel" id="agri-summary" style="margin-bottom:12px;">
+      <div>Dernière mesure: <span id="agri-latest">—</span></div>
+      <div>Temp: <span id="agri-temperature">—</span> • Humid: <span id="agri-humidity">—</span></div>
     </div>
-
-    <div style="display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
-      <div class="panel" style="flex:1; min-width:260px;">
-        <h4 style="margin:6px 0">📈 Température</h4>
-        <canvas id="climateChartCanvas" width="400" height="200"></canvas>
-      </div>
-      <div class="panel" style="flex:1; min-width:260px;">
-        <h4 style="margin:6px 0">💧 Humidité</h4>
-        <canvas id="airChartCanvas" width="400" height="200"></canvas>
-      </div>
-    </div>
-
-    <div class="panel">
-      <h4 style="margin:6px 0">Données brutes</h4>
-      <div style="max-height:320px; overflow:auto;">
-        <table id="agri-data-table" style="width:100%; border-collapse:collapse;">
-          <thead><tr><th>Timestamp</th><th>Temp (°C)</th><th>Humid (%)</th><th>Capteur</th></tr></thead>
-          <tbody><!-- rempli dynamiquement --></tbody>
-        </table>
-      </div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+      <canvas id="climateChartCanvas" width="400" height="200" style="background:#071023;border-radius:6px"></canvas>
+      <canvas id="airChartCanvas" width="400" height="200" style="background:#071023;border-radius:6px"></canvas>
     </div>
   </div>
 
-  <!-- MODULE: SECURITY -->
+  <!-- SECURITY MODULE -->
   <div id="module-security" class="panel hidden">
     <h3 style="margin-top:0">📹 Sécurité</h3>
 
@@ -100,9 +74,7 @@
         <button id="startPhoneCamBtn" class="btn">🎥 Démarrer</button>
         <button id="stopPhoneCamBtn" class="btn">⏹️ Arrêter</button>
         <button id="capturePhoneCamBtn" class="btn">📸 Capturer + Détection</button>
-        <label style="color:#9fb0cc; font-size:13px;">
-          <input id="phoneCamAutoDetect" type="checkbox" /> Détection auto
-        </label>
+        <label class="small"><input id="phoneCamAutoDetect" type="checkbox" /> Détection auto</label>
         <select id="phoneCamFacing" style="padding:6px;">
           <option value="environment">Arrière</option>
           <option value="user">Avant</option>
@@ -110,35 +82,32 @@
       </div>
       <div style="display:flex; gap:12px; margin-top:12px; align-items:flex-start; flex-wrap:wrap;">
         <video id="phone-camera-video" playsinline autoplay muted width="320" height="240"></video>
-        <div id="phone-camera-preview" style="min-width:160px; color:#9fb0cc;">Aperçu</div>
+        <div id="phone-camera-preview" class="small">Aperçu</div>
       </div>
       <canvas id="phone-camera-canvas" width="640" height="480" style="display:none;"></canvas>
-      <div style="margin-top:8px; font-size:12px; color:#9fb0cc;">
-        HTTPS requis sur mobile pour l'accès caméra. iOS Safari requiert une interaction utilisateur.
-      </div>
+      <div class="small" style="margin-top:8px;">HTTPS requis sur mobile pour getUserMedia. iOS Safari : interaction utilisateur requise.</div>
     </div>
 
-    <!-- Security controls -->
-    <div style="display:flex; gap:8px; margin-top:12px; margin-bottom:12px;">
-      <button class="btn" onclick="Priva && Priva.refreshAllCameras ? Priva.refreshAllCameras() : alert('Priva non chargé')">🔄 Rafraîchir</button>
-      <button class="btn" onclick="Priva && Priva.captureAllCameras ? Priva.captureAllCameras() : alert('Priva non chargé')">📸 Capturer toutes</button>
+    <!-- Security actions -->
+    <div style="display:flex; gap:8px; margin-top:12px;">
+      <button class="btn" onclick="Priva && Priva.refreshAllCameras && Priva.refreshAllCameras()">🔄 Rafraîchir</button>
+      <button class="btn" onclick="Priva && Priva.captureAllCameras && Priva.captureAllCameras()">📸 Capturer toutes</button>
       <button class="btn" onclick="openAddCameraModal()">➕ Ajouter Caméra</button>
     </div>
 
-    <div id="security-cameras-grid" class="grid"></div>
+    <!-- Cameras grid (shows cameras added either via devices or add camera modal) -->
+    <div id="security-cameras-grid" class="grid" style="margin-top:12px;"></div>
 
     <h4 style="margin-top:12px">Captures récentes</h4>
     <div id="security-captures-gallery" class="grid"></div>
 
-    <div style="margin-top:12px;">
-      <h4>Statistiques IA</h4>
-      <div id="ai-model-info" style="font-size:13px;color:#9fb0cc;"></div>
-      <div id="ai-stats" style="margin-top:8px;"></div>
-      <div id="ai-results-container" style="margin-top:8px;"></div>
-    </div>
+    <h4 style="margin-top:12px">Statistiques IA</h4>
+    <div id="ai-model-info" class="small"></div>
+    <div id="ai-stats" style="margin-top:8px;"></div>
+    <div id="ai-results-container" style="margin-top:8px;"></div>
   </div>
 
-  <!-- MODULE: DEVICES -->
+  <!-- DEVICES MODULE -->
   <div id="module-devices" class="panel hidden">
     <h3 style="margin-top:0">🔌 Appareils</h3>
     <div style="display:flex; gap:8px; margin-bottom:8px;">
@@ -150,7 +119,7 @@
       </select>
       <button id="addDeviceBtn" class="btn">Ajouter</button>
     </div>
-    <div id="devices-list" style="border-top:1px solid rgba(255,255,255,0.04); padding-top:8px;"></div>
+    <div id="devices-list"></div>
   </div>
 
   <!-- Add camera modal -->
@@ -160,28 +129,28 @@
       <input id="newCameraName" placeholder="Nom" style="width:100%; padding:8px; margin-bottom:8px;" />
       <input id="newCameraIP" placeholder="IP (ex: 192.168.0.10 or 192.168.0.10:81 or http://host:81)" style="width:100%; padding:8px; margin-bottom:8px;" />
       <input id="newCameraLocation" placeholder="Emplacement (optionnel)" style="width:100%; padding:8px; margin-bottom:8px;" />
-      <div style="display:flex; justify-content:flex-end; gap:8px;">
+      <label class="small"><input id="newCameraAutoDetect" type="checkbox" /> Détection auto (si capture)</label>
+      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
         <button id="addCameraConfirmBtn" class="btn">Ajouter</button>
         <button id="addCameraCancelBtn" class="btn">Annuler</button>
       </div>
     </div>
   </div>
 
-  <!-- app.js (main) -->
+  <!-- app.js (main logic) -->
   <script src="app.js"></script>
 
   <script>
-    // Simple UI glue to interact with Priva after app.js loaded
+    // UI glue that uses Priva API (app.js exposes window.Priva)
     function showModule(name) {
       document.getElementById('module-agriculture').classList.toggle('hidden', name !== 'agriculture');
       document.getElementById('module-security').classList.toggle('hidden', name !== 'security');
       document.getElementById('module-devices').classList.toggle('hidden', name !== 'devices');
-      // try to notify Priva
       if (window.Priva && window.Priva.State) window.Priva.State.currentModule = name;
     }
     function returnHome() { showModule('agriculture'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
-    // Add device button
+    // Devices: add
     document.getElementById('addDeviceBtn')?.addEventListener('click', () => {
       const name = document.getElementById('newDeviceName').value.trim();
       const type = document.getElementById('newDeviceType').value;
@@ -189,88 +158,95 @@
       if (window.Priva && window.Priva.addDeviceFromParams) {
         window.Priva.addDeviceFromParams(name, type, null, {});
         document.getElementById('newDeviceName').value = '';
-      } else alert('Priva non chargé');
+      } else alert('Module Priva non chargé');
     });
 
-    // Add camera modal handlers
+    // Add camera modal controls
     const addModal = document.getElementById('addCameraModal');
     document.getElementById('addCameraCancelBtn')?.addEventListener('click', () => addModal.classList.add('hidden'));
     document.getElementById('addCameraConfirmBtn')?.addEventListener('click', () => {
       const name = document.getElementById('newCameraName').value.trim();
       const ip = document.getElementById('newCameraIP').value.trim();
-      const location = document.getElementById('newCameraLocation').value.trim();
+      const loc = document.getElementById('newCameraLocation').value.trim();
+      const auto = document.getElementById('newCameraAutoDetect').checked;
       if (!name || !ip) { alert('Nom et IP requis'); return; }
       if (window.Priva && window.Priva.addSecurityCameraFromParams) {
-        window.Priva.addSecurityCameraFromParams(name, ip, location || 'Non spécifié');
+        const camId = window.Priva.addSecurityCameraFromParams(name, ip, loc || 'Non spécifié');
+        // set camera config autoDetect
+        if (camId && window.Priva.State && window.Priva.State.securityCameras[camId]) {
+          window.Priva.State.securityCameras[camId].autoDetect = !!auto;
+          window.Priva.Utils.saveToStorage('priva_security_cameras', window.Priva.State.securityCameras);
+        }
         addModal.classList.add('hidden');
       } else alert('Priva non chargé');
     });
 
     function openAddCameraModal() { addModal.classList.remove('hidden'); }
 
-    // Phone camera UI bindings (buttons)
+    // Phone camera bindings
     document.getElementById('startPhoneCamBtn')?.addEventListener('click', () => {
       const f = document.getElementById('phoneCamFacing')?.value || 'environment';
       if (window.Priva && window.Priva.startPhoneCamera) window.Priva.startPhoneCamera({ video: { facingMode: { ideal: f } } });
-      else alert('Priva non chargé');
     });
-    document.getElementById('stopPhoneCamBtn')?.addEventListener('click', () => {
-      if (window.Priva && window.Priva.stopPhoneCamera) window.Priva.stopPhoneCamera();
-    });
-    document.getElementById('capturePhoneCamBtn')?.addEventListener('click', () => {
-      if (window.Priva && window.Priva.capturePhoneCameraAndDetect) window.Priva.capturePhoneCameraAndDetect();
-    });
+    document.getElementById('stopPhoneCamBtn')?.addEventListener('click', () => { if (window.Priva) window.Priva.stopPhoneCamera && window.Priva.stopPhoneCamera(); });
+    document.getElementById('capturePhoneCamBtn')?.addEventListener('click', () => { if (window.Priva) window.Priva.capturePhoneCameraAndDetect && window.Priva.capturePhoneCameraAndDetect(); });
     document.getElementById('phoneCamAutoDetect')?.addEventListener('change', (e) => {
-      if (window.Priva) {
-        if (e.target.checked) window.Priva.startPhoneCameraAutoDetect && window.Priva.startPhoneCameraAutoDetect(2000);
-        else window.Priva.stopPhoneCameraAutoDetect && window.Priva.stopPhoneCameraAutoDetect();
-      }
+      if (!window.Priva) return;
+      if (e.target.checked) window.Priva.startPhoneCameraAutoDetect && window.Priva.startPhoneCameraAutoDetect(2000);
+      else window.Priva.stopPhoneCameraAutoDetect && window.Priva.stopPhoneCameraAutoDetect();
     });
 
-    // Listen Priva alerts (EventBus)
-    (function attachPrivaListeners() {
+    // Subscribe to Priva EventBus for rendering
+    (function attachPriva() {
       if (!window.Priva || !window.Priva.EventBus) return;
       const bus = window.Priva.EventBus;
+
+      // alerts
       bus.addEventListener && bus.addEventListener('priva:alert', (e) => {
         const d = e.detail || e;
         const c = document.getElementById('alertContainer');
         if (!c) return;
         const el = document.createElement('div');
         el.className = 'alert ' + (d.type || 'warning');
-        el.textContent = d.msg || (d.detail && d.detail.msg) || '';
+        el.textContent = d.msg || '';
         c.appendChild(el);
         setTimeout(() => el.remove(), 5000);
       });
 
-      // Render devices list
+      // render devices
       bus.addEventListener && bus.addEventListener('priva:render-devices', (e) => {
         const list = e.detail || e;
         const container = document.getElementById('devices-list');
         if (!container) return;
         container.innerHTML = '';
-        list.forEach(dev => {
-          const wrapper = document.createElement('div');
-          wrapper.className = 'panel';
-          wrapper.style.marginBottom = '8px';
-          wrapper.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;">
-            <div><strong>${dev.name}</strong><div style="font-size:12px;color:#9fb0cc">${dev.type} • ${dev.module || 'non assigné'}</div></div>
-            <div style="display:flex;gap:8px;">
-              <select id="assign_${dev.id}">
-                <option value="">-- assign --</option>
-                <option value="agriculture">Agriculture</option>
-                <option value="security">Sécurité</option>
-              </select>
-              <button class="btn" id="remove_${dev.id}">✖</button>
-            </div>
+        (list || []).forEach(dev => {
+          const wrap = document.createElement('div');
+          wrap.className = 'panel';
+          wrap.style.marginBottom = '8px';
+          const promoteBtn = (dev.type === 'camera') ? `<button class="btn" id="promote_${dev.id}">➕ Vers Sécurité</button>` : '';
+          wrap.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;">
+            <div><strong>${dev.name}</strong><div class="small">${dev.type} • ${dev.module || 'non assigné'}</div></div>
+            <div class="device-footer">${promoteBtn}<button class="btn" id="delete_${dev.id}">✖</button></div>
           </div>`;
-          container.appendChild(wrapper);
-          const sel = wrapper.querySelector(`#assign_${dev.id}`);
-          if (sel) { sel.value = dev.module || ''; sel.addEventListener('change', (ev) => { window.Priva.assignDeviceModule && window.Priva.assignDeviceModule(dev.id, ev.target.value || null); }); }
-          wrapper.querySelector(`#remove_${dev.id}`)?.addEventListener('click', () => { if (confirm(`Supprimer ${dev.name}?`)) window.Priva.removeDevice && window.Priva.removeDevice(dev.id); });
+          container.appendChild(wrap);
+          if (dev.type === 'camera') {
+            const btn = document.getElementById(`promote_${dev.id}`);
+            if (btn) btn.addEventListener('click', () => {
+              if (window.Priva && window.Priva.addSecurityCameraFromParams) {
+                // try to reuse config.ip if present
+                const ip = dev.config?.ip || '';
+                const camId = window.Priva.addSecurityCameraFromParams(dev.name, ip || '', dev.config?.location || 'Non spécifié');
+                // link device to camera
+                if (camId) { window.Priva.State.devices[dev.id].linkedCameraId = camId; window.Priva.Utils.saveToStorage('priva_devices', window.Priva.State.devices); renderDevices(); }
+              }
+            });
+          }
+          const del = document.getElementById(`delete_${dev.id}`);
+          if (del) del.addEventListener('click', () => { if (confirm(`Supprimer ${dev.name} ?`)) window.Priva.removeDevice && window.Priva.removeDevice(dev.id); });
         });
       });
 
-      // Render cameras/captures
+      // render cameras
       bus.addEventListener && bus.addEventListener('priva:render-cameras', (e) => {
         const list = e.detail || e;
         const grid = document.getElementById('security-cameras-grid');
@@ -279,20 +255,78 @@
         (list || []).forEach(cam => {
           const card = document.createElement('div');
           card.className = 'panel';
-          card.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px;">
-            <div style="font-weight:600">${cam.name}</div>
-            <div style="font-size:12px;color:#9fb0cc">${cam.location} • ${cam.ip}</div>
-            <img src="${cam.ip ? (cam.ip.startsWith('http') ? cam.ip + '/capture' : 'http://' + cam.ip + ':' + (window.Priva?.CONFIG?.ESP32_PORT||81) + '/capture') : ''}" style="width:100%;height:140px;object-fit:cover;border-radius:6px;" />
-            <div style="display:flex;gap:6px;">
-              <button class="btn" onclick="Priva.captureCamera('${cam.id}','${cam.name}','${cam.ip}')">📸</button>
-              <button class="btn" onclick="Priva.captureCameraAndDetect('${cam.id}','${cam.name}','${cam.ip}')">🤖</button>
-              <button class="btn" onclick="Priva.detectWithESP32Camera('${cam.id}','${cam.name}','${cam.ip}')">🔍 ESP32</button>
+          card.innerHTML = `
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                  <strong contenteditable="false" id="cam-name-${cam.id}">${cam.name}</strong><br>
+                  <span class="small" id="cam-location-${cam.id}">${cam.location}</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+                  <label class="small"><input type="checkbox" id="cam-active-${cam.id}" ${cam.active ? 'checked' : ''}/> Actif</label>
+                  <button class="btn" id="cam-remove-${cam.id}">🗑️</button>
+                </div>
+              </div>
+
+              <img id="stream-${cam.id}" src="${cam.ip ? (cam.ip.startsWith('http') ? cam.ip + '/capture?t=' + Date.now() : 'http://' + cam.ip + ':' + (window.Priva?.CONFIG?.ESP32_PORT||81) + '/capture?t=' + Date.now()) : ''}" style="width:100%;height:160px;object-fit:cover;border-radius:6px;" />
+
+              <div class="cam-settings">
+                <div style="display:flex;gap:6px;">
+                  <input id="cam-ip-${cam.id}" value="${cam.ip || ''}" style="flex:1;" />
+                  <button class="btn" id="cam-save-${cam.id}">💾</button>
+                </div>
+                <div style="display:flex;gap:6px;">
+                  <button class="btn" id="cam-capture-${cam.id}">📸</button>
+                  <button class="btn" id="cam-ia-${cam.id}">🤖 IA</button>
+                  <button class="btn" id="cam-esp-${cam.id}">🔍 ESP32</button>
+                  <button class="btn" id="cam-flash-${cam.id}">💡 Flash</button>
+                  <label class="small" style="margin-left:8px;"><input type="checkbox" id="cam-autodetect-${cam.id}" ${cam.autoDetect ? 'checked' : ''}/> Auto détect</label>
+                </div>
+              </div>
             </div>
-          </div>`;
+          `;
           grid.appendChild(card);
+
+          // events
+          document.getElementById(`cam-save-${cam.id}`)?.addEventListener('click', () => {
+            const newIp = document.getElementById(`cam-ip-${cam.id}`).value.trim();
+            const newName = document.getElementById(`cam-name-${cam.id}`).textContent.trim();
+            const newLoc  = document.getElementById(`cam-location-${cam.id}`).textContent.trim();
+            if (!newName || !newIp) { alert('Nom et IP requis'); return; }
+            if (window.Priva && window.Priva.State) {
+              window.Priva.State.securityCameras[cam.id].name = newName;
+              window.Priva.State.securityCameras[cam.id].ip = newIp;
+              window.Priva.State.securityCameras[cam.id].location = newLoc;
+              window.Priva.Utils.saveToStorage('priva_security_cameras', window.Priva.State.securityCameras);
+              showAlert('success','✅ Config sauvegardée');
+              window.Priva.renderSecurityCameras && window.Priva.renderSecurityCameras();
+            }
+          });
+
+          document.getElementById(`cam-capture-${cam.id}`)?.addEventListener('click', () => { window.Priva && window.Priva.captureCamera && window.Priva.captureCamera(cam.id, cam.name, cam.ip); });
+          document.getElementById(`cam-ia-${cam.id}`)?.addEventListener('click', () => { window.Priva && window.Priva.captureCameraAndDetect && window.Priva.captureCameraAndDetect(cam.id, cam.name, cam.ip); });
+          document.getElementById(`cam-esp-${cam.id}`)?.addEventListener('click', () => { window.Priva && window.Priva.detectWithESP32Camera && window.Priva.detectWithESP32Camera(cam.id, cam.name, cam.ip); });
+          document.getElementById(`cam-flash-${cam.id}`)?.addEventListener('click', () => { window.Priva && window.Priva.toggleFlash && window.Priva.toggleFlash(cam.id, cam.ip); });
+          document.getElementById(`cam-remove-${cam.id}`)?.addEventListener('click', () => { if (confirm(`Supprimer caméra ${cam.name} ?`)) window.Priva.removeSecurityCamera && window.Priva.removeSecurityCamera(cam.id); });
+          document.getElementById(`cam-active-${cam.id}`)?.addEventListener('change', (e) => {
+            if (window.Priva && window.Priva.State) {
+              window.Priva.State.securityCameras[cam.id].active = e.target.checked;
+              window.Priva.Utils.saveToStorage('priva_security_cameras', window.Priva.State.securityCameras);
+              if (e.target.checked) window.Priva.CameraManager && window.Priva.CameraManager.startRefresh && window.Priva.CameraManager.startRefresh(cam.id, window.Priva.State.securityCameras[cam.id].ip);
+              else window.Priva.CameraManager && window.Priva.CameraManager.stopRefresh && window.Priva.CameraManager.stopRefresh(cam.id);
+            }
+          });
+          document.getElementById(`cam-autodetect-${cam.id}`)?.addEventListener('change', (e) => {
+            if (window.Priva && window.Priva.State) {
+              window.Priva.State.securityCameras[cam.id].autoDetect = e.target.checked;
+              window.Priva.Utils.saveToStorage('priva_security_cameras', window.Priva.State.securityCameras);
+              showAlert('success', e.target.checked ? 'Auto-détect activé' : 'Auto-détect désactivé');
+            }
+          });
         });
       });
 
+      // render captures
       bus.addEventListener && bus.addEventListener('priva:render-captures', (e) => {
         const caps = e.detail || e;
         const gallery = document.getElementById('security-captures-gallery');
@@ -301,15 +335,21 @@
         (caps || []).slice(0,20).forEach(cap => {
           const el = document.createElement('div');
           el.className = 'panel';
-          el.innerHTML = `<img src="${cap.url}" style="width:100%;height:120px;object-fit:cover;border-radius:6px;"/><div style="font-size:12px;margin-top:6px;">${cap.name} • ${(new Date(cap.timestamp)).toLocaleTimeString()}</div>`;
+          el.innerHTML = `<img src="${cap.url}" style="width:100%;height:120px;object-fit:cover;border-radius:6px;"/><div class="small" style="margin-top:6px">${cap.name} • ${(new Date(cap.timestamp)).toLocaleTimeString()}</div>`;
           gallery.appendChild(el);
         });
       });
 
-    }
-  )();
+      // when ready, trigger render of existing state
+      bus.addEventListener && bus.addEventListener('priva:ready', (e) => {
+        window.Priva && window.Priva.renderDevices && window.Priva.renderDevices();
+        window.Priva && window.Priva.renderSecurityCameras && window.Priva.renderSecurityCameras();
+        window.Priva && window.Priva.renderSecurityCaptures && window.Priva.renderSecurityCaptures();
+      });
 
-    // default view
+    })();
+
+    // default module
     showModule('agriculture');
   </script>
 </body>
