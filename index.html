@@ -26,9 +26,18 @@
     .camera-controls { display:flex; gap:6px; margin-top:8px; }
     .device-footer { display:flex; gap:6px; align-items:center; }
     .cam-settings { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+    #welcome-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:#071023; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:1000; color:#e6eef8; }
+    .app-hidden { display: none; }
   </style>
 </head>
 <body>
+  <!-- Welcome Screen -->
+  <div id="welcome-screen">
+    <h1>Bienvenu</h1>
+    <button class="btn" id="enter-app-btn">Bienvenu</button>
+  </div>
+
+  <div id="main-app" class="app-hidden">
   <div class="header">
     <div>
       <h2 style="margin:0">🌍 Sagitarius-Nova (PRIVA)</h2>
@@ -240,6 +249,14 @@
 
     // default module
     showModule('agriculture');
+  </script>
+
+  <script>
+    // Welcome screen handler
+    document.getElementById('enter-app-btn').addEventListener('click', () => {
+      document.getElementById('welcome-screen').style.display = 'none';
+      document.getElementById('main-app').classList.remove('app-hidden');
+    });
   </script>
 </body>
 </html>
