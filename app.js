@@ -1536,4 +1536,93 @@ function captureFromFullscreen() {
 
 function toggleFlashFullscreen() {
   const img = document.getElementById('fullscreen-camera-img');
-  if (!img || !img.src) return;
+  if (!img || !img.src) return;const active = Object.entries(State.securityCameras).find(([id, cam]) =>
+img.src.includes(cam.ip)
+);
+if (active) {
+const [id, cam] = active;
+toggleFlash(id, cam.ip);
+}
+}
+function downloadCapture() {
+const img = document.getElementById('fullscreen-camera-img');
+if (!img || !img.src) return;
+const link = document.createElement('a');
+link.href = img.src;
+link.download = capture_${Date.now()}.jpg;
+link.click();
+showAlert('success', '⬇️ Téléchargement...');
+}
+// ==================== FONCTIONS IA ====================
+async function testAIServer() {
+showAlert('warning', '🔍 Test serveur IA...');
+try {
+const response = await Utils.fetchWithTimeout(${CONFIG.AI_SERVER_URL}/health);
+const data = await response.json();
+if (data.status === 'healthy') {
+  showAlert('success', `✅ Serveur IA opérationnel`);
+  console.log('📊 Infos serveur:', data);
+  return true;
+}
+} catch (error) {
+showAlert('danger', '❌ Serveur IA injoignable');
+console.error('Erreur:', error);
+return false;
+}
+}
+async function getAIModelInfo() {
+try {
+const response = await Utils.fetchWithTimeout(${CONFIG.AI_SERVER_URL}/info);
+const data = await response.json();
+console.log('🤖 Infos modèle IA:', data);
+
+const infoDiv = document.getElementById('ai-model-info');
+if (infoDiv) {
+  infoDiv.innerHTML = `
+    <div style="padding: 10px; background: #1a1d29; border-radius: 8px; font-size: 12px;">
+      <strong>Modèle:</strong> ${data.model_name}<br>
+      <strong>Classes:</strong> ${data.classes.join(', ')}<br>
+      <strong>Input:</strong> ${data.input_shape.join('x')}<br>
+      <strong>Version:</strong> ${data.version}
+    </div>
+  `;
+}
+
+return data;
+} catch (error) {
+console.error('Erreur infos modèle:', error);
+showAlert('danger', '❌ Erreur récupération infos modèle');
+return null;
+}
+}
+function toggleAutoDetect() {
+CONFIG.AI_AUTO_DETECT = !CONFIG.AI_AUTO_DETECT;
+const btn = document.getElementById('toggle-auto-detect-btn');
+if (btn) {
+btn.textContent = CONFIG.AI_AUTO_DETECT ? '🤖 Auto: ON' : '🤖 Auto: OFF';
+btn.className = CONFIG.AI_AUTO_DETECT ? 'btn btn-success btn-small' : 'btn btn-secondary btn-small';
+}
+showAlert(
+CONFIG.AI_AUTO_DETECT ? 'success' : 'warning',
+CONFIG.AI_AUTO_DETECT ? '✅ Détection auto activée' : '⏸️ Détection auto désactivée'
+);
+}
+// ==================== ÉVÉNEMENTS ====================
+document.addEventListener('visibilitychange', () => {
+if (!document.hidden && CameraManager.isActive && State.currentModule === 'security') {
+console.log('👁️ Page visible - Relance refresh caméras');
+const active = Object.entries(State.securityCameras).filter(([id, cam]) => cam.active);
+active.forEach(([id, cam]) => {
+  if (!CameraManager.intervals[id]) {
+    console.log(`🔄 Relance refresh ${id}`);
+    CameraManager.startRefresh(id, cam.ip);
+  }
+});
+}
+});
+window.addEventListener('beforeunload', () => {
+if (State.dataUpdateInterval) clearInterval(State.dataUpdateInterval);
+if (State.moduleUpdateInterval) clearInterval(State.moduleUpdateInterval);
+CameraManager.stopAll();
+});
+console.log('✅ PRIVA JavaScript Complet v4.0 Final - Toutes fonctionnalités chargées');
