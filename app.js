@@ -700,8 +700,8 @@ function switchModule(module) {
   document.getElementById('deviceManager').style.display = 'none';
   document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
   
-  const btn = event?.target || document.querySelector(`.tab-btn[onclick*="${module}"]`);
-  if (btn) btn.classList.add('active');
+   const clickedBtn = document.querySelector(`.tab-btn[onclick*="switchModule('${module}')"]`);
+  if (clickedBtn) clickedBtn.classList.add('active');
   
   if (module === 'agriculture' || module === 'security') {
     const moduleDiv = document.getElementById(module);
@@ -722,6 +722,8 @@ function switchModule(module) {
 }
 
 function showDeviceManager() {
+  console.log('🔄 Affichage gestionnaire appareils');
+  
   if (State.moduleUpdateInterval) {
     clearInterval(State.moduleUpdateInterval);
     State.moduleUpdateInterval = null;
@@ -734,7 +736,8 @@ function showDeviceManager() {
   document.getElementById('deviceManager').style.display = 'block';
   document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
   
-  if (event?.target) event.target.classList.add('active');
+ const deviceBtn = document.querySelector('.tab-btn[onclick*="showDeviceManager"]');
+  if (deviceBtn) deviceBtn.classList.add('active');
   
   renderDevicesList();
 }
