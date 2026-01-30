@@ -1,1631 +1,580 @@
-// ============================================
-// PRIVA Platform - JavaScript Complet v4.0 Final
-// Toutes fonctionnalités intégrées avec IA
-// ============================================
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#667eea">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PRIVA">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Icônes temporaires (emoji SVG) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+  <title>Sagitarius-Nova</title>
+  <link rel="stylesheet" href="styles.css?v=A2">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+</head>
+<body>
+  
+  <!-- ========================================= -->
+  <!-- PAGE D'ACCUEIL -->
+  <!-- ========================================= -->
+  <div id="homepage" class="homepage">
+    <div class="home-background-image"></div>
+    <div class="home-overlay"></div>
+    
+    <div class="home-container">
+      <button class="home-button" onclick="enterPlatform()">
+        <span class="home-icon">🌍</span>
+        <span class="home-button-text">Accéder à la Plateforme</span>
+        <div class="button-glow"></div>
+      </button>
+    </div>
+  </div>
 
-// ==================== CONFIGURATION ====================
-const CONFIG = {
-  COMMAND_API_URL: 'https://script.google.com/macros/s/AKfycbwA53tJWrpVpd6WeoAA09FYVe63aFvwy-liD_rQgb2gr_HZ2bYHC1sKajJ4wzwshMC6aA/exec',
-  AGRICULTURE_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwJjy2KpJJ5X--C87zVuPjykAg9Fyc79zIxpdk1Dt0FvrxYw1Onfzt5wSHOVagvLry9uyyohzeN3h4/pub?output=csv",
-  SECURITY_CSV_URL: "https://docs.google.com/spreadsheets/d/12x5LRuFBaKeAfkSxc53uR-6Q3Xcu-OxZt2plY0GZSko/export?format=csv&gid=2127989880",
-  PROXY: 'https://api.allorigins.win/raw?url=',
-  AI_SERVER_URL: 'https://priva-climate-control.onrender.com',
-  CAMERA_REFRESH_RATE: 500,
-  MAX_CAPTURES: 100,
-  FETCH_TIMEOUT: 5000,
-  ESP32_PORT: 81,
-  AI_AUTO_DETECT: false
-};
-
-// ==================== ÉTAT GLOBAL ====================
-const State = {
-  allAgriData: [],
-  allSecurityData: [],
-  devices: {},
-  securityCameras: {},
-  securityCaptures: [],
-  currentModule: 'agriculture',
-  climateChart: null,
-  airChart: null,
-  dataUpdateInterval: null,
-  moduleUpdateInterval: null,
-  isInitialized: false
-};
-
-// ==================== UTILITAIRES ====================
-const Utils = {
-  async fetchWithTimeout(url, options = {}, timeout = CONFIG.FETCH_TIMEOUT) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
-    
-    try {
-      const response = await fetch(url, { ...options, signal: controller.signal });
-      clearTimeout(timeoutId);
-      return response;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      throw error;
-    }
-  },
-  
-  formatDateTime(dateStr) {
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleString('fr-FR', {
-        day: '2-digit',
-        month: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch {
-      return dateStr;
-    }
-  },
-  
-  saveToLocalStorage(key, data) {
-    try {
-      localStorage.setItem(key, JSON.stringify(data));
-      return true;
-    } catch (error) {
-      console.error('Erreur sauvegarde localStorage:', error);
-      return false;
-    }
-  },
-  
-  loadFromLocalStorage(key, defaultValue = null) {
-    try {
-      const data = localStorage.getItem(key);
-      return data ? JSON.parse(data) : defaultValue;
-    } catch (error) {
-      console.error('Erreur chargement localStorage:', error);
-      return defaultValue;
-    }
-  },
-  
-  validateIP(ip) {
-    const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
-    if (!ipRegex.test(ip)) return false;
-    
-    return ip.split('.').every(octet => {
-      const num = parseInt(octet, 10);
-      return num >= 0 && num <= 255;
-    });
-  },
-  
-  buildCameraUrl(ip, endpoint = 'capture') {
-    return `http://${ip}:${CONFIG.ESP32_PORT}/${endpoint}?t=${Date.now()}`;
-  }
-};
-
-// ==================== GESTIONNAIRE IA ====================
-const AIManager = {
-  isProcessing: false,
-  history: [],
-  
-  async detectImage(imageBlob, cameraName, cameraId) {
-    if (this.isProcessing) {
-      showAlert('warning', '⏳ Détection en cours...');
-      return null;
-    }
-    
-    this.isProcessing = true;
-    showAlert('warning', '🤖 Analyse IA en cours...');
-    
-    try {
-      const formData = new FormData();
-      formData.append('file', imageBlob, `capture_${cameraId}_${Date.now()}.jpg`);
-      
-      const response = await Utils.fetchWithTimeout(
-        `${CONFIG.AI_SERVER_URL}/upload`,
-        { method: 'POST', body: formData },
-        30000
-      );
-      
-      if (!response.ok) throw new Error(`Erreur serveur: ${response.status}`);
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        const detection = {
-          cameraId,
-          cameraName,
-          label: result.prediction.label,
-          confidence: result.prediction.confidence,
-          timestamp: new Date().toISOString(),
-          allPredictions: result.all_predictions
-        };
-        
-        this.history.unshift(detection);
-        if (this.history.length > 50) this.history = this.history.slice(0, 50);
-        
-        Utils.saveToLocalStorage('priva_ai_history', this.history);
-        this.showDetectionResult(detection);
-        this.updateAIStats();
-        
-        showAlert('success', `✅ ${result.prediction.label} (${result.prediction.confidence}%)`);
-        return detection;
-      } else {
-        throw new Error(result.error || 'Erreur inconnue');
-      }
-      
-    } catch (error) {
-      console.error('❌ Erreur détection IA:', error);
-      showAlert('danger', `❌ Erreur IA: ${error.message}`);
-      return null;
-    } finally {
-      this.isProcessing = false;
-    }
-  },
-  
-  async detectWithESP32(cameraIp, cameraName, cameraId) {
-    showAlert('warning', '🔍 Détection directe ESP32...');
-    
-    try {
-      const response = await Utils.fetchWithTimeout(`http://${cameraIp}:81/detect`);
-      const result = await response.json();
-      
-      if (result.success) {
-        const detection = {
-          cameraId, cameraName,
-          label: result.detected,
-          confidence: result.confidence,
-          timestamp: new Date().toISOString(),
-          source: 'esp32'
-        };
-        
-        this.history.unshift(detection);
-        this.showDetectionResult(detection);
-        
-        showAlert('success', `✅ ${result.detected} (${result.confidence.toFixed(1)}%)`);
-        return detection;
-      }
-    } catch (error) {
-      console.error('❌ Erreur détection ESP32:', error);
-      showAlert('danger', '❌ Erreur détection ESP32');
-      return null;
-    }
-  },
-  
-  showDetectionResult(detection) {
-    const resultDiv = document.createElement('div');
-    resultDiv.style.cssText = `
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      padding: 15px; border-radius: 10px; margin: 10px 0;
-      animation: slideIn 0.3s; transition: all 0.3s;
-    `;
-    
-    const confidenceColor = detection.confidence >= 80 ? '#00a651' : 
-                           detection.confidence >= 60 ? '#f77f00' : '#e63946';
-    
-    resultDiv.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 15px;">
-        <div style="font-size: 48px;">🤖</div>
-        <div style="flex: 1;">
-          <strong style="font-size: 18px;">📹 ${detection.cameraName}</strong><br>
-          <div style="margin: 8px 0;">
-            🎯 Détection: <strong style="font-size: 20px; color: #fff;">${detection.label}</strong>
+  <!-- ========================================= -->
+  <!-- PLATEFORME PRINCIPALE -->
+  <!-- ========================================= -->
+  <div id="platform" style="display: none;">
+    <div class="header">
+      <div class="header-content">
+        <div class="logo">
+          <span style="font-size: 36px;">🌍</span>
+          <h1>Sagitarius-Nova</h1>
+        </div>
+        <div class="status-bar">
+          <div class="status-item">
+            <div class="status-dot connected" id="connectionStatus"></div>
+            <span id="connectionText">Démarrage...</span>
           </div>
-          <div style="display: flex; align-items: center; gap: 10px;">
-            📊 Confiance: 
-            <div style="flex: 1; background: rgba(255,255,255,0.2); height: 20px; border-radius: 10px; overflow: hidden;">
-              <div style="width: ${detection.confidence}%; height: 100%; background: ${confidenceColor}; transition: width 0.3s;"></div>
+          <div class="status-item">
+            <span>🤖 Mode: <strong id="modeDisplay">--</strong></span>
+          </div>
+          <div class="status-item">
+            <span>📡 <strong id="dataCount">0</strong> mesures</span>
+          </div>
+          <div class="status-item">
+            <button class="btn btn-danger btn-small" onclick="returnHome()">🏠 Accueil</button>
+          </div>
+        </div>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchModule('agriculture')">🌱 Agriculture</button>
+          <button class="tab-btn" onclick="switchModule('security')">🔒 Sécurité</button>
+          <button class="tab-btn" onclick="showDeviceManager()">🎛️ Appareils</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div id="alertContainer"></div>
+      
+      <!-- Gestionnaire d'Appareils -->
+      <div class="card" id="deviceManager" style="display:none;">
+        <div class="card-header">
+          <div class="card-title">🎛️ Gestionnaire d'Appareils ESP32</div>
+          <button class="btn btn-success" onclick="openAddDeviceModal()">➕ Ajouter</button>
+        </div>
+        <div id="devicesList"></div>
+      </div>
+
+      <!-- ========================================= -->
+      <!-- MODULE AGRICULTURE -->
+      <!-- ========================================= -->
+      <div id="agriculture" class="module active">
+        <!-- Configuration appareil actif -->
+        <div class="card" id="agri-config" style="background: linear-gradient(135deg, #252836, #1a1d29); border: 2px solid #667eea;">
+          <div class="card-header" style="border-bottom: 2px solid #667eea;">
+            <div class="card-title">⚙️ Configuration ESP32 Agriculture</div>
+          </div>
+          <div id="agri-device-info" style="text-align: center; padding: 20px; opacity: 0.6;">
+            Aucun appareil actif. Ajoutez un ESP32 via l'onglet "🎛️ Appareils"
+          </div>
+        </div>
+        
+        <!-- Première ligne : Température et Humidité sur 2 colonnes -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+          <div class="sensor-card">
+            <div class="sensor-icon">🌡️</div>
+            <div class="sensor-value"><span id="tempValue">--</span><span class="sensor-unit">°C</span></div>
+            <div style="margin-top:10px"><span class="status-badge optimal">Normal</span></div>
+          </div>
+          <div class="sensor-card">
+            <div class="sensor-icon">💧</div>
+            <div class="sensor-value"><span id="humidValue">--</span><span class="sensor-unit">%</span></div>
+            <div style="margin-top:10px"><span class="status-badge optimal">Normal</span></div>
+          </div>
+        </div>
+        
+        <!-- Deuxième ligne : CO2, DC et autres capteurs sur 4 colonnes -->
+        <div class="grid-4" style="margin-bottom: 25px;">
+          <div class="sensor-card">
+            <div class="sensor-icon">🔬</div>
+            <div class="sensor-value"><span id="gasValue">--</span><span class="sensor-unit">ppm</span></div>
+            <div style="margin-top:10px"><span class="status-badge optimal">Normal</span></div>
+          </div>
+          <div class="sensor-card">
+            <div class="sensor-icon">⚡</div>
+            <div class="sensor-value"><span id="dcValue">--</span><span class="sensor-unit">V</span></div>
+            <div style="margin-top:10px"><span class="status-badge optimal">DC</span></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><div class="card-title">⚙️ Équipements</div></div>
+            <div class="device-grid">
+              <div class="device-card" id="pompeCard" onclick="toggleDevice('agriculture', 'pompe')">
+                <div class="device-icon">💧</div>
+                <div>Irrigation</div>
+                <small id="pompeStatus">Arrêté</small>
+              </div>
+              <div class="device-card" id="brumisateurCard" onclick="toggleDevice('agriculture', 'brumisateur')">
+                <div class="device-icon">💦</div>
+                <div>Brumisation</div>
+                <small id="brumisateurStatus">Arrêté</small>
+              </div>
+              <div class="device-card" id="ventilateurCard" onclick="toggleDevice('agriculture', 'ventilateur')">
+                <div class="device-icon">🌀</div>
+                <div>Ventilation</div>
+                <small id="ventilateurStatus">Arrêté</small>
+              </div>
+              <div class="device-card" id="chauffageCard" onclick="toggleDevice('agriculture', 'chauffage')">
+                <div class="device-icon">🔥</div>
+                <div>Chauffage</div>
+                <small id="chauffageStatus">Arrêté</small>
+              </div>
+              <div class="device-card" id="eclairageCard" onclick="toggleDevice('agriculture', 'eclairage')">
+                <div class="device-icon">💡</div>
+                <div>Éclairage</div>
+                <small id="eclairageStatus">Arrêté</small>
+              </div>
+              <div class="device-card" id="electrovanneCard" onclick="toggleDevice('agriculture', 'electrovanne')">
+                <div class="device-icon">🚰</div>
+                <div>Électrovanne</div>
+                <small id="electrovanneStatus">Fermée</small>
+              </div>
             </div>
-            <strong style="color: ${confidenceColor};">${detection.confidence.toFixed(1)}%</strong>
+            <div style="margin-top:20px">
+              <button class="btn btn-success" onclick="setMode('auto')">🤖 Auto</button>
+              <button class="btn btn-primary" onclick="setMode('manual')">✋ Manuel</button>
+              <button class="btn btn-danger" onclick="emergencyStop()">🛑 Arrêt</button>
+            </div>
           </div>
-          <small style="opacity: 0.8;">⏰ ${new Date(detection.timestamp).toLocaleString('fr-FR')}</small>
+
+          <div class="card">
+            <div class="card-header"><div class="card-title">🎯 Paramètres Auto</div></div>
+            <div class="control-group">
+              <label class="control-label">🌡️ Temp Min: <span id="tempMinVal">18°C</span></label>
+              <input type="range" min="0" max="100" value="18" class="slider" id="tempMin" oninput="updateSlider('tempMin',this.value,'°C')">
+            </div>
+            <div class="control-group">
+              <label class="control-label">🌡️ Temp Max: <span id="tempMaxVal">28°C</span></label>
+              <input type="range" min="0" max="100" value="28" class="slider" id="tempMax" oninput="updateSlider('tempMax',this.value,'°C')">
+            </div>
+            <div class="control-group">
+              <label class="control-label">💧 Humid Min: <span id="humidMinVal">50%</span></label>
+              <input type="range" min="0" max="100" value="50" class="slider" id="humidMin" oninput="updateSlider('humidMin',this.value,'%')">
+            </div>
+            <div class="control-group">
+              <label class="control-label">💧 Humid Max: <span id="humidMaxVal">80%</span></label>
+              <input type="range" min="0" max="100" value="80" class="slider" id="humidMax" oninput="updateSlider('humidMax',this.value,'%')">
+            </div>
+            <button class="btn btn-success" style="width:100%" onclick="saveSettings()">💾 Enregistrer</button>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><div class="card-title">📈 Température & Humidité</div></div>
+            <div class="chart-container"><canvas id="climateChart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">📊 Qualité Air</div></div>
+            <div class="chart-container"><canvas id="airChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">📋 Données Récentes</div></div>
+          <table>
+            <thead><tr><th>Date</th><th>Temp</th><th>Humid</th><th>CO2</th><th>DC</th></tr></thead>
+            <tbody id="dataTable"><tr><td colspan="5" style="text-align:center">Chargement...</td></tr></tbody>
+          </table>
         </div>
       </div>
-    `;
-    
-    const container = document.getElementById('ai-results-container') || document.getElementById('alertContainer');
-    if (container) {
-      container.insertBefore(resultDiv, container.firstChild);
-      setTimeout(() => {
-        resultDiv.style.opacity = '0';
-        resultDiv.style.transform = 'translateX(100%)';
-        setTimeout(() => resultDiv.remove(), 300);
-      }, 15000);
-    }
-  },
-  
-  updateAIStats() {
-    const statsDiv = document.getElementById('ai-stats');
-    if (!statsDiv) return;
-    
-    const total = this.history.length;
-    if (total === 0) {
-      statsDiv.innerHTML = '<div style="text-align: center; padding: 20px; opacity: 0.6;">Aucune détection pour le moment</div>';
-      return;
-    }
-    
-    const labels = {};
-    this.history.forEach(h => labels[h.label] = (labels[h.label] || 0) + 1);
-    
-    let html = `<div style="padding: 15px; background: #1a1d29; border-radius: 10px;">
-      <h3 style="margin-top: 0;">📊 Statistiques IA</h3>
-      <p>Total détections: <strong>${total}</strong></p>
-      <div style="margin-top: 10px;">`;
-    
-    Object.entries(labels).forEach(([label, count]) => {
-      const percentage = (count / total * 100).toFixed(1);
-      html += `
-        <div style="margin: 5px 0;">
-          <div style="display: flex; justify-content: space-between;">
-            <span>${label}</span>
-            <span><strong>${count}</strong> (${percentage}%)</span>
-          </div>
-          <div style="background: #0f1117; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 3px;">
-            <div style="width: ${percentage}%; height: 100%; background: #667eea;"></div>
-          </div>
-        </div>`;
-    });
-    
-    html += `</div></div>`;
-    statsDiv.innerHTML = html;
-  },
-  
-  loadHistory() {
-    this.history = Utils.loadFromLocalStorage('priva_ai_history', []);
-    this.updateAIStats();
-  },
-  
-  clearHistory() {
-    if (confirm('Vider l\'historique des détections IA ?')) {
-      this.history = [];
-      Utils.saveToLocalStorage('priva_ai_history', []);
-      this.updateAIStats();
-      showAlert('success', '🗑️ Historique vidé');
-    }
-  }
-};
 
-// ==================== GESTIONNAIRE CAMÉRAS ====================
-const CameraManager = {
-  intervals: {},
-  fullscreenInterval: null,
-  isActive: false,
-  frameCounters: {},
-  
-  init() {
-    console.log('📹 Initialisation CameraManager');
-    this.isActive = false;
-    this.stopAll();
-  },
-  
-  startRefresh(id, ip) {
-    if (!Utils.validateIP(ip)) {
-      console.error(`❌ IP invalide pour caméra ${id}: ${ip}`);
-      return;
-    }
-    
-    this.stopRefresh(id);
-    
-    if (!this.isActive) {
-      console.log('⏸️ CameraManager inactif, refresh non démarré');
-      return;
-    }
-    
-    console.log(`📹 Démarrage refresh caméra: ${id}`);
-    
-    let errorCount = 0;
-    const MAX_ERRORS = 3;
-    this.frameCounters[id] = { count: 0, lastTime: Date.now() };
-    
-    const refreshFrame = async () => {
-      if (!this.isActive) {
-        console.log(`⏸️ Module inactif, arrêt refresh ${id}`);
-        this.stopRefresh(id);
-        return;
-      }
-      
-      const img = document.getElementById(`stream-${id}`);
-      if (!img) {
-        console.log(`❌ Image ${id} introuvable, arrêt refresh`);
-        this.stopRefresh(id);
-        return;
-      }
-      
-      try {
-        const newSrc = Utils.buildCameraUrl(ip, 'capture');
-        const testImg = new Image();
-        
-        testImg.onload = () => {
-          img.src = newSrc;
-          errorCount = 0;
-          this.updateCameraStatus(id, 'online');
-          this.updateFPS(id);
-        };
-        
-        testImg.onerror = () => {
-          errorCount++;
-          console.warn(`⚠️ Erreur chargement ${id} (${errorCount}/${MAX_ERRORS})`);
+      <!-- ========================================= -->
+      <!-- MODULE SÉCURITÉ -->
+      <!-- ========================================= -->
+      <div id="security" class="module">
+        <!-- Configuration ESP32 Sécurité -->
+        <div class="card" id="sec-config" style="background: linear-gradient(135deg, #252836, #1a1d29); border: 2px solid #667eea;">
+          <div class="card-header" style="border-bottom: 2px solid #667eea;">
+            <div class="card-title">⚙️ Configuration ESP32 Sécurité</div>
+          </div>
+          <div id="sec-device-info" style="text-align: center; padding: 20px; opacity: 0.6;">
+            Aucun appareil actif. Ajoutez un ESP32 via l'onglet "🎛️ Appareils"
+          </div>
+        </div>
+
+        <!-- NOUVEAU : Panneau de contrôle IA -->
+        <div class="card" style="background: linear-gradient(135deg, #1a1d29, #252836); border: 2px solid #667eea;">
+          <div class="card-header" style="border-bottom: 2px solid #667eea;">
+            <div class="card-title">🤖 Intelligence Artificielle</div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button id="toggle-auto-detect-btn" class="btn btn-secondary btn-small" onclick="toggleAutoDetect()">
+                🤖 Auto: OFF
+              </button>
+              <button class="btn btn-primary btn-small" onclick="testAIServer()">
+                🔍 Tester Serveur
+              </button>
+              <button class="btn btn-primary btn-small" onclick="getAIModelInfo()">
+                ℹ️ Info Modèle
+              </button>
+            </div>
+          </div>
           
-          if (errorCount >= MAX_ERRORS) {
-            console.error(`❌ Trop d'erreurs pour ${id}, arrêt refresh`);
-            this.updateCameraStatus(id, 'offline');
-            this.stopRefresh(id);
-          }
-        };
+          <!-- Infos modèle -->
+          <div id="ai-model-info" style="margin-bottom: 15px;">
+            <div style="text-align: center; padding: 10px; opacity: 0.6;">
+              Cliquez sur "ℹ️ Info Modèle" pour voir les détails
+            </div>
+          </div>
+          
+          <!-- Statistiques IA -->
+          <div id="ai-stats">
+            <div style="text-align: center; padding: 20px; opacity: 0.6;">
+              Aucune détection pour le moment
+            </div>
+          </div>
+          
+          <!-- Actions -->
+          <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+            <button class="btn btn-danger btn-small" onclick="AIManager.clearHistory()">
+              🗑️ Vider Historique
+            </button>
+          </div>
+        </div>
+
+        <!-- Conteneur résultats IA -->
+        <div id="ai-results-container"></div>
         
-        testImg.src = newSrc;
-        
-      } catch (error) {
-        console.error(`❌ Erreur refresh ${id}:`, error);
-        errorCount++;
-        if (errorCount >= MAX_ERRORS) this.stopRefresh(id);
+        <!-- Capteurs sécurité -->
+        <div class="grid-4">
+          <div class="sensor-card">
+            <div class="sensor-icon">🚪</div>
+            <div class="sensor-value" id="sec-door" style="font-size: 24px;">--</div>
+            <div>État Porte</div>
+          </div>
+          <div class="sensor-card">
+            <div class="sensor-icon">👁️</div>
+            <div class="sensor-value" id="sec-motion" style="font-size: 24px;">--</div>
+            <div>Mouvement</div>
+          </div>
+          <div class="sensor-card">
+            <div class="sensor-icon">🔑</div>
+            <div class="sensor-value" id="sec-badge" style="font-size: 18px;">--</div>
+            <div>Dernier Badge</div>
+          </div>
+          <div class="sensor-card">
+            <div class="sensor-icon">⏰</div>
+            <div class="sensor-value" id="sec-time" style="font-size: 20px;">--</div>
+            <div>Dernier Accès</div>
+          </div>
+        </div>
+
+        <!-- Contrôles sécurité -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">🔒 Contrôles</div></div>
+          <div class="device-grid">
+            <div class="device-card" id="lockCard" onclick="toggleDevice('security', 'lock')">
+              <div class="device-icon">🔓</div>
+              <div>Serrure</div>
+              <small id="lockStatus">Verrouillée</small>
+            </div>
+            <div class="device-card" id="alarmCard" onclick="toggleDevice('security', 'alarm')">
+              <div class="device-icon">🚨</div>
+              <div>Alarme</div>
+              <small id="alarmStatus">Désactivée</small>
+            </div>
+            <div class="device-card" id="lightsCard" onclick="toggleDevice('security', 'lights')">
+              <div class="device-icon">💡</div>
+              <div>Lumières</div>
+              <small id="lightsStatus">Éteintes</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================= -->
+        <!-- SECTION CAMÉRAS ESP32-CAM -->
+        <!-- ========================================= -->
+        <div class="card" style="background: linear-gradient(135deg, #1a1d29, #252836); border: 2px solid #667eea;">
+          <div class="card-header" style="border-bottom: 2px solid #667eea;">
+            <div class="card-title">📹 Caméras de Surveillance</div>
+            <button class="btn btn-success btn-small" onclick="openAddCameraModal()">➕ Ajouter Caméra</button>
+          </div>
+          
+          <!-- Contrôles caméras -->
+          <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+            <button class="btn btn-small btn-primary" onclick="setCameraView('grid')">🔲 Grille</button>
+            <button class="btn btn-small btn-primary" onclick="setCameraView('single')">📺 Simple</button>
+            <button class="btn btn-small btn-success" onclick="refreshAllCameras()">🔄 Rafraîchir</button>
+            <button class="btn btn-small btn-danger" onclick="captureAllCameras()">📸 Capturer Tout</button>
+          </div>
+          
+          <!-- Grille des caméras -->
+          <div id="security-cameras-grid" class="cameras-grid">
+            <div style="text-align: center; padding: 40px; opacity: 0.6;">
+              Aucune caméra configurée. Cliquez sur "➕ Ajouter Caméra"
+            </div>
+          </div>
+        </div>
+
+        <!-- Galerie des captures -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📸 Captures Récentes</div>
+            <button class="btn btn-small btn-danger" onclick="clearSecurityCaptures()">🗑️ Vider</button>
+          </div>
+          <div id="security-captures-gallery" class="capture-gallery">
+            <div style="text-align: center; padding: 20px; opacity: 0.6;">
+              Aucune capture
+            </div>
+          </div>
+        </div>
+           
+        <!-- Tableau des événements sécurité -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">📋 Événements Récents</div></div>
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Badge</th>
+                <th>Porte</th>
+                <th>Mouvement</th>
+                <th>Auth</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="securityTable">
+              <tr><td colspan="6" style="text-align:center">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- MODALS -->
+    <!-- ========================================= -->
+    
+    <!-- Modal Ajout Appareil ESP32 -->
+    <div id="addDeviceModal" class="modal">
+      <div class="modal-content">
+        <div class="card-header">
+          <h2 style="margin: 0;">➕ Ajouter un ESP32</h2>
+          <button class="btn btn-danger btn-small" onclick="closeAddDeviceModal()">✖</button>
+        </div>
+        <div class="input-group">
+          <label>📛 Nom:</label>
+          <input type="text" id="newDeviceName" placeholder="Serre 1" style="flex: 2;">
+        </div>
+        <div class="input-group">
+          <label>📡 IP:</label>
+          <input type="text" id="newDeviceIP" placeholder="192.168.1.100" style="flex: 2;">
+        </div>
+        <div class="input-group">
+          <label>🏷️ Type:</label>
+          <select id="newDeviceType" style="flex: 2;">
+            <option value="agriculture">🌱 Agriculture</option>
+            <option value="security">🔒 Sécurité</option>
+            <option value="custom">⚙️ Personnalisé</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>📍 Lieu:</label>
+          <input type="text" id="newDeviceLocation" placeholder="Zone A" style="flex: 2;">
+        </div>
+        <button class="btn btn-success" onclick="addDevice()" style="width: 100%; margin-top: 15px;">💾 Ajouter</button>
+      </div>
+    </div>
+
+    <!-- Modal Ajout Caméra -->
+    <div id="addCameraModal" class="modal">
+      <div class="modal-content">
+        <div class="card-header">
+          <h2 style="margin: 0;">➕ Ajouter une ESP32-CAM</h2>
+          <button class="btn btn-danger btn-small" onclick="closeAddCameraModal()">✖</button>
+        </div>
+        <div class="input-group">
+          <label>📛 Nom:</label>
+          <input type="text" id="newCameraName" placeholder="Caméra Entrée" style="flex: 2;">
+        </div>
+        <div class="input-group">
+          <label>📡 IP:</label>
+          <input type="text" id="newCameraIP" placeholder="192.168.1.200" style="flex: 2;">
+        </div>
+        <div class="input-group">
+          <label>📍 Position:</label>
+          <input type="text" id="newCameraLocation" placeholder="Entrée principale" style="flex: 2;">
+        </div>
+        <button class="btn btn-success" onclick="addSecurityCamera()" style="width: 100%; margin-top: 15px;">
+          💾 Ajouter Caméra
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Plein Écran Caméra -->
+    <div id="cameraFullscreenModal" class="modal">
+      <div class="modal-content" style="max-width: 95%; max-height: 95vh; padding: 15px;">
+        <div class="card-header">
+          <h2 style="margin: 0;" id="fullscreen-camera-name">📹 Caméra</h2>
+          <button class="btn btn-danger btn-small" onclick="closeCameraFullscreen()">✖ Fermer</button>
+        </div>
+        <img id="fullscreen-camera-img" style="width: 100%; height: auto; border-radius: 10px; margin-top: 15px;">
+        <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+          <button class="btn btn-success" onclick="captureFromFullscreen()">📸 Capturer</button>
+          <button class="btn btn-primary" onclick="toggleFlashFullscreen()">💡 Flash</button>
+          <button class="btn btn-primary" onclick="downloadCapture()">⬇️ Télécharger</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="H.js"></script>
+  <script>
+    // Fonction pour entrer dans la plateforme
+    function enterPlatform() {
+      document.getElementById('homepage').style.display = 'none';
+      document.getElementById('platform').style.display = 'block';
+      if (typeof init === 'function') {
+        init();
       }
-    };
-    
-    refreshFrame();
-    this.intervals[id] = setInterval(refreshFrame, CONFIG.CAMERA_REFRESH_RATE);
-  },
-  
-  stopRefresh(id) {
-    if (this.intervals[id]) {
-      clearInterval(this.intervals[id]);
-      delete this.intervals[id];
-      console.log(`🛑 Arrêt refresh: ${id}`);
-    }
-  },
-  
-  stopAll() {
-    console.log('🛑 Arrêt de tous les refresh caméras');
-    Object.keys(this.intervals).forEach(id => this.stopRefresh(id));
-    
-    if (this.fullscreenInterval) {
-      clearInterval(this.fullscreenInterval);
-      this.fullscreenInterval = null;
     }
     
-    this.frameCounters = {};
-  },
-  
-  startFullscreen(ip) {
-    if (this.fullscreenInterval) {
-      clearInterval(this.fullscreenInterval);
-    }
-    
-    const img = document.getElementById('fullscreen-camera-img');
-    if (!img) return;
-    
-    const refresh = () => {
-      const modal = document.getElementById('cameraFullscreenModal');
-      if (!modal || !modal.classList.contains('active')) {
-        clearInterval(this.fullscreenInterval);
-        this.fullscreenInterval = null;
-        return;
-      }
-      
-      img.src = Utils.buildCameraUrl(ip, 'capture');
-    };
-    
-    refresh();
-    this.fullscreenInterval = setInterval(refresh, CONFIG.CAMERA_REFRESH_RATE);
-  },
-  
-  updateCameraStatus(id, status) {
-    const indicator = document.getElementById(`status-${id}`);
-    const card = document.getElementById(`sec-cam-${id}`);
-    const loading = document.getElementById(`loading-${id}`);
-    
-    if (status === 'online') {
-      indicator?.classList.remove('offline');
-      card?.classList.remove('offline');
-      if (loading) loading.style.display = 'none';
-    } else {
-      indicator?.classList.add('offline');
-      card?.classList.add('offline');
-      if (loading) {
-        loading.style.display = 'block';
-        loading.textContent = '❌ Hors ligne';
+    // Fonction pour retourner à l'accueil
+    function returnHome() {
+      if (confirm('Voulez-vous vraiment retourner à l\'accueil ?')) {
+        document.getElementById('platform').style.display = 'none';
+        document.getElementById('homepage').style.display = 'flex';
       }
     }
-  },
-  
-  updateFPS(id) {
-    const counter = this.frameCounters[id];
-    if (!counter) return;
-    
-    counter.count++;
-    const now = Date.now();
-    
-    if (now - counter.lastTime >= 1000) {
-      const fps = Math.round(counter.count * 1000 / (now - counter.lastTime));
-      const fpsElement = document.getElementById(`fps-${id}`);
-      if (fpsElement) fpsElement.textContent = fps;
-      
-      counter.count = 0;
-      counter.lastTime = now;
-    }
-  }
-};
 
-// ==================== ALERTES ====================
-function showAlert(type, msg) {
-  const alert = document.createElement('div');
-  alert.className = `alert ${type}`;
-  alert.textContent = msg;
-  
-  const container = document.getElementById('alertContainer');
-  if (container) {
-    container.appendChild(alert);
-    setTimeout(() => alert.remove(), 5000);
-  }
-}
-
-// ==================== INITIALISATION ====================
-function init() {
-  if (State.isInitialized) {
-    console.log('⚠️ Application déjà initialisée');
-    return;
-  }
-  
-  console.log('🚀 Initialisation PRIVA...');
-  
-  State.devices = Utils.loadFromLocalStorage('priva_devices', {});
-  State.securityCameras = Utils.loadFromLocalStorage('priva_security_cameras', {});
-  State.securityCaptures = Utils.loadFromLocalStorage('priva_security_captures', []);
-  
-  setupCharts();
-  loadAgricultureData();
-  loadSecurityData();
-  
-  State.dataUpdateInterval = setInterval(() => {
-    loadAgricultureData();
-    loadSecurityData();
-  }, 10000);
-  
-  renderDevicesList();
-  
-  const agriDevice = Object.values(State.devices).find(d => d.type === 'agriculture' && d.active);
-  if (agriDevice) {
-    updateModuleConfig('agriculture');
-    startModuleUpdate('agriculture');
-  }
-  
-  State.isInitialized = true;
-  showAlert('success', '✓ Système initialisé');
-  
-  console.log('✅ PRIVA initialisé');
-}
-
-function initAI() {
-  console.log('🤖 Initialisation module IA');
-  AIManager.loadHistory();
-}
-
-// ==================== GRAPHIQUES ====================
-function setupCharts() {
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { 
-      legend: { 
-        labels: { 
-          color: '#f8f9fa', 
-          font: { size: 12 } 
-        } 
-      } 
-    },
-    scales: {
-      x: { 
-        ticks: { color: '#9ca3af', maxRotation: 45, minRotation: 45 }, 
-        grid: { color: '#2d3142' } 
-      },
-      y: { 
-        ticks: { color: '#9ca3af' }, 
-        grid: { color: '#2d3142' } 
-      }
-    }
-  };
-
-  const climateCtx = document.getElementById('climateChart');
-  const airCtx = document.getElementById('airChart');
-  
-  if (climateCtx) {
-    State.climateChart = new Chart(climateCtx, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [
-          { 
-            label: 'Température (°C)', 
-            data: [], 
-            borderColor: '#ef4444', 
-            backgroundColor: 'rgba(239, 68, 68, 0.1)', 
-            tension: 0.4, 
-            borderWidth: 3, 
-            fill: true 
-          },
-          { 
-            label: 'Humidité (%)', 
-            data: [], 
-            borderColor: '#3b82f6', 
-            backgroundColor: 'rgba(59, 130, 246, 0.1)', 
-            tension: 0.4, 
-            borderWidth: 3, 
-            fill: true 
-          }
-        ]
-      },
-      options: chartOptions
-    });
-  }
-
-  if (airCtx) {
-    State.airChart = new Chart(airCtx, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [
-          { 
-            label: 'CO2 (ppm)', 
-            data: [], 
-            borderColor: '#10b981', 
-            backgroundColor: 'rgba(16, 185, 129, 0.1)', 
-            tension: 0.4, 
-            borderWidth: 3, 
-            fill: true 
-          }
-        ]
-      },
-      options: chartOptions
-    });
-  }
-}
-
-// ==================== DONNÉES AGRICULTURE ====================
-async function loadAgricultureData() {
-  try {
-    const res = await Utils.fetchWithTimeout(
-      CONFIG.PROXY + encodeURIComponent(CONFIG.AGRICULTURE_CSV_URL)
-    );
-    const csv = await res.text();
-    const rows = csv.trim().split('\n').map(r => r.split(',').map(c => c.trim()));
-    
-    State.allAgriData = rows.slice(1).filter(row => row.length >= 3);
-    
-    if (State.allAgriData.length > 0) {
-      updateCharts();
-      updateAgricultureTable();
-      
-      const dataCount = document.getElementById('dataCount');
-      if (dataCount) dataCount.textContent = State.allAgriData.length;
-    }
-  } catch (err) {
-    console.error('❌ Erreur chargement agriculture:', err);
-  }
-}
-
-function updateCharts() {
-  if (!State.climateChart || !State.airChart) return;
-  
-  const data = State.allAgriData.slice(-50);
-  
-  State.climateChart.data.labels = data.map(r => Utils.formatDateTime(r[0]));
-  State.climateChart.data.datasets[0].data = data.map(r => parseFloat(r[1]) || 0);
-  State.climateChart.data.datasets[1].data = data.map(r => parseFloat(r[2]) || 0);
-  State.climateChart.update('none');
-
-  State.airChart.data.labels = data.map(r => Utils.formatDateTime(r[0]));
-  State.airChart.data.datasets[0].data = data.map(r => parseFloat(r[3]) || 0);
-  State.airChart.update('none');
-}
-
-function updateAgricultureTable() {
-  const tableBody = document.getElementById('dataTable');
-  if (!tableBody) return;
-  
-  const recentData = State.allAgriData.slice(-10).reverse();
-  
-  if (recentData.length === 0) {
-    tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Aucune donnée</td></tr>';
-    return;
-  }
-  
-  tableBody.innerHTML = recentData.map(r => `
-    <tr>
-      <td>${r[0]}</td>
-      <td>${parseFloat(r[1]).toFixed(1)}°C</td>
-      <td>${parseFloat(r[2]).toFixed(1)}%</td>
-      <td>${parseFloat(r[3]).toFixed(0)} ppm</td>
-      <td>${parseFloat(r[4]).toFixed(2)}V</td>
-    </tr>
-  `).join('');
-}
-
-// ==================== DONNÉES SÉCURITÉ ====================
-async function loadSecurityData() {
-  try {
-    const res = await Utils.fetchWithTimeout(
-      CONFIG.PROXY + encodeURIComponent(CONFIG.SECURITY_CSV_URL)
-    );
-    const csv = await res.text();
-    const rows = csv.trim().split('\n').map(r => r.split(',').map(c => c.trim()));
-    
-    State.allSecurityData = rows.slice(1).filter(row => row.length >= 3);
-    
-    if (State.allSecurityData.length > 0) {
-      updateSecurityTable();
-    }
-  } catch (err) {
-    console.error('❌ Erreur chargement sécurité:', err);
-  }
-}
-
-function updateSecurityTable() {
-  const tableBody = document.getElementById('securityTable');
-  if (!tableBody) return;
-  
-  const recentData = State.allSecurityData.slice(-10).reverse();
-  
-  if (recentData.length === 0) {
-    tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Aucune donnée</td></tr>';
-    return;
-  }
-  
-  tableBody.innerHTML = recentData.map(r => {
-    const authorized = r[4] === 'Oui';
-    const authColor = authorized ? '#00a651' : '#e63946';
-    return `
-      <tr>
-        <td>${r[0]}</td>
-        <td>${r[1] || '--'}</td>
-        <td>${r[2] || '--'}</td>
-        <td>${r[3] || '--'}</td>
-        <td style="color: ${authColor}; font-weight: bold;">${r[4] || '--'}</td>
-        <td>${r[5] || '--'}</td>
-      </tr>
-    `;
-  }).join('');
-}
-
-// ==================== NAVIGATION ====================
-function switchModule(module) {
-  console.log(`🔄 Changement module: ${State.currentModule} → ${module}`);
-  
-  if (State.moduleUpdateInterval) {
-    clearInterval(State.moduleUpdateInterval);
-    State.moduleUpdateInterval = null;
-  }
-  
-  if (State.currentModule === 'security') {
-    CameraManager.isActive = false;
-    CameraManager.stopAll();
-  }
-  
-  State.currentModule = module;
-  
-  document.querySelectorAll('.module').forEach(m => m.style.display = 'none');
-  document.getElementById('deviceManager').style.display = 'none';
-  document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
-  
-   const clickedBtn = document.querySelector(`.tab-btn[onclick*="switchModule('${module}')"]`);
-  if (clickedBtn) clickedBtn.classList.add('active');
-  
-  if (module === 'agriculture' || module === 'security') {
-    const moduleDiv = document.getElementById(module);
-    if (moduleDiv) moduleDiv.style.display = 'block';
-    
-    updateModuleConfig(module);
-    startModuleUpdate(module);
-    
-    if (module === 'security') {
+    // Initialiser le module IA au chargement
+    document.addEventListener('DOMContentLoaded', function() {
       setTimeout(() => {
-        CameraManager.isActive = true;
-        initSecurityCameras();
-      }, 100);
-    }
+        if (typeof initAI === 'function') {
+          initAI();
+          console.log('✅ Module IA initialisé');
+        }
+      }, 1000);
+    });
     
-    showAlert('success', `📱 Module ${module === 'agriculture' ? 'Agriculture' : 'Sécurité'} activé`);
-  }
-}
-
-function showDeviceManager() {
-  console.log('🔄 Affichage gestionnaire appareils');
-  
-  if (State.moduleUpdateInterval) {
-    clearInterval(State.moduleUpdateInterval);
-    State.moduleUpdateInterval = null;
-  }
-  
-  CameraManager.isActive = false;
-  CameraManager.stopAll();
-  
-  document.querySelectorAll('.module').forEach(m => m.style.display = 'none');
-  document.getElementById('deviceManager').style.display = 'block';
-  document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
-  
- const deviceBtn = document.querySelector('.tab-btn[onclick*="showDeviceManager"]');
-  if (deviceBtn) deviceBtn.classList.add('active');
-  
-  renderDevicesList();
-}
-
-// ==================== CONFIGURATION MODULE ====================
-function updateModuleConfig(module) {
-  const device = Object.values(State.devices).find(d => d.type === module && d.active);
-  const configId = module === 'agriculture' ? 'agri-device-info' : 'sec-device-info';
-  const configDiv = document.getElementById(configId);
-  
-  if (!configDiv) return;
-  
-  if (!device) {
-    configDiv.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.6;">Aucun appareil actif. Ajoutez un ESP32 via "🎛️ Appareils"</div>';
-    return;
-  }
-  
-  const icon = module === 'agriculture' ? '🌱' : '🔒';
-  
-  configDiv.innerHTML = `
-    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
-      <div style="flex:1;">
-        <div style="font-weight:600;margin-bottom:5px;">${icon} ${device.name}</div>
-        <div style="font-size:12px;opacity:0.7;">📍 ${device.location}</div>
-      </div>
-      <div style="flex:2;display:flex;gap:10px;align-items:center;">
-        <label style="font-weight:600;">📡 IP:</label>
-        <input type="text" id="edit-ip-${module}" value="${device.ip}" 
-               style="flex:1;padding:8px;background:#0f1117;border:1px solid #2d3142;border-radius:5px;color:white;">
-        <button class="btn btn-success btn-small" onclick="updateDeviceIP('${module}')">💾</button>
-        <button class="btn btn-primary btn-small" onclick="testActiveDevice('${module}')">🔍</button>
-      </div>
-    </div>
-  `;
-}
-
-function updateDeviceIP(module) {
-  const device = Object.values(State.devices).find(d => d.type === module && d.active);
-  if (!device) return;
-  
-  const input = document.getElementById(`edit-ip-${module}`);
-  const newIP = input?.value.trim();
-  
-  if (!newIP || !Utils.validateIP(newIP)) {
-    showAlert('warning', '⚠️ IP invalide');
-    return;
-  }
-  
-  device.ip = newIP;
-  Utils.saveToLocalStorage('priva_devices', State.devices);
-  showAlert('success', `✓ IP mise à jour: ${newIP}`);
-  
-  if (State.moduleUpdateInterval) {
-    clearInterval(State.moduleUpdateInterval);
-  }
-  startModuleUpdate(module);
-}
-
-async function testActiveDevice(module) {
-  const device = Object.values(State.devices).find(d => d.type === module && d.active);
-  if (!device) return;
-  
-  showAlert('warning', `🔍 Test de connexion...`);
-  
-  try {
-    await Utils.fetchWithTimeout(`http://${device.ip}/`, { mode: 'cors' });
-    showAlert('success', `✓ Connexion réussie`);
-  } catch (err) {
-    showAlert('danger', `❌ Connexion échouée`);
-  }
-}
-
-// ==================== MISE À JOUR ESP32 ====================
-function startModuleUpdate(module) {
-  const device = Object.values(State.devices).find(d => d.type === module && d.active);
-  if (!device) return;
-  
-  if (module === 'agriculture') {
-    updateAgricultureData(device.ip);
-    State.moduleUpdateInterval = setInterval(() => updateAgricultureData(device.ip), 3000);
-  } else if (module === 'security') {
-    updateSecurityData(device.ip);
-    State.moduleUpdateInterval = setInterval(() => updateSecurityData(device.ip), 3000);
-  }
-}
-
-async function updateAgricultureData(ip) {
-  try {
-    const res = await Utils.fetchWithTimeout(`http://${ip}/status`, { mode: 'cors' });
-    const data = await res.json();
-    
-    const tempValue = document.getElementById('tempValue');
-    const humidValue = document.getElementById('humidValue');
-    const gasValue = document.getElementById('gasValue');
-    const dcValue = document.getElementById('dcValue');
-    const modeDisplay = document.getElementById('modeDisplay');
-    
-    if (tempValue) tempValue.textContent = data.temperature.toFixed(1);
-    if (humidValue) humidValue.textContent = data.humidity.toFixed(1);
-    if (gasValue) gasValue.textContent = data.gas.toFixed(0);
-    if (dcValue) dcValue.textContent = data.dc.toFixed(2);
-    if (modeDisplay) modeDisplay.textContent = data.mode.toUpperCase();
-    
-    ['pompe', 'brumisateur', 'ventilateur', 'chauffage', 'eclairage', 'electrovanne'].forEach(d => 
-      updateDeviceUI(d, data.devices[d])
-    );
-    
-    updateConnectionStatus('connected', 'Agriculture');
-  } catch (err) {
-    updateConnectionStatus('disconnected');
-  }
-}
-
-async function updateSecurityData(ip) {
-  try {
-    const res = await Utils.fetchWithTimeout(`http://${ip}/status`, { mode: 'cors' });
-    const data = await res.json();
-    
-    const doorEl = document.getElementById('sec-door');
-    const motionEl = document.getElementById('sec-motion');
-    const badgeEl = document.getElementById('sec-badge');
-    const timeEl = document.getElementById('sec-time');
-    
-    if (doorEl) {
-      doorEl.textContent = data.doorOpen ? 'OUVERTE' : 'FERMÉE';
-      doorEl.style.color = data.doorOpen ? '#e63946' : '#00a651';
-    }
-    
-    if (motionEl) {
-      motionEl.textContent = data.motionDetected ? 'DÉTECTÉ' : 'AUCUN';
-      motionEl.style.color = data.motionDetected ? '#f77f00' : '#00a651';
-    }
-    
-    if (badgeEl) badgeEl.textContent = data.lastBadge || '--';
-    
-    if (timeEl && data.lastAccess > 0) {
-      const date = new Date(data.lastAccess);
-      timeEl.textContent = date.toLocaleTimeString();
-    }
-    
-    updateDeviceUI('lock', data.devices.lock);
-    updateDeviceUI('alarm', data.devices.alarm);
-    updateDeviceUI('lights', data.devices.lights);
-    
-    updateConnectionStatus('connected', 'Sécurité');
-  } catch (err) {
-    updateConnectionStatus('disconnected');
-  }
-}
-
-function updateConnectionStatus(status, module = '') {
-  const statusDot = document.getElementById('connectionStatus');
-  const statusText = document.getElementById('connectionText');
-  
-  if (statusDot) {
-    statusDot.className = status === 'connected' ? 'status-dot connected' : 'status-dot disconnected';
-  }
-  
-  if (statusText) {
-    statusText.textContent = status === 'connected' ? `Connecté (${module})` : 'Déconnecté';
-  }
-}
-
-// ==================== UI ACTIONNEURS ====================
-function updateDeviceUI(device, state) {
-  const card = document.getElementById(device + 'Card');
-  const status = document.getElementById(device + 'Status');
-  if (!card || !status) return;
-  
-  const texts = {
-    active: {
-      pompe: 'Actif', brumisateur: 'Actif', ventilateur: 'Actif',
-      chauffage: 'Actif', eclairage: 'Allumé', electrovanne: 'Ouverte',
-      lock: 'Déverrouillée', alarm: 'Activée', lights: 'Allumées'
-    },
-    inactive: {
-      pompe: 'Arrêté', brumisateur: 'Arrêté', ventilateur: 'Arrêté',
-      chauffage: 'Arrêté', eclairage: 'Éteint', electrovanne: 'Fermée',
-      lock: 'Verrouillée', alarm: 'Désactivée', lights: 'Éteintes'
-    }
-  };
-  
-  if (state) {
-    card.classList.add('active');
-    status.textContent = texts.active[device] || 'Actif';
-  } else {
-    card.classList.remove('active');
-    status.textContent = texts.inactive[device] || 'Arrêté';
-  }
-}
-
-// ==================== CONTRÔLE ACTIONNEURS ====================
-async function toggleDevice(module, device) {
-  const activeDevice = Object.values(State.devices).find(d => d.type === module && d.active);
-  const card = document.getElementById(device + 'Card');
-  const newState = !card?.classList.contains('active');
-  
-  if (activeDevice) {
-    try {
-      const res = await Utils.fetchWithTimeout(`http://${activeDevice.ip}/control`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: `device=${device}&state=${newState ? '1' : '0'}`
-      });
-      
-      if (res.ok) {
-        updateDeviceUI(device, newState);
-        showAlert('success', `✓ ${device} ${newState ? 'activé' : 'désactivé'}`);
-        return;
+    // Vérifier serveur IA toutes les 5 minutes
+    setInterval(async () => {
+      try {
+        const response = await fetch('https://priva-climate-control.onrender.com/health');
+        if (response.ok) {
+          console.log('✅ Serveur IA: OK');
+        }
+      } catch (e) {
+        console.warn('⚠️ Serveur IA: Injoignable');
       }
-    } catch (err) {
-      console.error('Erreur contrôle local:', err);
-    }
-  }
-  
-  try {
-    const response = await fetch(CONFIG.COMMAND_API_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'text/plain;charset=utf-8'},
-      body: JSON.stringify({
-        cible: module,
-        actionneur: device,
-        etat: newState ? 1 : 0
-      })
-    });
-    
-    const result = await response.json();
-    
-    if (result.status === "success") {
-      updateDeviceUI(device, newState);
-      showAlert('success', `✓ ${device} ${newState ? 'activé' : 'désactivé'} (cloud)`);
-    }
-  } catch (err) {
-    showAlert('danger', '❌ Erreur commande');
-  }
-}
+    }, 300000);
+  </script>
 
-async function setMode(mode) {
-  const activeDevice = Object.values(State.devices).find(d => d.type === 'agriculture' && d.active);
+  <!-- ========================================= -->
+  <!-- PWA FEATURES -->
+  <!-- ========================================= -->
   
-  if (activeDevice) {
-    try {
-      const res = await Utils.fetchWithTimeout(`http://${activeDevice.ip}/mode`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: `mode=${mode}`
+  <!-- Bannière d'installation PWA -->
+  <div id="installPrompt" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; z-index: 10000; box-shadow: 0 -4px 20px rgba(0,0,0,0.3);">
+    <div style="display: flex; align-items: center; gap: 15px; max-width: 900px; margin: 0 auto;">
+      <div style="font-size: 48px;">📱</div>
+      <div style="flex: 1;">
+        <strong style="display: block; font-size: 18px;">Installer PRIVA</strong>
+        <p style="margin: 5px 0 0 0; opacity: 0.9;">Ajoutez l'app à votre écran d'accueil</p>
+      </div>
+      <button id="installBtn" class="btn btn-success">Installer</button>
+      <button id="dismissBtn" class="btn btn-secondary" style="background: rgba(255,255,255,0.2);">Plus tard</button>
+    </div>
+  </div>
+
+  <!-- Indicateur hors-ligne -->
+  <div id="offlineIndicator" style="display: none; position: fixed; top: 0; left: 0; right: 0; background: #f77f00; color: white; padding: 10px; text-align: center; font-weight: bold; z-index: 9999;">
+    📡 Mode hors-ligne
+  </div>
+
+  <!-- Script PWA -->
+  <script>
+    // Service Worker
+    let deferredPrompt;
+    
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', async () => {
+        try {
+          const registration = await navigator.serviceWorker.register('sw.js');
+          console.log('✅ Service Worker enregistré');
+        } catch (err) {
+          console.error('❌ Erreur SW:', err);
+        }
       });
-      
-      if (res.ok) {
-        const modeDisplay = document.getElementById('modeDisplay');
-        if (modeDisplay) modeDisplay.textContent = mode.toUpperCase();
-        showAlert('success', `✓ Mode ${mode}`);
-        return;
+    }
+
+    // Détection online/offline
+    window.addEventListener('online', () => {
+      document.getElementById('offlineIndicator').style.display = 'none';
+      if (typeof showAlert === 'function') {
+        showAlert('success', '✅ Connexion rétablie');
       }
-    } catch (err) {
-      console.error('Erreur setMode:', err);
-    }
-  }
-  
-  showAlert('warning', '⚠️ Connectez un ESP32');
-}
-
-async function emergencyStop() {
-  if (!confirm('⚠️ CONFIRMER L\'ARRÊT D\'URGENCE ?')) return;
-  
-  const activeDevice = Object.values(State.devices).find(d => d.type === 'agriculture' && d.active);
-  
-  if (activeDevice) {
-    try {
-      await Utils.fetchWithTimeout(`http://${activeDevice.ip}/emergency`, {method: 'POST'});
-      
-      ['pompe', 'brumisateur', 'ventilateur', 'chauffage', 'eclairage', 'electrovanne'].forEach(d => 
-        updateDeviceUI(d, false)
-      );
-      showAlert('danger', '🛑 ARRÊT D\'URGENCE');
-      return;
-    } catch (err) {
-      console.error('Erreur emergencyStop:', err);
-    }
-  }
-  
-  showAlert('danger', '🛑 ARRÊT D\'URGENCE (cloud)');
-}
-
-async function saveSettings() {
-  const activeDevice = Object.values(State.devices).find(d => d.type === 'agriculture' && d.active);
-  
-  const settings = {
-    tempMin: document.getElementById('tempMin')?.value,
-    tempMax: document.getElementById('tempMax')?.value,
-    humMin: document.getElementById('humidMin')?.value,
-    humMax: document.getElementById('humidMax')?.value
-  };
-  
-  if (activeDevice) {
-    try {
-      await Utils.fetchWithTimeout(`http://${activeDevice.ip}/settings`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: `tempMin=${settings.tempMin}&tempMax=${settings.tempMax}&humMin=${settings.humMin}&humMax=${settings.humMax}`
-      });
-      
-      showAlert('success', '💾 Paramètres enregistrés');
-      return;
-    } catch (err) {
-      console.error('Erreur saveSettings:', err);
-    }
-  }
-  
-  showAlert('warning', '⚠️ Connectez un ESP32');
-}
-
-function updateSlider(id, val, unit) {
-  const label = document.getElementById(id + 'Val');
-  if (label) label.textContent = val + unit;
-}
-
-// ==================== GESTIONNAIRE APPAREILS ====================
-function renderDevicesList() {
-  const list = document.getElementById('devicesList');
-  if (!list) return;
-  
-  if (Object.keys(State.devices).length === 0) {
-    list.innerHTML = '<div style="text-align:center;padding:40px;opacity:0.6;">Aucun appareil. Cliquez sur "Ajouter"</div>';
-    return;
-  }
-  
-  list.innerHTML = Object.entries(State.devices).map(([id, dev]) => {
-    const icon = dev.type === 'agriculture' ? '🌱' : dev.type === 'security' ? '🔒' : '📟';
-    return `
-      <div class="device-item">
-        <div class="device-info">
-          <div class="device-name">${icon} ${dev.name}</div>
-          <div class="device-details">📡 ${dev.ip} • 📍 ${dev.location} • <span style="color:${dev.active ? '#00a651' : '#e63946'};font-weight:bold;">${dev.active ? '✓ Actif' : '○ Inactif'}</span></div>
-        </div>
-        <div class="device-actions">
-          <button class="btn btn-small ${dev.active ? 'btn-danger' : 'btn-success'}" onclick="toggleDeviceActive('${id}')">${dev.active ? '⏸️' : '▶️'}</button>
-          <button class="btn btn-small btn-primary" onclick="testDeviceConnection('${id}')">🔍</button>
-          <button class="btn btn-small btn-danger" onclick="deleteDevice('${id}')">🗑️</button>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function openAddDeviceModal() {
-  const modal = document.getElementById('addDeviceModal');
-  if (modal) modal.classList.add('active');
-}
-
-function closeAddDeviceModal() {
-  const modal = document.getElementById('addDeviceModal');
-  if (modal) modal.classList.remove('active');
-}
-
-function addDevice() {
-  const name = document.getElementById('newDeviceName')?.value.trim();
-  const ip = document.getElementById('newDeviceIP')?.value.trim();
-  const type = document.getElementById('newDeviceType')?.value;
-  const location = document.getElementById('newDeviceLocation')?.value.trim();
-  
-  if (!name || !ip) {
-    showAlert('warning', '⚠️ Nom et IP requis');
-    return;
-  }
-  
-  if (!Utils.validateIP(ip)) {
-    showAlert('warning', '⚠️ Format IP invalide');
-    return;
-  }
-  
-  const id = 'dev_' + Date.now();
-  State.devices[id] = {
-    name, 
-    ip, 
-    type,
-    location: location || 'Non spécifié',
-    active: true,
-    addedAt: new Date().toISOString()
-  };
-  
-  Object.entries(State.devices).forEach(([key, dev]) => {
-    if (key !== id && dev.type === type) dev.active = false;
-  });
-  
-  Utils.saveToLocalStorage('priva_devices', State.devices);
-  
-  closeAddDeviceModal();
-  renderDevicesList();
-  showAlert('success', `✓ ${name} ajouté`);
-  
-  ['newDeviceName', 'newDeviceIP', 'newDeviceLocation'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-  
-  if (type === 'agriculture' || type === 'security') {
-    setTimeout(() => {
-      const moduleBtn = document.querySelector(`.tab-btn[onclick*="switchModule('${type}')"]`);
-      if (moduleBtn) moduleBtn.click();
-    }, 500);
-  }
-}
-
-function toggleDeviceActive(id) {
-  const device = State.devices[id];
-  if (!device) return;
-  
-  if (!device.active) {
-    Object.entries(State.devices).forEach(([key, dev]) => {
-      if (dev.type === device.type) dev.active = false;
     });
-    device.active = true;
-    showAlert('success', `✓ ${device.name} activé`);
-    
-    if (State.currentModule === device.type) {
-      if (State.moduleUpdateInterval) clearInterval(State.moduleUpdateInterval);
-      updateModuleConfig(device.type);
-      startModuleUpdate(device.type);
-    }
-  } else {
-    device.active = false;
-    showAlert('warning', `⏸️ ${device.name} désactivé`);
-    if (State.moduleUpdateInterval) clearInterval(State.moduleUpdateInterval);
-  }
-  
-  Utils.saveToLocalStorage('priva_devices', State.devices);
-  renderDevicesList();
-}
 
-async function testDeviceConnection(id) {
-  const device = State.devices[id];
-  if (!device) return;
-  
-  showAlert('warning', `🔍 Test ${device.name}...`);
-  
-  try {
-    await Utils.fetchWithTimeout(`http://${device.ip}/`, {mode: 'cors'});
-    showAlert('success', `✓ ${device.name} répond`);
-  } catch (err) {
-    showAlert('danger', `❌ ${device.name} ne répond pas`);
-  }
-}
-
-function deleteDevice(id) {
-  const device = State.devices[id];
-  if (!device) return;
-  
-  if (!confirm(`Supprimer "${device.name}" ?`)) return;
-  
-  delete State.devices[id];
-  Utils.saveToLocalStorage('priva_devices', State.devices);
-  renderDevicesList();
-  showAlert('success', `🗑️ ${device.name} supprimé`);
-}
-
-// ==================== CAMÉRAS ESP32-CAM ====================
-function initSecurityCameras() {
-  console.log('📹 Init caméras:', Object.keys(State.securityCameras).length);
-  CameraManager.isActive = true;
-  CameraManager.stopAll();
-  renderSecurityCameras();
-  renderSecurityCaptures();
-}
-
-function renderSecurityCameras() {
-  const grid = document.getElementById('security-cameras-grid');
-  if (!grid) return;
-  
-  CameraManager.stopAll();
-  
-  const active = Object.entries(State.securityCameras).filter(([id, cam]) => cam.active);
-  
-  if (active.length === 0) {
-    grid.innerHTML = '<div style="text-align:center;padding:40px;opacity:0.6;">Aucune caméra configurée. Cliquez sur "➕ Ajouter Caméra"</div>';
-    return;
-  }
-  
-  grid.innerHTML = active.map(([id, cam]) => `
-    <div class="security-camera-card" id="sec-cam-${id}">
-      <div class="camera-header">
-        <div class="camera-name">
-          📹 ${cam.name}
-          <div class="camera-status-indicator" id="status-${id}"></div>
-        </div>
-        <button class="btn btn-small btn-danger" onclick="removeSecurityCamera('${id}')">🗑️</button>
-      </div>
-      
-      <div style="position: relative; background: #000; border-radius: 8px; min-height: 250px; overflow: hidden;">
-        <img class="camera-stream-img" 
-             id="stream-${id}" 
-             src="${Utils.buildCameraUrl(cam.ip, 'capture')}"
-             onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')"
-             alt="${cam.name}"
-             style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;">
-        
-        <div id="loading-${id}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; display: none;">
-          ⏳ Chargement...
-        </div>
-      </div>
-      
-      <div class="camera-controls">
-        <button class="btn btn-small btn-success" onclick="captureCamera('${id}', '${cam.name}', '${cam.ip}')">📸</button>
-        <button class="btn btn-small btn-warning" onclick="captureCameraAndDetect('${id}', '${cam.name}', '${cam.ip}')" 
-                style="background: linear-gradient(135deg, #667eea, #764ba2);">🤖 IA</button>
-        <button class="btn btn-small btn-info" onclick="detectWithESP32Camera('${id}', '${cam.name}', '${cam.ip}')">🔍 ESP32</button>
-        <button class="btn btn-small btn-primary" onclick="toggleFlash('${id}', '${cam.ip}')">💡</button>
-        <button class="btn btn-small btn-primary" onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')">🔍</button>
-      </div>
-      
-      <div class="camera-info">
-        📍 ${cam.location} • 🔗 ${cam.ip} • 
-        <span style="font-size: 10px; opacity: 0.6;">FPS: <span id="fps-${id}">--</span></span>
-      </div>
-    </div>
-  `).join('');
-  
-  console.log('✅ Caméras rendues:', active.length);
-  
-  if (CameraManager.isActive) {
-    active.forEach(([id, cam]) => {
-      CameraManager.startRefresh(id, cam.ip);
+    window.addEventListener('offline', () => {
+      document.getElementById('offlineIndicator').style.display = 'block';
+      if (typeof showAlert === 'function') {
+        showAlert('warning', '⚠️ Mode hors-ligne');
+      }
     });
-  }
-}
 
-function renderSecurityCaptures() {
-  const gallery = document.getElementById('security-captures-gallery');
-  if (!gallery) return;
-  
-  if (State.securityCaptures.length === 0) {
-    gallery.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.6;">Aucune capture</div>';
-    return;
-  }
-  
-  gallery.innerHTML = State.securityCaptures.slice(0, 20).map((cap, idx) => {
-    const date = new Date(cap.timestamp);
-    return `
-      <div class="capture-item" onclick="viewCapture(${idx})">
-        <img src="${cap.url}" alt="${cap.name}" loading="lazy">
-        <div class="capture-info">
-          <div>📹 ${cap.name}</div>
-          <div>⏰ ${date.toLocaleTimeString('fr-FR')}</div>
-        </div>
-        <button class="capture-delete" onclick="event.stopPropagation(); deleteCapture(${idx})">✖</button>
-      </div>
-    `;
-  }).join('');
-}
-
-async function captureCamera(id, name, ip) {
-  if (!Utils.validateIP(ip)) {
-    showAlert('danger', '❌ IP invalide');
-    return;
-  }
-  
-  showAlert('warning', '📸 Capture en cours...');
-  
-  try {
-    const captureUrl = Utils.buildCameraUrl(ip, 'capture');
-    const response = await fetch(captureUrl);
-    const blob = await response.blob();
-    
-    const capture = {
-      id: 'cap_' + Date.now(),
-      cameraId: id,
-      name: name,
-      timestamp: new Date().toISOString(),
-      url: captureUrl
-    };
-    
-    State.securityCaptures.unshift(capture);
-    if (State.securityCaptures.length > CONFIG.MAX_CAPTURES) {
-      State.securityCaptures = State.securityCaptures.slice(0, CONFIG.MAX_CAPTURES);
-    }
-    
-    Utils.saveToLocalStorage('priva_security_captures', State.securityCaptures);
-    renderSecurityCaptures();
-    showAlert('success', `✅ Photo capturée: ${name}`);
-    
-    if (CONFIG.AI_AUTO_DETECT) {
-      await AIManager.detectImage(blob, name, id);
-    }
-    
-  } catch (error) {
-    console.error('❌ Erreur capture:', error);
-    showAlert('danger', '❌ Erreur capture');
-  }
-}
-
-async function captureCameraAndDetect(id, name, ip) {
-  showAlert('warning', '📸 Capture + Détection IA...');
-  
-  try {
-    const captureUrl = Utils.buildCameraUrl(ip, 'capture');
-    const response = await fetch(captureUrl);
-    const blob = await response.blob();
-    
-    const capture = {
-      id: 'cap_' + Date.now(),
-      cameraId: id,
-      name: name,
-      timestamp: new Date().toISOString(),
-      url: captureUrl
-    };
-    
-    State.securityCaptures.unshift(capture);
-    if (State.securityCaptures.length > CONFIG.MAX_CAPTURES) {
-      State.securityCaptures = State.securityCaptures.slice(0, CONFIG.MAX_CAPTURES);
-    }
-    
-    Utils.saveToLocalStorage('priva_security_captures', State.securityCaptures);
-    renderSecurityCaptures();
-    
-    await AIManager.detectImage(blob, name, id);
-    
-  } catch (error) {
-    console.error('❌ Erreur:', error);
-    showAlert('danger', '❌ Erreur capture/détection');
-  }
-}
-
-async function detectWithESP32Camera(id, name, ip) {
-  await AIManager.detectWithESP32(ip, name, id);
-}
-
-function captureAllCameras() {
-  const active = Object.entries(State.securityCameras).filter(([id, cam]) => cam.active);
-  
-  if (active.length === 0) {
-    showAlert('warning', '⚠️ Aucune caméra active');
-    return;
-  }
-  
-  showAlert('warning', `📸 Capture de ${active.length} caméra(s)...`);
-  active.forEach(([id, cam], idx) => {
-    setTimeout(() => captureCamera(id, cam.name, cam.ip), idx * 500);
-  });
-}
-
-async function toggleFlash(id, ip) {
-  try {
-    await Utils.fetchWithTimeout(`http://${ip}:${CONFIG.ESP32_PORT}/flash`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: 'state=1'
+    // Prompt d'installation
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('installPrompt').style.display = 'block';
     });
-    
-    setTimeout(async () => {
-      await Utils.fetchWithTimeout(`http://${ip}:${CONFIG.ESP32_PORT}/flash`, {
-        method: 'POST',
-        body: 'state=0'
-      });
-    }, 200);
-    
-    showAlert('success', '💡 Flash activé');
-  } catch (err) {
-    showAlert('danger', '❌ Erreur flash');
-  }
-}
 
-function refreshAllCameras() {
-  Object.entries(State.securityCameras).forEach(([id, cam]) => {
-    const img = document.getElementById(`stream-${id}`);
-    if (img) img.src = Utils.buildCameraUrl(cam.ip, 'capture');
-  });
-  showAlert('success', '🔄 Caméras rafraîchies');
-}
+    document.getElementById('installBtn')?.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        console.log('✅ PWA installée');
+        if (typeof showAlert === 'function') {
+          showAlert('success', '🎉 PRIVA installée !');
+        }
+      }
+      
+      deferredPrompt = null;
+      document.getElementById('installPrompt').style.display = 'none';
+    });
 
-function setCameraView(mode) {
-  const grid = document.getElementById('security-cameras-grid');
-  if (!grid) return;
-  grid.className = mode === 'single' ? 'cameras-single' : 'cameras-grid';
-  showAlert('success', `📺 Vue ${mode === 'single' ? 'simple' : 'grille'}`);
-}
+    document.getElementById('dismissBtn')?.addEventListener('click', () => {
+      document.getElementById('installPrompt').style.display = 'none';
+    });
 
-function openAddCameraModal() {
-  const modal = document.getElementById('addCameraModal');
-  if (modal) modal.classList.add('active');
-}
-
-function closeAddCameraModal() {
-  const modal = document.getElementById('addCameraModal');
-  if (modal) modal.classList.remove('active');
-}
-
-function addSecurityCamera() {
-  const name = document.getElementById('newCameraName')?.value.trim();
-  const ip = document.getElementById('newCameraIP')?.value.trim();
-  const location = document.getElementById('newCameraLocation')?.value.trim();
-  
-  if (!name || !ip) {
-    showAlert('warning', '⚠️ Nom et IP requis');
-    return;
-  }
-  
-  if (!Utils.validateIP(ip)) {
-    showAlert('warning', '⚠️ Format IP invalide');
-    return;
-  }
-  
-  const id = 'cam_' + Date.now();
-  State.securityCameras[id] = {
-    name,
-    ip,
-    location: location || 'Non spécifié',
-    active: true,
-    addedAt: new Date().toISOString()
-  };
-  
-  Utils.saveToLocalStorage('priva_security_cameras', State.securityCameras);
-  
-  closeAddCameraModal();
-  renderSecurityCameras();
-  showAlert('success', `✅ ${name} ajoutée`);
-  
-  ['newCameraName', 'newCameraIP', 'newCameraLocation'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-}
-
-function removeSecurityCamera(id) {
-  const cam = State.securityCameras[id];
-  if (!cam) return;
-  
-  if (!confirm(`Supprimer "${cam.name}" ?`)) return;
-  
-  CameraManager.stopRefresh(id);
-  delete State.securityCameras[id];
-  Utils.saveToLocalStorage('priva_security_cameras', State.securityCameras);
-  renderSecurityCameras();
-  showAlert('success', `🗑️ ${cam.name} supprimée`);
-}
-
-function viewCapture(idx) {
-  const cap = State.securityCaptures[idx];
-  if (!cap) return;
-  openCameraFullscreen(null, cap.name, null, cap.url);
-}
-
-function deleteCapture(idx) {
-  State.securityCaptures.splice(idx, 1);
-  Utils.saveToLocalStorage('priva_security_captures', State.securityCaptures);
-  renderSecurityCaptures();
-  showAlert('success', '🗑️ Capture supprimée');
-}
-
-function clearSecurityCaptures() {
-  if (!confirm('Vider toutes les captures ?')) return;
-  State.securityCaptures = [];
-  Utils.saveToLocalStorage('priva_security_captures', State.securityCaptures);
-  renderSecurityCaptures();
-  showAlert('success', '🗑️ Galerie vidée');
-}
-
-function openCameraFullscreen(id, name, ip, captureUrl = null) {
-  const modal = document.getElementById('cameraFullscreenModal');
-  const img = document.getElementById('fullscreen-camera-img');
-  const title = document.getElementById('fullscreen-camera-name');
-  
-  if (!modal || !img || !title) return;
-  
-  title.textContent = `📹 ${name}`;
-  
-  if (captureUrl) {
-    img.src = captureUrl;
-  } else if (ip) {
-    img.src = Utils.buildCameraUrl(ip, 'capture');
-    CameraManager.startFullscreen(ip);
-  }
-  
-  modal.classList.add('active');
-}
-
-function closeCameraFullscreen() {
-  const modal = document.getElementById('cameraFullscreenModal');
-  if (modal) modal.classList.remove('active');
-  
-  if (CameraManager.fullscreenInterval) {
-    clearInterval(CameraManager.fullscreenInterval);
-    CameraManager.fullscreenInterval = null;
-  }
-}
-
-function captureFromFullscreen() {
-  const img = document.getElementById('fullscreen-camera-img');
-  if (!img || !img.src) return;
-  
-  const active = Object.entries(State.securityCameras).find(([id, cam]) => 
-    img.src.includes(cam.ip)
-  );
-  
-  if (active) {
-    const [id, cam] = active;
-    captureCamera(id, cam.name, cam.ip);
-  }
-}
-
-function toggleFlashFullscreen() {
-  const img = document.getElementById('fullscreen-camera-img');
-  if (!img || !img.src) return;const active = Object.entries(State.securityCameras).find(([id, cam]) =>
-img.src.includes(cam.ip)
-);
-if (active) {
-const [id, cam] = active;
-toggleFlash(id, cam.ip);
-}
-}
-function downloadCapture() {
-const img = document.getElementById('fullscreen-camera-img');
-if (!img || !img.src) return;
-const link = document.createElement('a');
-link.href = img.src;
-link.download = capture_${Date.now()}.jpg;
-link.click();
-showAlert('success', '⬇️ Téléchargement...');
-}
-// ==================== FONCTIONS IA ====================
-async function testAIServer() {
-showAlert('warning', '🔍 Test serveur IA...');
-try {
-const response = await Utils.fetchWithTimeout(${CONFIG.AI_SERVER_URL}/health);
-const data = await response.json();
-if (data.status === 'healthy') {
-  showAlert('success', `✅ Serveur IA opérationnel`);
-  console.log('📊 Infos serveur:', data);
-  return true;
-}
-} catch (error) {
-showAlert('danger', '❌ Serveur IA injoignable');
-console.error('Erreur:', error);
-return false;
-}
-}
-async function getAIModelInfo() {
-try {
-const response = await Utils.fetchWithTimeout(${CONFIG.AI_SERVER_URL}/info);
-const data = await response.json();
-console.log('🤖 Infos modèle IA:', data);
-
-const infoDiv = document.getElementById('ai-model-info');
-if (infoDiv) {
-  infoDiv.innerHTML = `
-    <div style="padding: 10px; background: #1a1d29; border-radius: 8px; font-size: 12px;">
-      <strong>Modèle:</strong> ${data.model_name}<br>
-      <strong>Classes:</strong> ${data.classes.join(', ')}<br>
-      <strong>Input:</strong> ${data.input_shape.join('x')}<br>
-      <strong>Version:</strong> ${data.version}
-    </div>
-  `;
-}
-
-return data;
-} catch (error) {
-console.error('Erreur infos modèle:', error);
-showAlert('danger', '❌ Erreur récupération infos modèle');
-return null;
-}
-}
-function toggleAutoDetect() {
-CONFIG.AI_AUTO_DETECT = !CONFIG.AI_AUTO_DETECT;
-const btn = document.getElementById('toggle-auto-detect-btn');
-if (btn) {
-btn.textContent = CONFIG.AI_AUTO_DETECT ? '🤖 Auto: ON' : '🤖 Auto: OFF';
-btn.className = CONFIG.AI_AUTO_DETECT ? 'btn btn-success btn-small' : 'btn btn-secondary btn-small';
-}
-showAlert(
-CONFIG.AI_AUTO_DETECT ? 'success' : 'warning',
-CONFIG.AI_AUTO_DETECT ? '✅ Détection auto activée' : '⏸️ Détection auto désactivée'
-);
-}
-// ==================== ÉVÉNEMENTS ====================
-document.addEventListener('visibilitychange', () => {
-if (!document.hidden && CameraManager.isActive && State.currentModule === 'security') {
-console.log('👁️ Page visible - Relance refresh caméras');
-const active = Object.entries(State.securityCameras).filter(([id, cam]) => cam.active);
-active.forEach(([id, cam]) => {
-  if (!CameraManager.intervals[id]) {
-    console.log(`🔄 Relance refresh ${id}`);
-    CameraManager.startRefresh(id, cam.ip);
-  }
-});
-}
-});
-window.addEventListener('beforeunload', () => {
-if (State.dataUpdateInterval) clearInterval(State.dataUpdateInterval);
-if (State.moduleUpdateInterval) clearInterval(State.moduleUpdateInterval);
-CameraManager.stopAll();
-});
-console.log('✅ PRIVA JavaScript Complet v4.0 Final - Toutes fonctionnalités chargées');
+    // Détection si installée
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      console.log('🚀 PWA en mode standalone');
+    }
+  </script>
+</body>
+</html>
