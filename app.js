@@ -700,8 +700,8 @@ function switchModule(module) {
   document.getElementById('deviceManager').style.display = 'none';
   document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
   
-   const clickedBtn = document.querySelector(`.tab-btn[onclick*="switchModule('${module}')"]`);
-  if (clickedBtn) clickedBtn.classList.add('active');
+  const btn = event?.target || document.querySelector(`.tab-btn[onclick*="${module}"]`);
+  if (btn) btn.classList.add('active');
   
   if (module === 'agriculture' || module === 'security') {
     const moduleDiv = document.getElementById(module);
@@ -722,8 +722,6 @@ function switchModule(module) {
 }
 
 function showDeviceManager() {
-  console.log('🔄 Affichage gestionnaire appareils');
-  
   if (State.moduleUpdateInterval) {
     clearInterval(State.moduleUpdateInterval);
     State.moduleUpdateInterval = null;
@@ -736,8 +734,7 @@ function showDeviceManager() {
   document.getElementById('deviceManager').style.display = 'block';
   document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
   
- const deviceBtn = document.querySelector('.tab-btn[onclick*="showDeviceManager"]');
-  if (deviceBtn) deviceBtn.classList.add('active');
+  if (event?.target) event.target.classList.add('active');
   
   renderDevicesList();
 }
@@ -1539,23 +1536,29 @@ function captureFromFullscreen() {
 
 function toggleFlashFullscreen() {
   const img = document.getElementById('fullscreen-camera-img');
-  if (!img || !img.src) return;const active = Object.entries(State.securityCameras).find(([id, cam]) =>
-img.src.includes(cam.ip)
-);
-if (active) {
-const [id, cam] = active;
-toggleFlash(id, cam.ip);
+  if (!img || !img.src) return;
+
+  const active = Object.entries(State.securityCameras).find(([id, cam]) =>
+    img.src.includes(cam.ip)
+  );
+
+  if (active) {
+    const [id, cam] = active;
+    toggleFlash(id, cam.ip);
+  }
 }
-}
+
 function downloadCapture() {
-const img = document.getElementById('fullscreen-camera-img');
-if (!img || !img.src) return;
-const link = document.createElement('a');
-link.href = img.src;
-link.download = `capture_${Date.now()}.jpg`;
-link.click();
-showAlert('success', '⬇️ Téléchargement...');
+  const img = document.getElementById('fullscreen-camera-img');
+  if (!img || !img.src) return;
+
+  const link = document.createElement('a');
+  link.href = img.src;
+  link.download = `capture_${Date.now()}.jpg`;
+  link.click();
+  showAlert('success', '⬇️ Téléchargement...');
 }
+
 // ==================== FONCTIONS IA ====================
 async function testAIServer() {
   showAlert('warning', '🔍 Test serveur IA...');
@@ -1598,17 +1601,19 @@ async function getAIModelInfo() {
     showAlert('danger', '❌ Erreur récupération infos modèle');
     return null;
   }
-function toggleAutoDetect() {
-CONFIG.AI_AUTO_DETECT = !CONFIG.AI_AUTO_DETECT;
-const btn = document.getElementById('toggle-auto-detect-btn');
-if (btn) {
-btn.textContent = CONFIG.AI_AUTO_DETECT ? '🤖 Auto: ON' : '🤖 Auto: OFF';
-btn.className = CONFIG.AI_AUTO_DETECT ? 'btn btn-success btn-small' : 'btn btn-secondary btn-small';
 }
-showAlert(
-CONFIG.AI_AUTO_DETECT ? 'success' : 'warning',
-CONFIG.AI_AUTO_DETECT ? '✅ Détection auto activée' : '⏸️ Détection auto désactivée'
-);
+
+function toggleAutoDetect() {
+  CONFIG.AI_AUTO_DETECT = !CONFIG.AI_AUTO_DETECT;
+  const btn = document.getElementById('toggle-auto-detect-btn');
+  if (btn) {
+    btn.textContent = CONFIG.AI_AUTO_DETECT ? '🤖 Auto: ON' : '🤖 Auto: OFF';
+    btn.className = CONFIG.AI_AUTO_DETECT ? 'btn btn-success btn-small' : 'btn btn-secondary btn-small';
+  }
+  showAlert(
+    CONFIG.AI_AUTO_DETECT ? 'success' : 'warning',
+    CONFIG.AI_AUTO_DETECT ? '✅ Détection auto activée' : '⏸️ Détection auto désactivée'
+  );
 }
 // ==================== ÉVÉNEMENTS ====================
 document.addEventListener('visibilitychange', () => {
