@@ -1,6 +1,6 @@
 // ============================================
 // PRIVA Platform - JavaScript Complet v4.0 Final
-// Toutes fonctionnalités intégrées avec IA
+// PARTIE 1/3 - Configuration & Gestionnaires
 // ============================================
 
 // ==================== CONFIGURATION ====================
@@ -453,6 +453,12 @@ function showAlert(type, msg) {
   }
 }
 
+console.log('✅ PRIVA JavaScript - Partie 1/3 chargée');
+// ============================================
+// PRIVA Platform - JavaScript Complet v4.0 Final
+// PARTIE 2/3 - Init, Graphiques, Données, Navigation
+// ============================================
+
 // ==================== INITIALISATION ====================
 function init() {
   if (State.isInitialized) {
@@ -680,7 +686,7 @@ function updateSecurityTable() {
   }).join('');
 }
 
-// ==================== NAVIGATION ====================
+// ==================== NAVIGATION - VERSION CORRIGÉE ====================
 function switchModule(module) {
   console.log(`🔄 Changement module: ${State.currentModule} → ${module}`);
   
@@ -696,16 +702,31 @@ function switchModule(module) {
   
   State.currentModule = module;
   
+  // Masquer tous les modules et le gestionnaire d'appareils
   document.querySelectorAll('.module').forEach(m => m.style.display = 'none');
-  document.getElementById('deviceManager').style.display = 'none';
+  const deviceManager = document.getElementById('deviceManager');
+  if (deviceManager) deviceManager.style.display = 'none';
+  
+  // Retirer la classe active de tous les boutons
   document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
   
-   const clickedBtn = document.querySelector(`.tab-btn[onclick*="switchModule('${module}')"]`);
-  if (clickedBtn) clickedBtn.classList.add('active');
+  // CORRECTION - Chercher le bon bouton directement
+  const clickedBtn = document.querySelector(`.tab-btn[onclick*="switchModule('${module}')"]`);
+  if (clickedBtn) {
+    clickedBtn.classList.add('active');
+    console.log(`✅ Bouton ${module} activé`);
+  } else {
+    console.warn(`⚠️ Bouton pour ${module} non trouvé`);
+  }
   
   if (module === 'agriculture' || module === 'security') {
     const moduleDiv = document.getElementById(module);
-    if (moduleDiv) moduleDiv.style.display = 'block';
+    if (moduleDiv) {
+      moduleDiv.style.display = 'block';
+      console.log(`✅ Module ${module} affiché`);
+    } else {
+      console.error(`❌ Élément #${module} non trouvé dans le DOM`);
+    }
     
     updateModuleConfig(module);
     startModuleUpdate(module);
@@ -732,12 +753,29 @@ function showDeviceManager() {
   CameraManager.isActive = false;
   CameraManager.stopAll();
   
+  // Masquer tous les modules
   document.querySelectorAll('.module').forEach(m => m.style.display = 'none');
-  document.getElementById('deviceManager').style.display = 'block';
+  
+  // Afficher le gestionnaire d'appareils
+  const deviceManager = document.getElementById('deviceManager');
+  if (deviceManager) {
+    deviceManager.style.display = 'block';
+    console.log('✅ Gestionnaire d\'appareils affiché');
+  } else {
+    console.error('❌ Élément #deviceManager non trouvé dans le DOM');
+  }
+  
+  // Retirer la classe active de tous les boutons
   document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
-
-   const deviceBtn = document.querySelector('.tab-btn[onclick*="showDeviceManager"]');
-  if (deviceBtn) deviceBtn.classList.add('active');
+  
+  // CORRECTION - Activer le bon bouton
+  const deviceBtn = document.querySelector('.tab-btn[onclick*="showDeviceManager"]');
+  if (deviceBtn) {
+    deviceBtn.classList.add('active');
+    console.log('✅ Bouton Appareils activé');
+  } else {
+    console.warn('⚠️ Bouton Appareils non trouvé');
+  }
   
   renderDevicesList();
 }
@@ -900,6 +938,12 @@ function updateConnectionStatus(status, module = '') {
     statusText.textContent = status === 'connected' ? `Connecté (${module})` : 'Déconnecté';
   }
 }
+
+console.log('✅ PRIVA JavaScript - Partie 2/3 chargée');
+// ============================================
+// PRIVA Platform - JavaScript Complet v4.0 Final
+// PARTIE 3/3 - Actionneurs, Appareils, Caméras, IA
+// ============================================
 
 // ==================== UI ACTIONNEURS ====================
 function updateDeviceUI(device, state) {
@@ -1111,9 +1155,7 @@ function addDevice() {
   
   const id = 'dev_' + Date.now();
   State.devices[id] = {
-    name, 
-    ip, 
-    type,
+    name, ip, type,
     location: location || 'Non spécifié',
     active: true,
     addedAt: new Date().toISOString()
@@ -1233,7 +1275,6 @@ function renderSecurityCameras() {
              onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')"
              alt="${cam.name}"
              style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;">
-        
         <div id="loading-${id}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; display: none;">
           ⏳ Chargement...
         </div>
@@ -1241,11 +1282,11 @@ function renderSecurityCameras() {
       
       <div class="camera-controls">
         <button class="btn btn-small btn-success" onclick="captureCamera('${id}', '${cam.name}', '${cam.ip}')">📸</button>
-        <button class="btn btn-small btn-warning" onclick="captureCameraAndDetect('${id}', '${cam.name}', '${cam.ip}')" 
-                style="background: linear-gradient(135deg, #667eea, #764ba2);">🤖 IA</button>
-        <button class="btn btn-small btn-info" onclick="detectWithESP32Camera('${id}', '${cam.name}', '${cam.ip}')">🔍 ESP32</button>
+        <button class="btn btn-small" onclick="captureCameraAndDetect('${id}', '${cam.name}', '${cam.ip}')" 
+                style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">🤖 IA</button>
+        <button class="btn btn-small btn-primary" onclick="detectWithESP32Camera('${id}', '${cam.name}', '${cam.ip}')">🔍 ESP32</button>
         <button class="btn btn-small btn-primary" onclick="toggleFlash('${id}', '${cam.ip}')">💡</button>
-        <button class="btn btn-small btn-primary" onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')">🔍</button>
+        <button class="btn btn-small btn-primary" onclick="openCameraFullscreen('${id}', '${cam.name}', '${cam.ip}')">🔲</button>
       </div>
       
       <div class="camera-info">
@@ -1441,8 +1482,7 @@ function addSecurityCamera() {
   
   const id = 'cam_' + Date.now();
   State.securityCameras[id] = {
-    name,
-    ip,
+    name, ip,
     location: location || 'Non spécifié',
     active: true,
     addedAt: new Date().toISOString()
@@ -1494,6 +1534,7 @@ function clearSecurityCaptures() {
   showAlert('success', '🗑️ Galerie vidée');
 }
 
+// ==================== MODAL CAMÉRA PLEIN ÉCRAN ====================
 function openCameraFullscreen(id, name, ip, captureUrl = null) {
   const modal = document.getElementById('cameraFullscreenModal');
   const img = document.getElementById('fullscreen-camera-img');
@@ -1540,11 +1581,11 @@ function captureFromFullscreen() {
 function toggleFlashFullscreen() {
   const img = document.getElementById('fullscreen-camera-img');
   if (!img || !img.src) return;
-
-  const active = Object.entries(State.securityCameras).find(([id, cam]) =>
+  
+  const active = Object.entries(State.securityCameras).find(([id, cam]) => 
     img.src.includes(cam.ip)
   );
-
+  
   if (active) {
     const [id, cam] = active;
     toggleFlash(id, cam.ip);
@@ -1554,7 +1595,7 @@ function toggleFlashFullscreen() {
 function downloadCapture() {
   const img = document.getElementById('fullscreen-camera-img');
   if (!img || !img.src) return;
-
+  
   const link = document.createElement('a');
   link.href = img.src;
   link.download = `capture_${Date.now()}.jpg`;
@@ -1565,9 +1606,11 @@ function downloadCapture() {
 // ==================== FONCTIONS IA ====================
 async function testAIServer() {
   showAlert('warning', '🔍 Test serveur IA...');
+  
   try {
     const response = await Utils.fetchWithTimeout(`${CONFIG.AI_SERVER_URL}/health`);
     const data = await response.json();
+    
     if (data.status === 'healthy') {
       showAlert('success', `✅ Serveur IA opérationnel`);
       console.log('📊 Infos serveur:', data);
@@ -1584,8 +1627,9 @@ async function getAIModelInfo() {
   try {
     const response = await Utils.fetchWithTimeout(`${CONFIG.AI_SERVER_URL}/info`);
     const data = await response.json();
+    
     console.log('🤖 Infos modèle IA:', data);
-
+    
     const infoDiv = document.getElementById('ai-model-info');
     if (infoDiv) {
       infoDiv.innerHTML = `
@@ -1597,7 +1641,7 @@ async function getAIModelInfo() {
         </div>
       `;
     }
-
+    
     return data;
   } catch (error) {
     console.error('Erreur infos modèle:', error);
@@ -1608,32 +1652,37 @@ async function getAIModelInfo() {
 
 function toggleAutoDetect() {
   CONFIG.AI_AUTO_DETECT = !CONFIG.AI_AUTO_DETECT;
+  
   const btn = document.getElementById('toggle-auto-detect-btn');
   if (btn) {
     btn.textContent = CONFIG.AI_AUTO_DETECT ? '🤖 Auto: ON' : '🤖 Auto: OFF';
     btn.className = CONFIG.AI_AUTO_DETECT ? 'btn btn-success btn-small' : 'btn btn-secondary btn-small';
   }
+  
   showAlert(
     CONFIG.AI_AUTO_DETECT ? 'success' : 'warning',
     CONFIG.AI_AUTO_DETECT ? '✅ Détection auto activée' : '⏸️ Détection auto désactivée'
   );
 }
+
 // ==================== ÉVÉNEMENTS ====================
 document.addEventListener('visibilitychange', () => {
-if (!document.hidden && CameraManager.isActive && State.currentModule === 'security') {
-console.log('👁️ Page visible - Relance refresh caméras');
-const active = Object.entries(State.securityCameras).filter(([id, cam]) => cam.active);
-active.forEach(([id, cam]) => {
-  if (!CameraManager.intervals[id]) {
-    console.log(`🔄 Relance refresh ${id}`);
-    CameraManager.startRefresh(id, cam.ip);
+  if (!document.hidden && CameraManager.isActive && State.currentModule === 'security') {
+    console.log('👁️ Page visible - Relance refresh caméras');
+    
+    const active = Object.entries(State.securityCameras).filter(([id, cam]) => cam.active);
+    active.forEach(([id, cam]) => {
+      if (!CameraManager.intervals[id]) {
+        console.log(`🔄 Relance refresh ${id}`);
+        CameraManager.startRefresh(id, cam.ip);
+      }
+    });
   }
 });
-}
-});
+
 window.addEventListener('beforeunload', () => {
-if (State.dataUpdateInterval) clearInterval(State.dataUpdateInterval);
-if (State.moduleUpdateInterval) clearInterval(State.moduleUpdateInterval);
-CameraManager.stopAll();
+  if (State.dataUpdateInterval) clearInterval(State.dataUpdateInterval);
+  if (State.moduleUpdateInterval) clearInterval(State.moduleUpdateInterval);
+  CameraManager.stopAll();
 });
 console.log('✅ PRIVA JavaScript Complet v4.0 Final - Toutes fonctionnalités chargées');
