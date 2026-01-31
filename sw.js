@@ -2,7 +2,7 @@
  * PRIVA Climate Control - Service Worker CORRIGÉ
  */
 
-const CACHE_NAME = 'priva-v=A22';  // ← Version changée pour forcer mise à jour
+const CACHE_NAME = 'priva-v=A12';  // ← Version changée pour forcer mise à jour
 const BASE_PATH = '/priva-climate-control';
 
 const FILES_TO_CACHE = [
