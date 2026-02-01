@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- PWA Meta Tags -->
   <meta name="theme-color" content="#667eea">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -12,13 +11,11 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <link rel="manifest" href="manifest.json">
-  
-  <!-- Icônes temporaires (emoji SVG) -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
   <title>Sagitarius-Nova</title>
-  <link rel="stylesheet" href="styles.css?v=A34">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <link rel="stylesheet" href="styles.css?v=A16">
+  <!-- PAS DE SCRIPT ICI -->
 </head>
 <body>
   
@@ -448,9 +445,11 @@
     </div>
   </div>
 
-  <script src="H.js"></script>
-  <script>
-    // Fonction pour entrer dans la plateforme
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script src="app.js?v=A16"></script>
+
+<!-- 3. Puis vos fonctions de navigation -->
+<script>
     function enterPlatform() {
       document.getElementById('homepage').style.display = 'none';
       document.getElementById('platform').style.display = 'block';
@@ -459,7 +458,6 @@
       }
     }
     
-    // Fonction pour retourner à l'accueil
     function returnHome() {
       if (confirm('Voulez-vous vraiment retourner à l\'accueil ?')) {
         document.getElementById('platform').style.display = 'none';
@@ -467,7 +465,7 @@
       }
     }
 
-    // Initialiser le module IA au chargement
+    // Initialiser le module IA après chargement
     document.addEventListener('DOMContentLoaded', function() {
       setTimeout(() => {
         if (typeof initAI === 'function') {
@@ -476,19 +474,7 @@
         }
       }, 1000);
     });
-    
-    // Vérifier serveur IA toutes les 5 minutes
-    setInterval(async () => {
-      try {
-        const response = await fetch('https://priva-climate-control.onrender.com/health');
-        if (response.ok) {
-          console.log('✅ Serveur IA: OK');
-        }
-      } catch (e) {
-        console.warn('⚠️ Serveur IA: Injoignable');
-      }
-    }, 300000);
-  </script>
+</script>
 
   <!-- ========================================= -->
   <!-- PWA FEATURES -->
