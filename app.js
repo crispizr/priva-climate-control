@@ -93,20 +93,14 @@ const Utils = {
   },
   
   buildCameraUrl(ip, endpoint = 'capture') {
-    return `http://${ip}:${CONFIG.ESP32_PORT}/${endpoint}?t=${Date.now()}`;
-  }
-};
-
-// ==================== GESTIONNAIRE IA ====================
-const AIManager = {
-  isProcessing: false,
-  history: [],
-  
-  async detectImage(imageBlob, cameraName, cameraId) {
-    if (this.isProcessing) {
-      showAlert('warning', '⏳ Détection en cours...');
-      return null;
+    const directUrl = `http://${ip}:${CONFIG.ESP32_PORT}/${endpoint}?t=${Date.now()}`;
+    // Si le site est en HTTPS, utiliser un proxy pour éviter Mixed Content
+    if (window.location.protocol === 'https:') {
+      return CONFIG.PROXY + encodeURIComponent(directUrl);
     }
+    // Si en HTTP (local), utiliser l'URL directe
+    return directUrl;
+  }
     
     this.isProcessing = true;
     showAlert('warning', '🤖 Analyse IA en cours...');
@@ -161,7 +155,13 @@ const AIManager = {
     showAlert('warning', '🔍 Détection directe ESP32...');
     
     try {
-      const response = await Utils.fetchWithTimeout(`http://${cameraIp}:81/detect`);
+      const detectUrl = window.location.protocol === 'https:'
+        ? CONFIG.PROXY + encodeURIComponent(`http://${cameraIp}:81/detect`)
+        : `http://${cameraIp}:81/detect`;
+      
+      console.log('🔍 URL detect ESP32:', detectUrl);
+      
+      const response = await Utils.fetchWithTimeout(detectUrl, {}, 30000);
       const result = await response.json();
       
       if (result.success) {
@@ -184,7 +184,7 @@ const AIManager = {
       showAlert('danger', '❌ Erreur détection ESP32');
       return null;
     }
-  },
+  }
   
   showDetectionResult(detection) {
     const resultDiv = document.createElement('div');
@@ -1339,15 +1339,27 @@ async function captureCamera(id, name, ip) {
   
   try {
     const captureUrl = Utils.buildCameraUrl(ip, 'capture');
-    const response = await fetch(captureUrl);
+    console.log('📸 URL capture:', captureUrl);
+    
+    const response = await Utils.fetchWithTimeout(captureUrl, {}, 10000);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
     const blob = await response.blob();
+    console.log('📸 Blob reçu:', blob.size, 'bytes');
+    
+    // Créer une URL temporaire pour l'image
+    const imageUrl = URL.createObjectURL(blob);
     
     const capture = {
       id: 'cap_' + Date.now(),
       cameraId: id,
       name: name,
       timestamp: new Date().toISOString(),
-      url: captureUrl
+      url: imageUrl,
+      blob: blob  // Garder le blob pour l'IA
     };
     
     State.securityCaptures.unshift(capture);
@@ -1355,17 +1367,27 @@ async function captureCamera(id, name, ip) {
       State.securityCaptures = State.securityCaptures.slice(0, CONFIG.MAX_CAPTURES);
     }
     
-    Utils.saveToLocalStorage('priva_security_captures', State.securityCaptures);
+    // Ne pas sauvegarder les blobs dans localStorage (trop lourd)
+    const capturesForStorage = State.securityCaptures.map(c => ({
+      id: c.id,
+      cameraId: c.cameraId,
+      name: c.name,
+      timestamp: c.timestamp,
+      url: c.url
+    }));
+    Utils.saveToLocalStorage('priva_security_captures', capturesForStorage);
+    
     renderSecurityCaptures();
     showAlert('success', `✅ Photo capturée: ${name}`);
     
+    // Détection auto si activée
     if (CONFIG.AI_AUTO_DETECT) {
       await AIManager.detectImage(blob, name, id);
     }
     
   } catch (error) {
     console.error('❌ Erreur capture:', error);
-    showAlert('danger', '❌ Erreur capture');
+    showAlert('danger', `❌ Erreur capture: ${error.message}`);
   }
 }
 
@@ -1374,15 +1396,28 @@ async function captureCameraAndDetect(id, name, ip) {
   
   try {
     const captureUrl = Utils.buildCameraUrl(ip, 'capture');
-    const response = await fetch(captureUrl);
-    const blob = await response.blob();
+    console.log('🤖 URL capture pour IA:', captureUrl);
     
+    const response = await Utils.fetchWithTimeout(captureUrl, {}, 10000);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const blob = await response.blob();
+    console.log('🤖 Blob reçu:', blob.size, 'bytes');
+    
+    // Créer URL pour affichage
+    const imageUrl = URL.createObjectURL(blob);
+    
+    // Sauvegarder la capture
     const capture = {
       id: 'cap_' + Date.now(),
       cameraId: id,
       name: name,
       timestamp: new Date().toISOString(),
-      url: captureUrl
+      url: imageUrl,
+      blob: blob
     };
     
     State.securityCaptures.unshift(capture);
@@ -1390,14 +1425,15 @@ async function captureCameraAndDetect(id, name, ip) {
       State.securityCaptures = State.securityCaptures.slice(0, CONFIG.MAX_CAPTURES);
     }
     
-    Utils.saveToLocalStorage('priva_security_captures', State.securityCaptures);
     renderSecurityCaptures();
+    showAlert('success', `✅ Photo capturée: ${name}`);
     
+    // Envoyer au serveur IA
     await AIManager.detectImage(blob, name, id);
     
   } catch (error) {
-    console.error('❌ Erreur:', error);
-    showAlert('danger', '❌ Erreur capture/détection');
+    console.error('❌ Erreur capture/détection:', error);
+    showAlert('danger', `❌ Erreur: ${error.message}`);
   }
 }
 
@@ -1421,14 +1457,18 @@ function captureAllCameras() {
 
 async function toggleFlash(id, ip) {
   try {
-    await Utils.fetchWithTimeout(`http://${ip}:${CONFIG.ESP32_PORT}/flash`, {
+    const flashUrl = window.location.protocol === 'https:' 
+      ? CONFIG.PROXY + encodeURIComponent(`http://${ip}:${CONFIG.ESP32_PORT}/flash`)
+      : `http://${ip}:${CONFIG.ESP32_PORT}/flash`;
+    
+    await Utils.fetchWithTimeout(flashUrl, {
       method: 'POST',
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: 'state=1'
     });
     
     setTimeout(async () => {
-      await Utils.fetchWithTimeout(`http://${ip}:${CONFIG.ESP32_PORT}/flash`, {
+      await Utils.fetchWithTimeout(flashUrl, {
         method: 'POST',
         body: 'state=0'
       });
