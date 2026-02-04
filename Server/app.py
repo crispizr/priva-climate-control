@@ -8,7 +8,7 @@ import os
 app = Flask(__name__, static_folder="static", template_folder="templates")
 
 # Charger le modèle TFLite
-interpreter = tf.lite.Interpreter(model_path="Server/output/camera_microscope_model.tflite")
+interpreter = tf.lite.Interpreter(model_path="Server/camera_microscope_model.tflite")
 interpreter.allocate_tensors()
 
 input_details = interpreter.get_input_details()
@@ -65,3 +65,4 @@ def upload():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
