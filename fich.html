@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#667eea">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PRIVA">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+  <title>Sagitarius-Nova</title>
+  <link rel="stylesheet" href="styles.css?v=A16">
+  <!-- PAS DE SCRIPT ICI -->
+</head>
+<body>
+  
+  <!-- ========================================= -->
+  <!-- PAGE D'ACCUEIL -->
+  <!-- ========================================= -->
+  <div id="homepage" class="homepage">
+    <div class="home-background-image"></div>
+    <div class="home-overlay"></div>
+    
+    <div class="home-container">
+      <button class="home-button" onclick="enterPlatform()">
+        <span class="home-icon">🌍</span>
+        <span class="home-button-text">Accéder à la Plateforme</span>
+        <div class="button-glow"></div>
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================= -->
+  <!-- PLATEFORME PRINCIPALE -->
+  <!-- ========================================= -->
+  <div id="platform" style="display: none;">
+    <div class="header">
+      <div class="header-content">
+        <div class="logo">
+          <span style="font-size: 36px;">🌍</span>
+          <h1>Sagitarius-Nova</h1>
+        </div>
+        <div class="status-bar">
+          <div class="status-item">
+            <div class="status-dot connected" id="connectionStatus"></div>
+            <span id="connectionText">Démarrage...</span>
+          </div>
+          <div class="status-item">
+            <span>🤖 Mode: <strong id="modeDisplay">--</strong></span>
+          </div>
+          <div class="status-item">
+            <span>📡 <strong id="dataCount">0</strong> mesures</span>
+          </div>
+          <div class="status-item">
+            <button class="btn btn-danger btn-small" onclick="returnHome()">🏠 Accueil</button>
+          </div>
+        </div>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchModule('agriculture')">🌱 Agriculture</button>
+          <button class="tab-btn" onclick="switchModule('security')">🔒 Sécurité</button>
+          <button class="tab-btn" onclick="showDeviceManager()">🎛️ Appareils</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div id="alertContainer"></div>
+      
+      <!-- Gestionnaire d'Appareils -->
+      <div class="card" id="deviceManager" style="display:none;">
+        <div class="card-header">
+          <div class="card-title">🎛️ Gestionnaire d'Appareils ESP32</div>
+          <button class="btn btn-success" onclick="openAddDeviceModal()">➕ Ajouter</button>
+        </div>
+        <div id="devicesList"></div>
+      </div>
+
+      <!-- ========================================= -->
+      <!-- MODULE AGRICULTURE -->
+      <!-- ========================================= -->
+      <div id="agriculture" class="module active">
+        <!-- Configuration appareil actif -->
+        <div class="card" id="agri-config" style="background: linear-gradient(135deg, #252836, #1a1d29); border: 2px solid #667eea;">
+          <div class="card-header" style="border-bottom: 2px solid #667eea;">
+            <div class="card-title">⚙️ Configuration ESP32 Agriculture</div>
+          </div>
+          <div id="agri-device-info" style="text-align: center; padding: 20px; opacity: 0.6;">
+            Aucun appareil actif. Ajoutez un ESP32 via l'onglet "🎛️ Appareils"
+          </div>
+        </div>
+        
+        <!-- Première ligne : Température et Humidité sur 2 colonnes -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+          <div class="sensor-card">
+            <div class="sensor-icon">🌡️</div>
+            <div class="sensor-value"><span id="tempValue">--</span><span class="sensor-unit">°C</span></div>
+            <div style="margin-top:10px"><span class="status-badge optimal">Normal</span></div>
+          </div>
+          <div class="sensor-card">
+            <div class="sensor-icon">💧</div>
+            <div class="sensor-value"><span id="humidValue">--</span><span class="sensor-unit">%</span></div>
+            <div style="margin-top:10px"><span class="status-badge optimal">Normal</span></div>
+          </div>
+        </div>
+        
+        <!-- Deuxième ligne : CO2, DC et autres capteurs sur 4 colonnes -->
+        <div class="grid-4" style="margin-bottom: 25px;">
+          <div class="sensor-card">
+            <div class="sensor-icon">🔬</div>
+            <div class="sensor-value"><span id="gasValue">--</span><span class="sensor-unit">ppm</span></div>
+            <div style="margin-top:10px"><span class="status-badge optimal">Normal</span></div>
+          </div>
+          <div class="sensor-card">
+            <div class="sensor-icon">⚡</div>
+            <div class="sensor-value"><span id="dcValue">--</span><span class="sensor-unit">V</span></div>
+            <div style="margin-top:10px"><span class="status-badge optimal">DC</span></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><div class="card-title">⚙️ Équipements</div></div>
+            <div class="device-grid">
+              <div class="device-card" id="pompeCard" onclick="toggleDevice('agriculture', 'pompe')">
+                <div class="device-icon">💧</div>
+                <div>Irrigation</div>
+                <small id="pompeStatus">Arrêté</small>
+              </div>
+              <div class="device-card" id="brumisateurCard" onclick="toggleDevice('agriculture', 'brumisateur')">
+                <div class="device-icon">💦</div>
+                <div>Brumisation</div>
+                <small id="brumisateurStatus">Arrêté</small>
+              </div>
+              <div class="device-card" id="ventilateurCard" onclick="toggleDevice('agriculture', 'ventilateur')">
+                <div class="device-icon">🌀</div>
+                <div>Ventilation</div>
+                <small id="ventilateurStatus">Arrêté</small>
+              </div>
+              <div class="device-card" id="chauffageCard" onclick="toggleDevice('agriculture', 'chauffage')">
+                <div class="device-icon">🔥</div>
+                <div>Chauffage</div>
+                <small id="chauffageStatus">Arrêté</small>
+              </div>
+              <div class="device-card" id="eclairageCard" onclick="toggleDevice('agriculture', 'eclairage')">
+                <div class="device-icon">💡</div>
+                <div>Éclairage</div>
+                <small id="eclairageStatus">Arrêté</small>
+              </div>
+              <div class="device-card" id="electrovanneCard" onclick="toggleDevice('agriculture', 'electrovanne')">
+                <div class="device-icon">🚰</div>
+                <div>Électrovanne</div>
+                <small id="electrovanneStatus">Fermée</small>
+              </div>
+            </div>
+            <div style="margin-top:20px">
+              <button class="btn btn-success" onclick="setMode('auto')">🤖 Auto</button>
+              <button class="btn btn-primary" onclick="setMode('manual')">✋ Manuel</button>
+              <button class="btn btn-danger" onclick="emergencyStop()">🛑 Arrêt</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><div class="card-title">🎯 Paramètres Auto</div></div>
+            <div class="control-group">
+              <label class="control-label">🌡️ Temp Min: <span id="tempMinVal">18°C</span></label>
+              <input type="range" min="0" max="100" value="18" class="slider" id="tempMin" oninput="updateSlider('tempMin',this.value,'°C')">
+            </div>
+            <div class="control-group">
+              <label class="control-label">🌡️ Temp Max: <span id="tempMaxVal">28°C</span></label>
+              <input type="range" min="0" max="100" value="28" class="slider" id="tempMax" oninput="updateSlider('tempMax',this.value,'°C')">
+            </div>
+            <div class="control-group">
+              <label class="control-label">💧 Humid Min: <span id="humidMinVal">50%</span></label>
+              <input type="range" min="0" max="100" value="50" class="slider" id="humidMin" oninput="updateSlider('humidMin',this.value,'%')">
+            </div>
+            <div class="control-group">
+              <label class="control-label">💧 Humid Max: <span id="humidMaxVal">80%</span></label>
+              <input type="range" min="0" max="100" value="80" class="slider" id="humidMax" oninput="updateSlider('humidMax',this.value,'%')">
+            </div>
+            <button class="btn btn-success" style="width:100%" onclick="saveSettings()">💾 Enregistrer</button>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><div class="card-title">📈 Température & Humidité</div></div>
+            <div class="chart-container"><canvas id="climateChart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">📊 Qualité Air</div></div>
+            <div class="chart-container"><canvas id="airChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">📋 Données Récentes</div></div>
+          <table>
+            <thead><tr><th>Date</th><th>Temp</th><th>Humid</th><th>CO2</th><th>DC</th></tr></thead>
+            <tbody id="dataTable"><tr><td colspan="5" style="text-align:center">Chargement...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ========================================= -->
+      <!-- MODULE SÉCURITÉ -->
+      <!-- ========================================= -->
+      <div id="security" class="module">
+        <!-- Configuration ESP32 Sécurité -->
+        <div class="card" id="sec-config" style="background: linear-gradient(135deg, #252836, #1a1d29); border: 2px solid #667eea;">
+          <div class="card-header" style="border-bottom: 2px solid #667eea;">
+            <div class="card-title">⚙️ Configuration ESP32 Sécurité</div>
+          </div>
+          <div id="sec-device-info" style="text-align: center; padding: 20px; opacity: 0.6;">
+            Aucun appareil actif. Ajoutez un ESP32 via l'onglet "🎛️ Appareils"
+          </div>
+        </div>
+
+        <!-- NOUVEAU : Panneau de contrôle IA -->
+        <div class="card" style="background: linear-gradient(135deg, #1a1d29, #252836); border: 2px solid #667eea;">
+          <div class="card-header" style="border-bottom: 2px solid #667eea;">
+            <div class="card-title">🤖 Intelligence Artificielle</div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button id="toggle-auto-detect-btn" class="btn btn-secondary btn-small" onclick="toggleAutoDetect()">
+                🤖 Auto: OFF
+              </button>
+              <button class="btn btn-primary btn-small" onclick="testAIServer()">
+                🔍 Tester Serveur
+              </button>
+              <button class="btn btn-primary btn-small" onclick="getAIModelInfo()">
+                ℹ️ Info Modèle
+              </button>
+            </div>
+          </div>
+          
+          <!-- Infos modèle -->
+          <div id="ai-model-info" style="margin-bottom: 15px;">
+            <div style="text-align: center; padding: 10px; opacity: 0.6;">
+              Cliquez sur "ℹ️ Info Modèle" pour voir les détails
+            </div>
+          </div>
+          
+          <!-- Statistiques IA -->
+          <div id="ai-stats">
+            <div style="text-align: center; padding: 20px; opacity: 0.6;">
+              Aucune détection pour le moment
+            </div>
+          </div>
+          
+          <!-- Actions -->
+          <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+            <button class="btn btn-danger btn-small" onclick="AIManager.clearHistory()">
+              🗑️ Vider Historique
+            </button>
+          </div>
+        </div>
+
+        <!-- Conteneur résultats IA -->
+        <div id="ai-results-container"></div>
+        
+        <!-- Capteurs sécurité -->
+        <div class="grid-4">
+          <div class="sensor-card">
+            <div class="sensor-icon">🚪</div>
+            <div class="sensor-value" id="sec-door" style="font-size: 24px;">--</div>
+            <div>État Porte</div>
+          </div>
+          <div class="sensor-card">
+            <div class="sensor-icon">👁️</div>
+            <div class="sensor-value" id="sec-motion" style="font-size: 24px;">--</div>
+            <div>Mouvement</div>
+          </div>
+          <div class="sensor-card">
+            <div class="sensor-icon">🔑</div>
+            <div class="sensor-value" id="sec-badge" style="font-size: 18px;">--</div>
+            <div>Dernier Badge</div>
+          </div>
+          <div class="sensor-card">
+            <div class="sensor-icon">⏰</div>
+            <div class="sensor-value" id="sec-time" style="font-size: 20px;">--</div>
+            <div>Dernier Accès</div>
+          </div>
+        </div>
+
+        <!-- Contrôles sécurité -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">🔒 Contrôles</div></div>
+          <div class="device-grid">
+            <div class="device-card" id="lockCard" onclick="toggleDevice('security', 'lock')">
+              <div class="device-icon">🔓</div>
+              <div>Serrure</div>
+              <small id="lockStatus">Verrouillée</small>
+            </div>
+            <div class="device-card" id="alarmCard" onclick="toggleDevice('security', 'alarm')">
+              <div class="device-icon">🚨</div>
+              <div>Alarme</div>
+              <small id="alarmStatus">Désactivée</small>
+            </div>
+            <div class="device-card" id="lightsCard" onclick="toggleDevice('security', 'lights')">
+              <div class="device-icon">💡</div>
+              <div>Lumières</div>
+              <small id="lightsStatus">Éteintes</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================= -->
+        <!-- SECTION CAMÉRAS ESP32-CAM -->
+        <!-- ========================================= -->
+        <div class="card" style="background: linear-gradient(135deg, #1a1d29, #252836); border: 2px solid #667eea;">
+          <div class="card-header" style="border-bottom: 2px solid #667eea;">
+            <div class="card-title">📹 Caméras de Surveillance</div>
+            <button class="btn btn-success btn-small" onclick="openAddCameraModal()">➕ Ajouter Caméra</button>
+          </div>
+          
+          <!-- Contrôles caméras -->
+          <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+            <button class="btn btn-small btn-primary" onclick="setCameraView('grid')">🔲 Grille</button>
+            <button class="btn btn-small btn-primary" onclick="setCameraView('single')">📺 Simple</button>
+            <button class="btn btn-small btn-success" onclick="refreshAllCameras()">🔄 Rafraîchir</button>
+            <button class="btn btn-small btn-danger" onclick="captureAllCameras()">📸 Capturer Tout</button>
+          </div>
+          
+          <!-- Grille des caméras -->
+          <div id="security-cameras-grid" class="cameras-grid">
+            <div style="text-align: center; padding: 40px; opacity: 0.6;">
+              Aucune caméra configurée. Cliquez sur "➕ Ajouter Caméra"
+            </div>
+          </div>
+        </div>
+
+        <!-- Galerie des captures -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📸 Captures Récentes</div>
+            <button class="btn btn-small btn-danger" onclick="clearSecurityCaptures()">🗑️ Vider</button>
+          </div>
+          <div id="security-captures-gallery" class="capture-gallery">
+            <div style="text-align: center; padding: 20px; opacity: 0.6;">
+              Aucune capture
+            </div>
+          </div>
+        </div>
+           
+        <!-- Tableau des événements sécurité -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">📋 Événements Récents</div></div>
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Badge</th>
+                <th>Porte</th>
+                <th>Mouvement</th>
+                <th>Auth</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="securityTable">
+              <tr><td colspan="6" style="text-align:center">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- MODALS -->
+    <!-- ========================================= -->
+    
+    <!-- Modal Ajout Appareil ESP32 -->
+    <div id="addDeviceModal" class="modal">
+      <div class="modal-content">
+        <div class="card-header">
+          <h2 style="margin: 0;">➕ Ajouter un ESP32</h2>
+          <button class="btn btn-danger btn-small" onclick="closeAddDeviceModal()">✖</button>
+        </div>
+        <div class="input-group">
+          <label>📛 Nom:</label>
+          <input type="text" id="newDeviceName" placeholder="Serre 1" style="flex: 2;">
+        </div>
+        <div class="input-group">
+          <label>📡 IP:</label>
+          <input type="text" id="newDeviceIP" placeholder="192.168.1.100" style="flex: 2;">
+        </div>
+        <div class="input-group">
+          <label>🏷️ Type:</label>
+          <select id="newDeviceType" style="flex: 2;">
+            <option value="agriculture">🌱 Agriculture</option>
+            <option value="security">🔒 Sécurité</option>
+            <option value="custom">⚙️ Personnalisé</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>📍 Lieu:</label>
+          <input type="text" id="newDeviceLocation" placeholder="Zone A" style="flex: 2;">
+        </div>
+        <button class="btn btn-success" onclick="addDevice()" style="width: 100%; margin-top: 15px;">💾 Ajouter</button>
+      </div>
+    </div>
+
+    <!-- Modal Ajout Caméra -->
+    <div id="addCameraModal" class="modal">
+      <div class="modal-content">
+        <div class="card-header">
+          <h2 style="margin: 0;">➕ Ajouter une ESP32-CAM</h2>
+          <button class="btn btn-danger btn-small" onclick="closeAddCameraModal()">✖</button>
+        </div>
+        <div class="input-group">
+          <label>📛 Nom:</label>
+          <input type="text" id="newCameraName" placeholder="Caméra Entrée" style="flex: 2;">
+        </div>
+        <div class="input-group">
+          <label>📡 IP:</label>
+          <input type="text" id="newCameraIP" placeholder="192.168.1.200" style="flex: 2;">
+        </div>
+        <div class="input-group">
+          <label>📍 Position:</label>
+          <input type="text" id="newCameraLocation" placeholder="Entrée principale" style="flex: 2;">
+        </div>
+        <button class="btn btn-success" onclick="addSecurityCamera()" style="width: 100%; margin-top: 15px;">
+          💾 Ajouter Caméra
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Plein Écran Caméra -->
+    <div id="cameraFullscreenModal" class="modal">
+      <div class="modal-content" style="max-width: 95%; max-height: 95vh; padding: 15px;">
+        <div class="card-header">
+          <h2 style="margin: 0;" id="fullscreen-camera-name">📹 Caméra</h2>
+          <button class="btn btn-danger btn-small" onclick="closeCameraFullscreen()">✖ Fermer</button>
+        </div>
+        <img id="fullscreen-camera-img" style="width: 100%; height: auto; border-radius: 10px; margin-top: 15px;">
+        <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+          <button class="btn btn-success" onclick="captureFromFullscreen()">📸 Capturer</button>
+          <button class="btn btn-primary" onclick="toggleFlashFullscreen()">💡 Flash</button>
+          <button class="btn btn-primary" onclick="downloadCapture()">⬇️ Télécharger</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script src="app.js?v=A16"></script>
+
+<!-- 3. Puis vos fonctions de navigation -->
+<script>
+    function enterPlatform() {
+      document.getElementById('homepage').style.display = 'none';
+      document.getElementById('platform').style.display = 'block';
+      if (typeof init === 'function') {
+        init();
+      }
+    }
+    
+    function returnHome() {
+      if (confirm('Voulez-vous vraiment retourner à l\'accueil ?')) {
+        document.getElementById('platform').style.display = 'none';
+        document.getElementById('homepage').style.display = 'flex';
+      }
+    }
+
+    // Initialiser le module IA après chargement
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(() => {
+        if (typeof initAI === 'function') {
+          initAI();
+          console.log('✅ Module IA initialisé');
+        }
+      }, 1000);
+    });
+</script>
+
+  <!-- ========================================= -->
+  <!-- PWA FEATURES -->
+  <!-- ========================================= -->
+  
+  <!-- Bannière d'installation PWA -->
+  <div id="installPrompt" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; z-index: 10000; box-shadow: 0 -4px 20px rgba(0,0,0,0.3);">
+    <div style="display: flex; align-items: center; gap: 15px; max-width: 900px; margin: 0 auto;">
+      <div style="font-size: 48px;">📱</div>
+      <div style="flex: 1;">
+        <strong style="display: block; font-size: 18px;">Installer PRIVA</strong>
+        <p style="margin: 5px 0 0 0; opacity: 0.9;">Ajoutez l'app à votre écran d'accueil</p>
+      </div>
+      <button id="installBtn" class="btn btn-success">Installer</button>
+      <button id="dismissBtn" class="btn btn-secondary" style="background: rgba(255,255,255,0.2);">Plus tard</button>
+    </div>
+  </div>
+
+  <!-- Indicateur hors-ligne -->
+  <div id="offlineIndicator" style="display: none; position: fixed; top: 0; left: 0; right: 0; background: #f77f00; color: white; padding: 10px; text-align: center; font-weight: bold; z-index: 9999;">
+    📡 Mode hors-ligne
+  </div>
+
+  <!-- Script PWA -->
+  <script>
+    // Service Worker
+    let deferredPrompt;
+    
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', async () => {
+        try {
+          const registration = await navigator.serviceWorker.register('sw.js');
+          console.log('✅ Service Worker enregistré');
+        } catch (err) {
+          console.error('❌ Erreur SW:', err);
+        }
+      });
+    }
+
+    // Détection online/offline
+    window.addEventListener('online', () => {
+      document.getElementById('offlineIndicator').style.display = 'none';
+      if (typeof showAlert === 'function') {
+        showAlert('success', '✅ Connexion rétablie');
+      }
+    });
+
+    window.addEventListener('offline', () => {
+      document.getElementById('offlineIndicator').style.display = 'block';
+      if (typeof showAlert === 'function') {
+        showAlert('warning', '⚠️ Mode hors-ligne');
+      }
+    });
+
+    // Prompt d'installation
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('installPrompt').style.display = 'block';
+    });
+
+    document.getElementById('installBtn')?.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        console.log('✅ PWA installée');
+        if (typeof showAlert === 'function') {
+          showAlert('success', '🎉 PRIVA installée !');
+        }
+      }
+      
+      deferredPrompt = null;
+      document.getElementById('installPrompt').style.display = 'none';
+    });
+
+    document.getElementById('dismissBtn')?.addEventListener('click', () => {
+      document.getElementById('installPrompt').style.display = 'none';
+    });
+
+    // Détection si installée
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      console.log('🚀 PWA en mode standalone');
+    }
+  </script>
+</body>
+</html>
