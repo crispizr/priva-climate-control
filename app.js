@@ -10,6 +10,12 @@ const CONFIG = {
   SECURITY_CSV_URL: "https://docs.google.com/spreadsheets/d/12x5LRuFBaKeAfkSxc53uR-6Q3Xcu-OxZt2plY0GZSko/export?format=csv&gid=2127989880",
   PROXY: 'https://api.allorigins.win/raw?url=',
   AI_SERVER_URL: 'https://priva-climate-control.onrender.com',
+
+  // ✅ Configuration Hugging Face via Render
+  RENDER_URL: 'https://sagitaimage.onrender.com/analyser',
+  HF_TOKEN: 'hf_VOTRE_TOKEN_ICI', // 👈 Remplacez par votre vrai token
+  HF_MODEL: 'google/vit-base-patch16-224',
+
   CAMERA_REFRESH_RATE: 500,
   MAX_CAPTURES: 100,
   FETCH_TIMEOUT: 5000,
@@ -101,7 +107,8 @@ const Utils = {
 const AIManager = {
   isProcessing: false,
   history: [],
-  
+
+  // ✅ FONCTION MODIFIÉE — utilise Render + Hugging Face
   async detectImage(imageBlob, cameraName, cameraId) {
     if (this.isProcessing) {
       showAlert('warning', '⏳ Détection en cours...');
@@ -112,42 +119,61 @@ const AIManager = {
     showAlert('warning', '🤖 Analyse IA en cours...');
     
     try {
-      const formData = new FormData();
-      formData.append('file', imageBlob, `capture_${cameraId}_${Date.now()}.jpg`);
-      
-      const response = await Utils.fetchWithTimeout(
-        `${CONFIG.AI_SERVER_URL}/upload`,
-        { method: 'POST', body: formData },
-        30000
-      );
-      
-      if (!response.ok) throw new Error(`Erreur serveur: ${response.status}`);
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        const detection = {
-          cameraId,
-          cameraName,
-          label: result.prediction.label,
-          confidence: result.prediction.confidence,
-          timestamp: new Date().toISOString(),
-          allPredictions: result.all_predictions
-        };
-        
-        this.history.unshift(detection);
-        if (this.history.length > 50) this.history = this.history.slice(0, 50);
-        
-        Utils.saveToLocalStorage('priva_ai_history', this.history);
-        this.showDetectionResult(detection);
-        this.updateAIStats();
-        
-        showAlert('success', `✅ ${result.prediction.label} (${result.prediction.confidence}%)`);
-        return detection;
-      } else {
-        throw new Error(result.error || 'Erreur inconnue');
+      // Convertir le blob en base64
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(imageBlob);
+      });
+
+      // Envoyer vers Render → Hugging Face
+      const response = await fetch(CONFIG.RENDER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: CONFIG.HF_TOKEN,
+          modele: CONFIG.HF_MODEL,
+          image: base64
+        })
+      });
+
+      const donnees = await response.json();
+
+      if (!response.ok) {
+        const msg = donnees?.erreur || donnees?.error || 'Erreur serveur';
+        if (msg.includes('loading') || msg.includes('currently loading')) {
+          throw new Error('⏳ Modèle en chargement, réessayez dans 20 secondes.');
+        }
+        throw new Error(msg);
       }
-      
+
+      if (!Array.isArray(donnees) || donnees.length === 0) {
+        throw new Error('Aucun résultat retourné');
+      }
+
+      // Prendre le meilleur résultat
+      const meilleur = donnees[0];
+      const detection = {
+        cameraId,
+        cameraName,
+        label: meilleur.label,
+        confidence: Math.round((meilleur.score || 0) * 100),
+        timestamp: new Date().toISOString(),
+        allPredictions: donnees
+      };
+
+      this.history.unshift(detection);
+      if (this.history.length > 50) this.history = this.history.slice(0, 50);
+
+      Utils.saveToLocalStorage('priva_ai_history', this.history);
+      this.showDetectionResult(detection);
+      this.updateAIStats();
+      this.updateLastResult(detection);
+
+      showAlert('success', `✅ ${detection.label} (${detection.confidence}%)`);
+      return detection;
+
     } catch (error) {
       console.error('❌ Erreur détection IA:', error);
       showAlert('danger', `❌ Erreur IA: ${error.message}`);
@@ -155,6 +181,30 @@ const AIManager = {
     } finally {
       this.isProcessing = false;
     }
+  },
+
+  // ✅ NOUVELLE FONCTION — affiche le dernier résultat de façon permanente
+  updateLastResult(detection) {
+    const lastResult = document.getElementById('ai-last-result');
+    const labelEl = document.getElementById('ai-result-label');
+    const confidenceEl = document.getElementById('ai-result-confidence');
+    const cameraEl = document.getElementById('ai-result-camera');
+    const timeEl = document.getElementById('ai-result-time');
+
+    if (!lastResult) return;
+
+    const confidenceColor = detection.confidence >= 80 ? '#00a651' :
+                            detection.confidence >= 60 ? '#f77f00' : '#e63946';
+
+    if (labelEl) labelEl.textContent = `🎯 ${detection.label}`;
+    if (confidenceEl) {
+      confidenceEl.textContent = `${detection.confidence}%`;
+      confidenceEl.style.color = confidenceColor;
+    }
+    if (cameraEl) cameraEl.textContent = `📹 ${detection.cameraName}`;
+    if (timeEl) timeEl.textContent = `⏰ ${new Date(detection.timestamp).toLocaleString('fr-FR')}`;
+
+    lastResult.style.display = 'block';
   },
   
   async detectWithESP32(cameraIp, cameraName, cameraId) {
@@ -175,6 +225,7 @@ const AIManager = {
         
         this.history.unshift(detection);
         this.showDetectionResult(detection);
+        this.updateLastResult(detection);
         
         showAlert('success', `✅ ${result.detected} (${result.confidence.toFixed(1)}%)`);
         return detection;
@@ -210,7 +261,7 @@ const AIManager = {
             <div style="flex: 1; background: rgba(255,255,255,0.2); height: 20px; border-radius: 10px; overflow: hidden;">
               <div style="width: ${detection.confidence}%; height: 100%; background: ${confidenceColor}; transition: width 0.3s;"></div>
             </div>
-            <strong style="color: ${confidenceColor};">${detection.confidence.toFixed(1)}%</strong>
+            <strong style="color: ${confidenceColor};">${detection.confidence.toFixed ? detection.confidence.toFixed(1) : detection.confidence}%</strong>
           </div>
           <small style="opacity: 0.8;">⏰ ${new Date(detection.timestamp).toLocaleString('fr-FR')}</small>
         </div>
@@ -274,6 +325,11 @@ const AIManager = {
       this.history = [];
       Utils.saveToLocalStorage('priva_ai_history', []);
       this.updateAIStats();
+
+      // Cacher le dernier résultat
+      const lastResult = document.getElementById('ai-last-result');
+      if (lastResult) lastResult.style.display = 'none';
+
       showAlert('success', '🗑️ Historique vidé');
     }
   }
@@ -686,7 +742,7 @@ function updateSecurityTable() {
   }).join('');
 }
 
-// ==================== NAVIGATION - VERSION CORRIGÉE ====================
+// ==================== NAVIGATION ====================
 function switchModule(module) {
   console.log(`🔄 Changement module: ${State.currentModule} → ${module}`);
   
@@ -702,30 +758,21 @@ function switchModule(module) {
   
   State.currentModule = module;
   
-  // Masquer tous les modules et le gestionnaire d'appareils
   document.querySelectorAll('.module').forEach(m => m.style.display = 'none');
   const deviceManager = document.getElementById('deviceManager');
   if (deviceManager) deviceManager.style.display = 'none';
   
-  // Retirer la classe active de tous les boutons
   document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
   
-  // CORRECTION - Chercher le bon bouton directement
   const clickedBtn = document.querySelector(`.tab-btn[onclick*="switchModule('${module}')"]`);
   if (clickedBtn) {
     clickedBtn.classList.add('active');
-    console.log(`✅ Bouton ${module} activé`);
-  } else {
-    console.warn(`⚠️ Bouton pour ${module} non trouvé`);
   }
   
   if (module === 'agriculture' || module === 'security') {
     const moduleDiv = document.getElementById(module);
     if (moduleDiv) {
       moduleDiv.style.display = 'block';
-      console.log(`✅ Module ${module} affiché`);
-    } else {
-      console.error(`❌ Élément #${module} non trouvé dans le DOM`);
     }
     
     updateModuleConfig(module);
@@ -753,28 +800,18 @@ function showDeviceManager() {
   CameraManager.isActive = false;
   CameraManager.stopAll();
   
-  // Masquer tous les modules
   document.querySelectorAll('.module').forEach(m => m.style.display = 'none');
   
-  // Afficher le gestionnaire d'appareils
   const deviceManager = document.getElementById('deviceManager');
   if (deviceManager) {
     deviceManager.style.display = 'block';
-    console.log('✅ Gestionnaire d\'appareils affiché');
-  } else {
-    console.error('❌ Élément #deviceManager non trouvé dans le DOM');
   }
   
-  // Retirer la classe active de tous les boutons
   document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
   
-  // CORRECTION - Activer le bon bouton
   const deviceBtn = document.querySelector('.tab-btn[onclick*="showDeviceManager"]');
   if (deviceBtn) {
     deviceBtn.classList.add('active');
-    console.log('✅ Bouton Appareils activé');
-  } else {
-    console.warn('⚠️ Bouton Appareils non trouvé');
   }
   
   renderDevicesList();
@@ -1296,8 +1333,6 @@ function renderSecurityCameras() {
     </div>
   `).join('');
   
-  console.log('✅ Caméras rendues:', active.length);
-  
   if (CameraManager.isActive) {
     active.forEach(([id, cam]) => {
       CameraManager.startRefresh(id, cam.ip);
@@ -1613,12 +1648,10 @@ async function testAIServer() {
     
     if (data.status === 'healthy') {
       showAlert('success', `✅ Serveur IA opérationnel`);
-      console.log('📊 Infos serveur:', data);
       return true;
     }
   } catch (error) {
     showAlert('danger', '❌ Serveur IA injoignable');
-    console.error('Erreur:', error);
     return false;
   }
 }
@@ -1628,24 +1661,28 @@ async function getAIModelInfo() {
     const response = await Utils.fetchWithTimeout(`${CONFIG.AI_SERVER_URL}/info`);
     const data = await response.json();
     
-    console.log('🤖 Infos modèle IA:', data);
-    
     const infoDiv = document.getElementById('ai-model-info');
     if (infoDiv) {
       infoDiv.innerHTML = `
         <div style="padding: 10px; background: #1a1d29; border-radius: 8px; font-size: 12px;">
-          <strong>Modèle:</strong> ${data.model_name}<br>
-          <strong>Classes:</strong> ${data.classes.join(', ')}<br>
-          <strong>Input:</strong> ${data.input_shape.join('x')}<br>
-          <strong>Version:</strong> ${data.version}
+          <strong>Modèle HF:</strong> ${CONFIG.HF_MODEL}<br>
+          <strong>Serveur Render:</strong> ${CONFIG.RENDER_URL}<br>
+          <strong>Version:</strong> v4.0
         </div>
       `;
     }
     
     return data;
   } catch (error) {
-    console.error('Erreur infos modèle:', error);
-    showAlert('danger', '❌ Erreur récupération infos modèle');
+    const infoDiv = document.getElementById('ai-model-info');
+    if (infoDiv) {
+      infoDiv.innerHTML = `
+        <div style="padding: 10px; background: #1a1d29; border-radius: 8px; font-size: 12px;">
+          <strong>Modèle HF:</strong> ${CONFIG.HF_MODEL}<br>
+          <strong>Serveur Render:</strong> ${CONFIG.RENDER_URL}
+        </div>
+      `;
+    }
     return null;
   }
 }
@@ -1668,12 +1705,9 @@ function toggleAutoDetect() {
 // ==================== ÉVÉNEMENTS ====================
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && CameraManager.isActive && State.currentModule === 'security') {
-    console.log('👁️ Page visible - Relance refresh caméras');
-    
     const active = Object.entries(State.securityCameras).filter(([id, cam]) => cam.active);
     active.forEach(([id, cam]) => {
       if (!CameraManager.intervals[id]) {
-        console.log(`🔄 Relance refresh ${id}`);
         CameraManager.startRefresh(id, cam.ip);
       }
     });
@@ -1685,4 +1719,5 @@ window.addEventListener('beforeunload', () => {
   if (State.moduleUpdateInterval) clearInterval(State.moduleUpdateInterval);
   CameraManager.stopAll();
 });
+
 console.log('✅ PRIVA JavaScript Complet v4.0 Final - Toutes fonctionnalités chargées');
