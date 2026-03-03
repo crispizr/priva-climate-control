@@ -89,6 +89,10 @@ const Utils = {
   },
   
   validateIP(ip) {
+    // Accepter les URLs ngrok et domaines
+    if (ip.includes('ngrok') || ip.includes('.dev') || ip.includes('.app')) return true;
+
+    // Accepter les IPs normales
     const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
     if (!ipRegex.test(ip)) return false;
     
@@ -99,6 +103,11 @@ const Utils = {
   },
   
   buildCameraUrl(ip, endpoint = 'capture') {
+    // Si c'est une URL ngrok ou domaine, utiliser HTTPS sans port
+    if (ip.includes('ngrok') || ip.includes('.dev') || ip.includes('.app')) {
+      return `https://${ip}/${endpoint}?t=${Date.now()}`;
+    }
+    // Sinon IP locale normale
     return `http://${ip}:${CONFIG.ESP32_PORT}/${endpoint}?t=${Date.now()}`;
   }
 };
