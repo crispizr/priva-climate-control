@@ -13,7 +13,7 @@ const CONFIG = {
 
   // ✅ Configuration Hugging Face via Render
   RENDER_URL: 'https://sagitaimage.onrender.com/analyser',
-  HF_TOKEN: 'hf_VOTRE_TOKEN_ICI', // 👈 Remplacez par votre vrai token
+  HF_TOKEN: '', // 👈 Remplacez par votre vrai token
   HF_MODEL: 'google/vit-base-patch16-224',
 
   CAMERA_REFRESH_RATE: 500,
@@ -117,6 +117,12 @@ const AIManager = {
   isProcessing: false,
   history: [],
 
+  function initAI() {
+  console.log('🤖 Initialisation module IA');
+  AIManager.loadHistory();
+  chargerToken(); // ✅ Charge le token sauvegardé
+}
+  
   // ✅ FONCTION MODIFIÉE — utilise Render + Hugging Face
   async detectImage(imageBlob, cameraName, cameraId) {
     if (this.isProcessing) {
@@ -1709,6 +1715,31 @@ function toggleAutoDetect() {
     CONFIG.AI_AUTO_DETECT ? 'success' : 'warning',
     CONFIG.AI_AUTO_DETECT ? '✅ Détection auto activée' : '⏸️ Détection auto désactivée'
   );
+}
+
+// ==================== TOKEN HUGGING FACE ====================
+function sauvegarderToken() {
+  const token = document.getElementById('hf-token-input')?.value.trim();
+  if (!token) {
+    showAlert('danger', '❌ Token vide');
+    return;
+  }
+  if (!token.startsWith('hf_')) {
+    showAlert('danger', '❌ Token invalide - doit commencer par hf_');
+    return;
+  }
+  CONFIG.HF_TOKEN = token;
+  Utils.saveToLocalStorage('priva_hf_token', token);
+  showAlert('success', '✅ Token sauvegardé !');
+}
+
+function chargerToken() {
+  const token = Utils.loadFromLocalStorage('priva_hf_token', '');
+  if (token) {
+    CONFIG.HF_TOKEN = token;
+    const input = document.getElementById('hf-token-input');
+    if (input) input.value = token;
+  }
 }
 
 // ==================== ÉVÉNEMENTS ====================
