@@ -224,6 +224,27 @@
         <div class="card" style="background: linear-gradient(135deg, #1a1d29, #252836); border: 2px solid #667eea;">
           <div class="card-header" style="border-bottom: 2px solid #667eea;">
             <div class="card-title">🤖 Intelligence Artificielle</div>
+            <!-- Champ Token HF -->
+<div style="margin: 15px 0; padding: 15px; background: #0f1117; border-radius: 8px;">
+  <label style="display:block; font-size:11px; letter-spacing:2px; 
+                text-transform:uppercase; color:#8a7f72; 
+                font-family:monospace; margin-bottom:8px;">
+    🔑 Token Hugging Face
+  </label>
+  <div style="display:flex; gap:10px;">
+    <input type="password" id="hf-token-input" 
+           placeholder="hf_..." 
+           style="flex:1; padding:10px; background:#1a1d29; 
+                  border:1px solid #2d3142; border-radius:5px; 
+                  color:white; font-family:monospace; font-size:13px;">
+    <button class="btn btn-success btn-small" onclick="sauvegarderToken()">
+      💾 Sauvegarder
+    </button>
+  </div>
+  <small style="color:#8a7f72; font-family:monospace; margin-top:5px; display:block;">
+    Token gratuit sur huggingface.co/settings/tokens
+  </small>
+</div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
               <button id="toggle-auto-detect-btn" class="btn btn-secondary btn-small" onclick="toggleAutoDetect()">
                 🤖 Auto: OFF
