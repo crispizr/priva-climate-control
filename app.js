@@ -40,11 +40,30 @@ const State = {
 
 // ==================== UTILITAIRES ====================
 const Utils = {
+
+  // Header ngrok anti-warning — ajouté automatiquement si URL ngrok
+  getNgrokHeaders(url = '') {
+    const isNgrok = url.includes('ngrok') || url.includes('.dev') || url.includes('.app') || url.includes('.io');
+    if (isNgrok) {
+      return { 'ngrok-skip-browser-warning': 'true' };
+    }
+    return {};
+  },
+
   async fetchWithTimeout(url, options = {}, timeout = CONFIG.FETCH_TIMEOUT) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    // Fusionner les headers ngrok automatiquement
+    const ngrokHeaders = this.getNgrokHeaders(url);
+    const mergedOptions = {
+      ...options,
+      headers: { ...ngrokHeaders, ...(options.headers || {}) },
+      signal: controller.signal
+    };
+
     try {
-      const response = await fetch(url, { ...options, signal: controller.signal });
+      const response = await fetch(url, mergedOptions);
       clearTimeout(timeoutId);
       return response;
     } catch (error) {
@@ -151,30 +170,54 @@ const StreamManager = {
 
     let consecutiveErrors = 0;
     const MAX_ERRORS = 5;
+    const isNgrok = ip.includes('ngrok') || ip.includes('.dev') || ip.includes('.app') || ip.includes('.io');
 
-    const refresh = () => {
-      // Vérifier que la caméra est toujours active
+    const refresh = async () => {
       if (!this.streams[camId]) return;
 
       const captureUrl = Utils.buildUrl(ip, 'capture');
-      const testImg = new Image();
 
-      testImg.onload = () => {
-        consecutiveErrors = 0;
-        img.src = captureUrl;
-        this._updateStatus(camId, 'online');
-        this._updateFPS(camId);
-      };
+      try {
+        if (isNgrok) {
+          // Pour ngrok: fetch avec header spécial puis convertir en blob URL
+          const response = await fetch(captureUrl, {
+            headers: { 'ngrok-skip-browser-warning': 'true' }
+          });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const blob = await response.blob();
+          const objectUrl = URL.createObjectURL(blob);
 
-      testImg.onerror = () => {
+          // Libérer l'ancienne URL blob
+          if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+
+          img.src = objectUrl;
+          consecutiveErrors = 0;
+          this._updateStatus(camId, 'online');
+          this._updateFPS(camId);
+        } else {
+          // IP locale: méthode classique
+          const testImg = new Image();
+          testImg.onload = () => {
+            consecutiveErrors = 0;
+            img.src = captureUrl;
+            this._updateStatus(camId, 'online');
+            this._updateFPS(camId);
+          };
+          testImg.onerror = () => {
+            consecutiveErrors++;
+            if (consecutiveErrors >= MAX_ERRORS) {
+              this._updateStatus(camId, 'offline');
+            }
+          };
+          testImg.src = captureUrl;
+        }
+      } catch (error) {
         consecutiveErrors++;
+        console.warn(`Erreur refresh ${camId} (${consecutiveErrors}/${MAX_ERRORS}):`, error);
         if (consecutiveErrors >= MAX_ERRORS) {
           this._updateStatus(camId, 'offline');
-          console.error(`Caméra ${camId} hors ligne`);
         }
-      };
-
-      testImg.src = captureUrl;
+      }
     };
 
     refresh();
@@ -186,7 +229,9 @@ const StreamManager = {
   async capture(camId, ip) {
     try {
       const captureUrl = Utils.buildUrl(ip, 'capture');
-      const response = await fetch(captureUrl);
+      const isNgrok = ip.includes('ngrok') || ip.includes('.dev') || ip.includes('.app') || ip.includes('.io');
+      const headers = isNgrok ? { 'ngrok-skip-browser-warning': 'true' } : {};
+      const response = await fetch(captureUrl, { headers });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const blob = await response.blob();
       return blob;
@@ -1064,19 +1109,37 @@ function openCameraFullscreen(id, name, ip, captureUrl = null) {
   const title = document.getElementById('fullscreen-camera-name');
   if (!modal || !img || !title) return;
   title.textContent = `📹 ${name}`;
+
   if (captureUrl) {
     img.src = captureUrl;
   } else if (ip) {
-    // Essayer MJPEG en plein écran
-    const streamUrl = Utils.buildUrl(ip, 'stream', true);
-    img.src = streamUrl;
-    img.onerror = () => {
-      // Fallback refresh
-      img.onerror = null;
-      const refresh = () => { img.src = Utils.buildUrl(ip, 'capture'); };
-      refresh();
-      fullscreenStreamInterval = setInterval(refresh, CONFIG.FALLBACK_REFRESH);
-    };
+    const isNgrok = ip.includes('ngrok') || ip.includes('.dev') || ip.includes('.app') || ip.includes('.io');
+
+    if (isNgrok) {
+      // ngrok → refresh avec fetch + blob
+      const refreshFullscreen = async () => {
+        try {
+          const url = Utils.buildUrl(ip, 'capture');
+          const response = await fetch(url, { headers: { 'ngrok-skip-browser-warning': 'true' } });
+          if (!response.ok) return;
+          const blob = await response.blob();
+          if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+          img.src = URL.createObjectURL(blob);
+        } catch {}
+      };
+      refreshFullscreen();
+      fullscreenStreamInterval = setInterval(refreshFullscreen, CONFIG.FALLBACK_REFRESH);
+    } else {
+      // IP locale → essayer MJPEG d'abord
+      const streamUrl = Utils.buildUrl(ip, 'stream', true);
+      img.src = streamUrl;
+      img.onerror = () => {
+        img.onerror = null;
+        const refresh = () => { img.src = Utils.buildUrl(ip, 'capture'); };
+        refresh();
+        fullscreenStreamInterval = setInterval(refresh, CONFIG.FALLBACK_REFRESH);
+      };
+    }
   }
   modal.classList.add('active');
 }
