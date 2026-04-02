@@ -14,18 +14,311 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
   <title>Sagitarius-Nova</title>
-  <link rel="stylesheet" href="styles.css?v=A16">
-  <!-- PAS DE SCRIPT ICI -->
+  <link rel="stylesheet" href="styles.css?v=A17">
+
+  <style>
+    /* ================================================
+       DASHBOARD MULTI-MODULES — PRIVA v6.0
+       ================================================ */
+
+    /* ── Section par type d'appareil ── */
+    .dashboard-section {
+      margin-bottom: 32px;
+    }
+    .dashboard-section-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #667eea;
+      padding: 0 4px 10px;
+      border-bottom: 1px solid #2d3142;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .dashboard-section-title .badge {
+      background: #667eea;
+      color: white;
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    /* ── Rangée de cartes ── */
+    .dashboard-cards-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Carte appareil individuelle ── */
+    .dash-card {
+      flex: 1;
+      min-width: 300px;
+      max-width: 100%;
+      background: #161929;
+      border-radius: 14px;
+      border: 1px solid #2d3142;
+      overflow: hidden;
+      transition: box-shadow 0.2s, border-color 0.2s;
+    }
+    .dash-card:hover {
+      box-shadow: 0 8px 32px rgba(102,126,234,0.15);
+    }
+    .dash-card-agri  { border-top: 3px solid #27ae60; }
+    .dash-card-sec   { border-top: 3px solid #667eea; }
+    .dash-card-inactive { opacity: 0.55; filter: grayscale(0.4); }
+
+    /* ── En-tête de carte ── */
+    .dash-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px 10px;
+      background: #1a1d2e;
+    }
+    .dash-card-header > div:first-child {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #e8e8f0;
+    }
+    .dash-card-icon { font-size: 18px; }
+
+    /* ── Métriques résumées ── */
+    .dash-metrics {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid #2d3142;
+    }
+    .dash-metric {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 6px 10px;
+      border-right: 1px solid #2d3142;
+      transition: background 0.15s;
+    }
+    .dash-metric:last-child { border-right: none; }
+    .dash-metric:hover { background: rgba(102,126,234,0.07); }
+    .metric-icon { font-size: 18px; margin-bottom: 4px; }
+    .metric-val  { font-size: 20px; font-weight: 700; color: #ffffff; line-height: 1; }
+    .metric-val.metric-small { font-size: 13px; font-weight: 600; }
+    .metric-unit { font-size: 10px; color: #7a7fa8; margin-top: 2px; }
+
+    /* ── Indicateur de statut (point) ── */
+    .dash-status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+    .dot-active   { background: #27ae60; box-shadow: 0 0 6px #27ae60; animation: pulse-dot 2s infinite; }
+    .dot-inactive { background: #e63946; }
+    @keyframes pulse-dot {
+      0%,100% { box-shadow: 0 0 4px #27ae60; }
+      50%      { box-shadow: 0 0 10px #27ae60, 0 0 20px rgba(39,174,96,0.3); }
+    }
+
+    /* ── Pied de carte ── */
+    .dash-card-footer {
+      padding: 8px 16px;
+      font-size: 11px;
+      color: #5a5f7a;
+      background: #0f1117;
+      border-top: 1px solid #1e2240;
+    }
+
+    /* ── Panneau expandable ── */
+    .dash-panel {
+      padding: 16px;
+      background: #0f1117;
+      border-top: 1px solid #2d3142;
+      animation: slideDown 0.2s ease;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Contenu du panneau ── */
+    .module-panel { display: flex; flex-direction: column; gap: 14px; }
+
+    .panel-ip-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      background: #161929;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #2d3142;
+    }
+
+    .panel-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #667eea;
+      padding-top: 4px;
+    }
+
+    /* ── Grille actionneurs mini ── */
+    .actuators-grid-mini {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 8px;
+    }
+    .actuator-mini {
+      background: #1a1d2e;
+      border: 1px solid #2d3142;
+      border-radius: 10px;
+      padding: 10px 6px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: #9ca3af;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .actuator-mini > span:first-child { font-size: 22px; }
+    .actuator-mini.active {
+      background: rgba(39,174,96,0.15);
+      border-color: #27ae60;
+      color: #27ae60;
+    }
+    .actuator-btn {
+      width: 100%;
+      padding: 3px 0;
+      border: 1px solid #3d4162;
+      border-radius: 5px;
+      background: #0f1117;
+      color: #7a7fa8;
+      font-size: 9px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .actuator-btn:hover { background: #667eea; color: white; border-color: #667eea; }
+
+    /* ── Mini graphique ── */
+    .mini-chart-wrap {
+      height: 120px;
+      position: relative;
+      background: #161929;
+      border-radius: 8px;
+      padding: 8px;
+      border: 1px solid #2d3142;
+    }
+
+    /* ── Section caméras mini ── */
+    .dashboard-cameras-mini {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .mini-cam-card {
+      position: relative;
+      width: 180px;
+      height: 120px;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid #2d3142;
+      background: #0f1117;
+      transition: border-color 0.2s, transform 0.2s;
+      flex-shrink: 0;
+    }
+    .mini-cam-card:hover { border-color: #667eea; transform: scale(1.02); }
+    .mini-cam-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      padding: 6px 8px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 2;
+      color: white;
+      font-size: 11px;
+    }
+    .mini-cam-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #7a7fa8;
+      flex-shrink: 0;
+    }
+    .mini-cam-buttons {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      display: flex;
+      gap: 4px;
+      padding: 5px;
+      background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
+      justify-content: center;
+      z-index: 2;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .mini-cam-card:hover .mini-cam-buttons { opacity: 1; }
+    .mini-cam-buttons button {
+      padding: 3px 8px;
+      font-size: 12px;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 5px;
+      background: rgba(0,0,0,0.5);
+      color: white;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+    }
+    .mini-cam-buttons button:hover { background: #667eea; border-color: #667eea; }
+
+    /* ── Vide dashboard ── */
+    .dashboard-empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: #5a5f7a;
+    }
+    .dashboard-empty h3 { color: #9ca3af; margin-bottom: 8px; }
+
+    /* ── Vue caméra plein écran ── */
+    #cameraView {
+      display: none;
+    }
+
+    /* ── Onglet IA ── */
+    #aiPanel { display: none; }
+
+    /* ── Animation spin ── */
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .dash-card { min-width: 100%; }
+      .mini-cam-card { width: 140px; height: 90px; }
+      .actuators-grid-mini { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
 </head>
 <body>
-  
+
   <!-- ========================================= -->
-  <!-- PAGE D'ACCUEIL -->
+  <!-- PAGE D'ACCUEIL                            -->
   <!-- ========================================= -->
   <div id="homepage" class="homepage">
     <div class="home-background-image"></div>
     <div class="home-overlay"></div>
-    
     <div class="home-container">
       <button class="home-button" onclick="enterPlatform()">
         <span class="home-icon">🌍</span>
@@ -36,22 +329,21 @@
   </div>
 
   <!-- ========================================= -->
-  <!-- PLATEFORME PRINCIPALE -->
+  <!-- PLATEFORME PRINCIPALE                     -->
   <!-- ========================================= -->
-  <div id="platform" style="display: none;">
+  <div id="platform" style="display:none;">
     <div class="header">
       <div class="header-content">
         <div class="logo">
-          <span style="font-size: 36px;">🌍</span>
+          <span style="font-size:36px;">🌍</span>
           <h1>Sagitarius-Nova</h1>
         </div>
+
+        <!-- Barre de statut globale -->
         <div class="status-bar">
           <div class="status-item">
             <div class="status-dot connected" id="connectionStatus"></div>
             <span id="connectionText">Démarrage...</span>
-          </div>
-          <div class="status-item">
-            <span>🤖 Mode: <strong id="modeDisplay">--</strong></span>
           </div>
           <div class="status-item">
             <span>📡 <strong id="dataCount">0</strong> mesures</span>
@@ -60,9 +352,12 @@
             <button class="btn btn-danger btn-small" onclick="returnHome()">🏠 Accueil</button>
           </div>
         </div>
+
+        <!-- Navigation principale — v6.0 : Dashboard central -->
         <div class="tabs">
-          <button class="tab-btn active" onclick="switchModule('agriculture')">🌱 Agriculture</button>
-          <button class="tab-btn" onclick="switchModule('security')">🔒 Sécurité</button>
+          <button class="tab-btn active" onclick="showDashboard()">🏠 Dashboard</button>
+          <button class="tab-btn" onclick="showCameraView()">📹 Caméras</button>
+          <button class="tab-btn" onclick="showAIPanel()">🤖 IA</button>
           <button class="tab-btn" onclick="showDeviceManager()">🎛️ Appareils</button>
         </div>
       </div>
@@ -70,286 +365,91 @@
 
     <div class="container">
       <div id="alertContainer"></div>
-      
-      <!-- Gestionnaire d'Appareils -->
-      <div class="card" id="deviceManager" style="display:none;">
-        <div class="card-header">
-          <div class="card-title">🎛️ Gestionnaire d'Appareils ESP32</div>
-          <button class="btn btn-success" onclick="openAddDeviceModal()">➕ Ajouter</button>
-        </div>
-        <div id="devicesList"></div>
-      </div>
 
-      <!-- ========================================= -->
-      <!-- MODULE AGRICULTURE -->
-      <!-- ========================================= -->
-      <div id="agriculture" class="module active">
-        <!-- Configuration appareil actif -->
-        <div class="card" id="agri-config" style="background: linear-gradient(135deg, #252836, #1a1d29); border: 2px solid #667eea;">
-          <div class="card-header" style="border-bottom: 2px solid #667eea;">
-            <div class="card-title">⚙️ Configuration ESP32 Agriculture</div>
+      <!-- =========================================
+           VUE 1 : DASHBOARD MULTI-MODULES
+           ========================================= -->
+      <div id="dashboard">
+        <!-- En-tête dashboard -->
+        <div style="display:flex; justify-content:space-between; align-items:center;
+                    margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+          <div>
+            <h2 style="margin:0; font-size:20px; color:#e8e8f0;">Tableau de bord</h2>
+            <p style="margin:4px 0 0; font-size:12px; color:#5a5f7a;">
+              Tous vos appareils actifs — mise à jour toutes les 3 secondes
+            </p>
           </div>
-          <div id="agri-device-info" style="text-align: center; padding: 20px; opacity: 0.6;">
-            Aucun appareil actif. Ajoutez un ESP32 via l'onglet "🎛️ Appareils"
-          </div>
-        </div>
-        
-        <!-- Première ligne : Température et Humidité sur 2 colonnes -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
-          <div class="sensor-card">
-            <div class="sensor-icon">🌡️</div>
-            <div class="sensor-value"><span id="tempValue">--</span><span class="sensor-unit">°C</span></div>
-            <div style="margin-top:10px"><span class="status-badge optimal">Normal</span></div>
-          </div>
-          <div class="sensor-card">
-            <div class="sensor-icon">💧</div>
-            <div class="sensor-value"><span id="humidValue">--</span><span class="sensor-unit">%</span></div>
-            <div style="margin-top:10px"><span class="status-badge optimal">Normal</span></div>
-          </div>
-        </div>
-        
-        <!-- Deuxième ligne : CO2, DC et autres capteurs sur 4 colonnes -->
-        <div class="grid-4" style="margin-bottom: 25px;">
-          <div class="sensor-card">
-            <div class="sensor-icon">🔬</div>
-            <div class="sensor-value"><span id="gasValue">--</span><span class="sensor-unit">ppm</span></div>
-            <div style="margin-top:10px"><span class="status-badge optimal">Normal</span></div>
-          </div>
-          <div class="sensor-card">
-            <div class="sensor-icon">⚡</div>
-            <div class="sensor-value"><span id="dcValue">--</span><span class="sensor-unit">V</span></div>
-            <div style="margin-top:10px"><span class="status-badge optimal">DC</span></div>
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-header"><div class="card-title">⚙️ Équipements</div></div>
-            <div class="device-grid">
-              <div class="device-card" id="pompeCard" onclick="toggleDevice('agriculture', 'pompe')">
-                <div class="device-icon">💧</div>
-                <div>Irrigation</div>
-                <small id="pompeStatus">Arrêté</small>
-              </div>
-              <div class="device-card" id="brumisateurCard" onclick="toggleDevice('agriculture', 'brumisateur')">
-                <div class="device-icon">💦</div>
-                <div>Brumisation</div>
-                <small id="brumisateurStatus">Arrêté</small>
-              </div>
-              <div class="device-card" id="ventilateurCard" onclick="toggleDevice('agriculture', 'ventilateur')">
-                <div class="device-icon">🌀</div>
-                <div>Ventilation</div>
-                <small id="ventilateurStatus">Arrêté</small>
-              </div>
-              <div class="device-card" id="chauffageCard" onclick="toggleDevice('agriculture', 'chauffage')">
-                <div class="device-icon">🔥</div>
-                <div>Chauffage</div>
-                <small id="chauffageStatus">Arrêté</small>
-              </div>
-              <div class="device-card" id="eclairageCard" onclick="toggleDevice('agriculture', 'eclairage')">
-                <div class="device-icon">💡</div>
-                <div>Éclairage</div>
-                <small id="eclairageStatus">Arrêté</small>
-              </div>
-              <div class="device-card" id="electrovanneCard" onclick="toggleDevice('agriculture', 'electrovanne')">
-                <div class="device-icon">🚰</div>
-                <div>Électrovanne</div>
-                <small id="electrovanneStatus">Fermée</small>
-              </div>
-            </div>
-            <div style="margin-top:20px">
-              <button class="btn btn-success" onclick="setMode('auto')">🤖 Auto</button>
-              <button class="btn btn-primary" onclick="setMode('manual')">✋ Manuel</button>
-              <button class="btn btn-danger" onclick="emergencyStop()">🛑 Arrêt</button>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-header"><div class="card-title">🎯 Paramètres Auto</div></div>
-            <div class="control-group">
-              <label class="control-label">🌡️ Temp Min: <span id="tempMinVal">18°C</span></label>
-              <input type="range" min="0" max="100" value="18" class="slider" id="tempMin" oninput="updateSlider('tempMin',this.value,'°C')">
-            </div>
-            <div class="control-group">
-              <label class="control-label">🌡️ Temp Max: <span id="tempMaxVal">28°C</span></label>
-              <input type="range" min="0" max="100" value="28" class="slider" id="tempMax" oninput="updateSlider('tempMax',this.value,'°C')">
-            </div>
-            <div class="control-group">
-              <label class="control-label">💧 Humid Min: <span id="humidMinVal">50%</span></label>
-              <input type="range" min="0" max="100" value="50" class="slider" id="humidMin" oninput="updateSlider('humidMin',this.value,'%')">
-            </div>
-            <div class="control-group">
-              <label class="control-label">💧 Humid Max: <span id="humidMaxVal">80%</span></label>
-              <input type="range" min="0" max="100" value="80" class="slider" id="humidMax" oninput="updateSlider('humidMax',this.value,'%')">
-            </div>
-            <button class="btn btn-success" style="width:100%" onclick="saveSettings()">💾 Enregistrer</button>
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-header"><div class="card-title">📈 Température & Humidité</div></div>
-            <div class="chart-container"><canvas id="climateChart"></canvas></div>
-          </div>
-          <div class="card">
-            <div class="card-header"><div class="card-title">📊 Qualité Air</div></div>
-            <div class="chart-container"><canvas id="airChart"></canvas></div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header"><div class="card-title">📋 Données Récentes</div></div>
-          <table>
-            <thead><tr><th>Date</th><th>Temp</th><th>Humid</th><th>CO2</th><th>DC</th></tr></thead>
-            <tbody id="dataTable"><tr><td colspan="5" style="text-align:center">Chargement...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- ========================================= -->
-      <!-- MODULE SÉCURITÉ -->
-      <!-- ========================================= -->
-      <div id="security" class="module">
-        <!-- Configuration ESP32 Sécurité -->
-        <div class="card" id="sec-config" style="background: linear-gradient(135deg, #252836, #1a1d29); border: 2px solid #667eea;">
-          <div class="card-header" style="border-bottom: 2px solid #667eea;">
-            <div class="card-title">⚙️ Configuration ESP32 Sécurité</div>
-          </div>
-          <div id="sec-device-info" style="text-align: center; padding: 20px; opacity: 0.6;">
-            Aucun appareil actif. Ajoutez un ESP32 via l'onglet "🎛️ Appareils"
-          </div>
-        </div>
-
-        <!-- NOUVEAU : Panneau de contrôle IA -->
-        <div class="card" style="background: linear-gradient(135deg, #1a1d29, #252836); border: 2px solid #667eea;">
-          <div class="card-header" style="border-bottom: 2px solid #667eea;">
-            <div class="card-title">🤖 Intelligence Artificielle</div>
-            <!-- Champ Token HF -->
-<div style="margin: 15px 0; padding: 15px; background: #0f1117; border-radius: 8px;">
-  <label style="display:block; font-size:11px; letter-spacing:2px; 
-                text-transform:uppercase; color:#8a7f72; 
-                font-family:monospace; margin-bottom:8px;">
-    🔑 Token Hugging Face
-  </label>
-  <div style="display:flex; gap:10px;">
-    <input type="password" id="hf-token-input" 
-           placeholder="hf_..." 
-           style="flex:1; padding:10px; background:#1a1d29; 
-                  border:1px solid #2d3142; border-radius:5px; 
-                  color:white; font-family:monospace; font-size:13px;">
-    <button class="btn btn-success btn-small" onclick="sauvegarderToken()">
-      💾 Sauvegarder
-    </button>
-  </div>
-  <small style="color:#8a7f72; font-family:monospace; margin-top:5px; display:block;">
-    Token gratuit sur huggingface.co/settings/tokens
-  </small>
-</div>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-              <button id="toggle-auto-detect-btn" class="btn btn-secondary btn-small" onclick="toggleAutoDetect()">
-                🤖 Auto: OFF
-              </button>
-              <button class="btn btn-primary btn-small" onclick="testAIServer()">
-                🔍 Tester Serveur
-              </button>
-              <button class="btn btn-primary btn-small" onclick="getAIModelInfo()">
-                ℹ️ Info Modèle
-              </button>
-            </div>
-          </div>
-          
-          <!-- Infos modèle -->
-          <div id="ai-model-info" style="margin-bottom: 15px;">
-            <div style="text-align: center; padding: 10px; opacity: 0.6;">
-              Cliquez sur "ℹ️ Info Modèle" pour voir les détails
-            </div>
-          </div>
-          
-          <!-- Statistiques IA -->
-          <div id="ai-stats">
-            <div style="text-align: center; padding: 20px; opacity: 0.6;">
-              Aucune détection pour le moment
-            </div>
-          </div>
-          
-          <!-- Actions -->
-          <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
-            <button class="btn btn-danger btn-small" onclick="AIManager.clearHistory()">
-              🗑️ Vider Historique
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn btn-success btn-small" onclick="showDeviceManager()">
+              ➕ Ajouter appareil
+            </button>
+            <button class="btn btn-primary btn-small" onclick="openAddCameraModal()">
+              📹 Ajouter caméra
+            </button>
+            <button class="btn btn-primary btn-small" onclick="DashboardManager.render()">
+              🔄 Rafraîchir
             </button>
           </div>
         </div>
 
-        <!-- Conteneur résultats IA -->
-        <div id="ai-results-container"></div>
-        
-        <!-- Capteurs sécurité -->
-        <div class="grid-4">
-          <div class="sensor-card">
-            <div class="sensor-icon">🚪</div>
-            <div class="sensor-value" id="sec-door" style="font-size: 24px;">--</div>
-            <div>État Porte</div>
-          </div>
-          <div class="sensor-card">
-            <div class="sensor-icon">👁️</div>
-            <div class="sensor-value" id="sec-motion" style="font-size: 24px;">--</div>
-            <div>Mouvement</div>
-          </div>
-          <div class="sensor-card">
-            <div class="sensor-icon">🔑</div>
-            <div class="sensor-value" id="sec-badge" style="font-size: 18px;">--</div>
-            <div>Dernier Badge</div>
-          </div>
-          <div class="sensor-card">
-            <div class="sensor-icon">⏰</div>
-            <div class="sensor-value" id="sec-time" style="font-size: 20px;">--</div>
-            <div>Dernier Accès</div>
+        <!-- Cartes modules — générées par DashboardManager.render() -->
+        <div id="dashboard-modules">
+          <div class="dashboard-empty">
+            <div style="font-size:60px; margin-bottom:20px;">📡</div>
+            <h3>Aucun appareil configuré</h3>
+            <p>Ajoutez votre premier ESP32 pour commencer</p>
+            <button class="btn btn-primary" style="margin-top:12px;"
+                    onclick="showDeviceManager()">➕ Ajouter un appareil</button>
           </div>
         </div>
 
-        <!-- Contrôles sécurité -->
-        <div class="card">
-          <div class="card-header"><div class="card-title">🔒 Contrôles</div></div>
-          <div class="device-grid">
-            <div class="device-card" id="lockCard" onclick="toggleDevice('security', 'lock')">
-              <div class="device-icon">🔓</div>
-              <div>Serrure</div>
-              <small id="lockStatus">Verrouillée</small>
-            </div>
-            <div class="device-card" id="alarmCard" onclick="toggleDevice('security', 'alarm')">
-              <div class="device-icon">🚨</div>
-              <div>Alarme</div>
-              <small id="alarmStatus">Désactivée</small>
-            </div>
-            <div class="device-card" id="lightsCard" onclick="toggleDevice('security', 'lights')">
-              <div class="device-icon">💡</div>
-              <div>Lumières</div>
-              <small id="lightsStatus">Éteintes</small>
-            </div>
+        <!-- Tableau données agriculture (global, depuis Google Sheets) -->
+        <div class="card" style="margin-top:24px;">
+          <div class="card-header">
+            <div class="card-title">📋 Dernières mesures Agriculture (Google Sheets)</div>
           </div>
+          <table>
+            <thead><tr><th>Date</th><th>Temp</th><th>Humid</th><th>CO2</th><th>DC</th></tr></thead>
+            <tbody id="dataTable">
+              <tr><td colspan="5" style="text-align:center; opacity:0.5;">Chargement...</td></tr>
+            </tbody>
+          </table>
         </div>
 
-        <!-- ========================================= -->
-        <!-- SECTION CAMÉRAS ESP32-CAM -->
-        <!-- ========================================= -->
-        <div class="card" style="background: linear-gradient(135deg, #1a1d29, #252836); border: 2px solid #667eea;">
-          <div class="card-header" style="border-bottom: 2px solid #667eea;">
+        <!-- Tableau données sécurité (global) -->
+        <div class="card" style="margin-top:16px;">
+          <div class="card-header">
+            <div class="card-title">📋 Derniers événements Sécurité (Google Sheets)</div>
+          </div>
+          <table>
+            <thead>
+              <tr><th>Date</th><th>Badge</th><th>Porte</th><th>Mouvement</th><th>Auth</th><th>Action</th></tr>
+            </thead>
+            <tbody id="securityTable">
+              <tr><td colspan="6" style="text-align:center; opacity:0.5;">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- =========================================
+           VUE 2 : CAMÉRAS (vue dédiée)
+           ========================================= -->
+      <div id="cameraView" style="display:none;">
+        <div class="card" style="background:linear-gradient(135deg,#1a1d29,#252836); border:2px solid #667eea;">
+          <div class="card-header" style="border-bottom:2px solid #667eea;">
             <div class="card-title">📹 Caméras de Surveillance</div>
-            <button class="btn btn-success btn-small" onclick="openAddCameraModal()">➕ Ajouter Caméra</button>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-success btn-small" onclick="openAddCameraModal()">➕ Caméra</button>
+              <button class="btn btn-primary btn-small" onclick="setCameraView('grid')">🔲 Grille</button>
+              <button class="btn btn-primary btn-small" onclick="setCameraView('single')">📺 Simple</button>
+              <button class="btn btn-small btn-success" onclick="refreshAllCameras()">🔄</button>
+              <button class="btn btn-small btn-danger" onclick="captureAllCameras()">📸 Tout</button>
+            </div>
           </div>
-          
-          <!-- Contrôles caméras -->
-          <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-            <button class="btn btn-small btn-primary" onclick="setCameraView('grid')">🔲 Grille</button>
-            <button class="btn btn-small btn-primary" onclick="setCameraView('single')">📺 Simple</button>
-            <button class="btn btn-small btn-success" onclick="refreshAllCameras()">🔄 Rafraîchir</button>
-            <button class="btn btn-small btn-danger" onclick="captureAllCameras()">📸 Capturer Tout</button>
-          </div>
-          
-          <!-- Grille des caméras -->
           <div id="security-cameras-grid" class="cameras-grid">
-            <div style="text-align: center; padding: 40px; opacity: 0.6;">
-              Aucune caméra configurée. Cliquez sur "➕ Ajouter Caméra"
+            <div style="text-align:center; padding:40px; opacity:0.6;">
+              Aucune caméra configurée. Cliquez sur "➕ Caméra"
             </div>
           </div>
         </div>
@@ -361,56 +461,95 @@
             <button class="btn btn-small btn-danger" onclick="clearSecurityCaptures()">🗑️ Vider</button>
           </div>
           <div id="security-captures-gallery" class="capture-gallery">
-            <div style="text-align: center; padding: 20px; opacity: 0.6;">
-              Aucune capture
-            </div>
+            <div style="text-align:center; padding:20px; opacity:0.6;">Aucune capture</div>
           </div>
         </div>
-           
-        <!-- Tableau des événements sécurité -->
-        <div class="card">
-          <div class="card-header"><div class="card-title">📋 Événements Récents</div></div>
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Badge</th>
-                <th>Porte</th>
-                <th>Mouvement</th>
-                <th>Auth</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="securityTable">
-              <tr><td colspan="6" style="text-align:center">Chargement...</td></tr>
-            </tbody>
-          </table>
+      </div>
+
+      <!-- =========================================
+           VUE 3 : PANNEAU IA
+           ========================================= -->
+      <div id="aiPanel" style="display:none;">
+        <div class="card" style="background:linear-gradient(135deg,#1a1d29,#252836); border:2px solid #667eea;">
+          <div class="card-header" style="border-bottom:2px solid #667eea;">
+            <div class="card-title">🤖 Intelligence Artificielle — SagitaImage</div>
+          </div>
+
+          <!-- Token HF -->
+          <div style="margin:15px 0; padding:15px; background:#0f1117; border-radius:8px;">
+            <label style="display:block; font-size:11px; letter-spacing:2px;
+                          text-transform:uppercase; color:#8a7f72;
+                          font-family:monospace; margin-bottom:8px;">
+              🔑 Token Hugging Face
+            </label>
+            <div style="display:flex; gap:10px;">
+              <input type="password" id="hf-token-input"
+                     placeholder="hf_..."
+                     style="flex:1; padding:10px; background:#1a1d29;
+                            border:1px solid #2d3142; border-radius:5px;
+                            color:white; font-family:monospace; font-size:13px;">
+              <button class="btn btn-success btn-small" onclick="sauvegarderToken()">💾 Sauvegarder</button>
+            </div>
+            <small style="color:#8a7f72; font-family:monospace; margin-top:5px; display:block;">
+              Token gratuit sur huggingface.co/settings/tokens
+            </small>
+          </div>
+
+          <!-- Actions IA -->
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:15px;">
+            <button id="toggle-auto-detect-btn" class="btn btn-secondary btn-small"
+                    onclick="toggleAutoDetect()">🤖 Auto: OFF</button>
+            <button class="btn btn-primary btn-small" onclick="testAIServer()">🔍 Tester Serveur</button>
+            <button class="btn btn-danger btn-small" onclick="AIManager.clearHistory()">🗑️ Vider Historique</button>
+          </div>
+
+          <!-- Statistiques IA -->
+          <div id="ai-stats">
+            <div style="text-align:center; padding:20px; opacity:0.6;">Aucune détection pour le moment</div>
+          </div>
+
+          <!-- Résultats IA en temps réel -->
+          <div id="ai-results-container"></div>
         </div>
       </div>
-    </div>
 
-    <!-- ========================================= -->
-    <!-- MODALS -->
-    <!-- ========================================= -->
-    
-    <!-- Modal Ajout Appareil ESP32 -->
+      <!-- =========================================
+           VUE 4 : GESTIONNAIRE D'APPAREILS
+           ========================================= -->
+      <div class="card" id="deviceManager" style="display:none;">
+        <div class="card-header">
+          <div class="card-title">🎛️ Gestionnaire d'Appareils ESP32</div>
+          <button class="btn btn-success" onclick="openAddDeviceModal()">➕ Ajouter</button>
+        </div>
+        <div id="devicesList">
+          <div style="text-align:center; padding:40px; opacity:0.6;">Aucun appareil.</div>
+        </div>
+      </div>
+
+    </div><!-- /container -->
+
+    <!-- =========================================
+         MODALS
+         ========================================= -->
+
+    <!-- Modal Ajout Appareil -->
     <div id="addDeviceModal" class="modal">
       <div class="modal-content">
         <div class="card-header">
-          <h2 style="margin: 0;">➕ Ajouter un ESP32</h2>
+          <h2 style="margin:0;">➕ Ajouter un ESP32</h2>
           <button class="btn btn-danger btn-small" onclick="closeAddDeviceModal()">✖</button>
         </div>
         <div class="input-group">
           <label>📛 Nom:</label>
-          <input type="text" id="newDeviceName" placeholder="Serre 1" style="flex: 2;">
+          <input type="text" id="newDeviceName" placeholder="Serre 1" style="flex:2;">
         </div>
         <div class="input-group">
-          <label>📡 IP:</label>
-          <input type="text" id="newDeviceIP" placeholder="192.168.1.100" style="flex: 2;">
+          <label>📡 IP / URL:</label>
+          <input type="text" id="newDeviceIP" placeholder="192.168.1.100 ou xxxx.ngrok-free.app" style="flex:2;">
         </div>
         <div class="input-group">
           <label>🏷️ Type:</label>
-          <select id="newDeviceType" style="flex: 2;">
+          <select id="newDeviceType" style="flex:2;">
             <option value="agriculture">🌱 Agriculture</option>
             <option value="security">🔒 Sécurité</option>
             <option value="custom">⚙️ Personnalisé</option>
@@ -418,9 +557,9 @@
         </div>
         <div class="input-group">
           <label>📍 Lieu:</label>
-          <input type="text" id="newDeviceLocation" placeholder="Zone A" style="flex: 2;">
+          <input type="text" id="newDeviceLocation" placeholder="Zone A" style="flex:2;">
         </div>
-        <button class="btn btn-success" onclick="addDevice()" style="width: 100%; margin-top: 15px;">💾 Ajouter</button>
+        <button class="btn btn-success" onclick="addDevice()" style="width:100%; margin-top:15px;">💾 Ajouter</button>
       </div>
     </div>
 
@@ -428,22 +567,22 @@
     <div id="addCameraModal" class="modal">
       <div class="modal-content">
         <div class="card-header">
-          <h2 style="margin: 0;">➕ Ajouter une ESP32-CAM</h2>
+          <h2 style="margin:0;">➕ Ajouter une ESP32-CAM</h2>
           <button class="btn btn-danger btn-small" onclick="closeAddCameraModal()">✖</button>
         </div>
         <div class="input-group">
           <label>📛 Nom:</label>
-          <input type="text" id="newCameraName" placeholder="Caméra Entrée" style="flex: 2;">
+          <input type="text" id="newCameraName" placeholder="Caméra Entrée" style="flex:2;">
         </div>
         <div class="input-group">
-          <label>📡 IP:</label>
-          <input type="text" id="newCameraIP" placeholder="192.168.1.200" style="flex: 2;">
+          <label>📡 IP / URL:</label>
+          <input type="text" id="newCameraIP" placeholder="192.168.1.200 ou xxxx.ngrok-free.app" style="flex:2;">
         </div>
         <div class="input-group">
           <label>📍 Position:</label>
-          <input type="text" id="newCameraLocation" placeholder="Entrée principale" style="flex: 2;">
+          <input type="text" id="newCameraLocation" placeholder="Entrée principale" style="flex:2;">
         </div>
-        <button class="btn btn-success" onclick="addSecurityCamera()" style="width: 100%; margin-top: 15px;">
+        <button class="btn btn-success" onclick="addSecurityCamera()" style="width:100%; margin-top:15px;">
           💾 Ajouter Caméra
         </button>
       </div>
@@ -451,83 +590,186 @@
 
     <!-- Modal Plein Écran Caméra -->
     <div id="cameraFullscreenModal" class="modal">
-      <div class="modal-content" style="max-width: 95%; max-height: 95vh; padding: 15px;">
+      <div class="modal-content" style="max-width:95%; max-height:95vh; padding:15px;">
         <div class="card-header">
-          <h2 style="margin: 0;" id="fullscreen-camera-name">📹 Caméra</h2>
+          <h2 style="margin:0;" id="fullscreen-camera-name">📹 Caméra</h2>
           <button class="btn btn-danger btn-small" onclick="closeCameraFullscreen()">✖ Fermer</button>
         </div>
-        <img id="fullscreen-camera-img" style="width: 100%; height: auto; border-radius: 10px; margin-top: 15px;">
-        <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+        <img id="fullscreen-camera-img"
+             style="width:100%; height:auto; border-radius:10px; margin-top:15px;">
+        <div style="margin-top:15px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
           <button class="btn btn-success" onclick="captureFromFullscreen()">📸 Capturer</button>
           <button class="btn btn-primary" onclick="toggleFlashFullscreen()">💡 Flash</button>
           <button class="btn btn-primary" onclick="downloadCapture()">⬇️ Télécharger</button>
         </div>
       </div>
     </div>
+
+  </div><!-- /platform -->
+
+  <!-- =========================================
+       INDICATEURS PWA
+       ========================================= -->
+
+  <div id="installPrompt" style="display:none; position:fixed; bottom:0; left:0; right:0;
+       background:linear-gradient(135deg,#667eea,#764ba2); color:white; padding:20px;
+       z-index:10000; box-shadow:0 -4px 20px rgba(0,0,0,0.3);">
+    <div style="display:flex; align-items:center; gap:15px; max-width:900px; margin:0 auto;">
+      <div style="font-size:48px;">📱</div>
+      <div style="flex:1;">
+        <strong style="display:block; font-size:18px;">Installer PRIVA</strong>
+        <p style="margin:5px 0 0; opacity:0.9;">Ajoutez l'app à votre écran d'accueil</p>
+      </div>
+      <button id="installBtn" class="btn btn-success">Installer</button>
+      <button id="dismissBtn" class="btn btn-secondary" style="background:rgba(255,255,255,0.2);">Plus tard</button>
+    </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-<script src="app.js?v=A16"></script>
+  <div id="offlineIndicator" style="display:none; position:fixed; top:0; left:0; right:0;
+       background:#f77f00; color:white; padding:10px; text-align:center;
+       font-weight:bold; z-index:9999;">
+    📡 Mode hors-ligne
+  </div>
 
-<!-- 3. Puis vos fonctions de navigation -->
-<script>
+  <!-- =========================================
+       SCRIPTS
+       ========================================= -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <script src="app.js?v=A17"></script>
+
+  <script>
+    /* ── Navigation ── */
     function enterPlatform() {
       document.getElementById('homepage').style.display = 'none';
       document.getElementById('platform').style.display = 'block';
-      if (typeof init === 'function') {
-        init();
-      }
+      if (typeof init === 'function') init();
     }
-    
+
     function returnHome() {
-      if (confirm('Voulez-vous vraiment retourner à l\'accueil ?')) {
+      if (confirm('Retourner à l\'accueil ?')) {
         document.getElementById('platform').style.display = 'none';
         document.getElementById('homepage').style.display = 'flex';
       }
     }
 
-    // Initialiser le module IA après chargement
-    document.addEventListener('DOMContentLoaded', function() {
-      setTimeout(() => {
-        if (typeof initAI === 'function') {
-          initAI();
-          console.log('✅ Module IA initialisé');
-        }
-      }, 1000);
-    });
-</script>
+    /* ── showCameraView : ouvre la vue caméras dédiée ── */
+    function showCameraView() {
+      _hideAll();
+      document.getElementById('cameraView').style.display = 'block';
+      _setActiveTab('showCameraView');
+      setTimeout(() => initSecurityCameras(), 100);
+    }
 
-  <!-- ========================================= -->
-  <!-- PWA FEATURES -->
-  <!-- ========================================= -->
-  
-  <!-- Bannière d'installation PWA -->
-  <div id="installPrompt" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; z-index: 10000; box-shadow: 0 -4px 20px rgba(0,0,0,0.3);">
-    <div style="display: flex; align-items: center; gap: 15px; max-width: 900px; margin: 0 auto;">
-      <div style="font-size: 48px;">📱</div>
-      <div style="flex: 1;">
-        <strong style="display: block; font-size: 18px;">Installer PRIVA</strong>
-        <p style="margin: 5px 0 0 0; opacity: 0.9;">Ajoutez l'app à votre écran d'accueil</p>
-      </div>
-      <button id="installBtn" class="btn btn-success">Installer</button>
-      <button id="dismissBtn" class="btn btn-secondary" style="background: rgba(255,255,255,0.2);">Plus tard</button>
-    </div>
-  </div>
+    /* ── captureFromFullscreen / toggleFlashFullscreen ── */
+    function captureFromFullscreen() {
+      const img = document.getElementById('fullscreen-camera-img');
+      if (!img?.src) return;
+      const cam = Object.entries(State.securityCameras || {})
+        .find(([id, c]) => img.src.includes(c.ip));
+      if (cam) captureCamera(cam[0], cam[1].name, cam[1].ip);
+    }
+    function toggleFlashFullscreen() {
+      const img = document.getElementById('fullscreen-camera-img');
+      if (!img?.src) return;
+      const cam = Object.entries(State.securityCameras || {})
+        .find(([id, c]) => img.src.includes(c.ip));
+      if (cam) toggleFlash(cam[0], cam[1].ip);
+    }
 
-  <!-- Indicateur hors-ligne -->
-  <div id="offlineIndicator" style="display: none; position: fixed; top: 0; left: 0; right: 0; background: #f77f00; color: white; padding: 10px; text-align: center; font-weight: bold; z-index: 9999;">
-    📡 Mode hors-ligne
-  </div>
+    function setCameraView(mode) {
+      const grid = document.getElementById('security-cameras-grid');
+      if (grid) grid.className = mode === 'single' ? 'cameras-single' : 'cameras-grid';
+    }
 
-  <!-- Script PWA -->
-  <script>
-    // Service Worker
+    function refreshAllCameras() {
+      Object.entries(State.securityCameras || {})
+        .filter(([,c]) => c.active)
+        .forEach(([id, cam]) => StreamManager.restart(id, cam.ip));
+      showAlert('success', '🔄 Caméras redémarrées');
+    }
+
+    function getAIModelInfo() {
+      const infoDiv = document.getElementById('ai-model-info');
+      if (infoDiv) {
+        infoDiv.innerHTML = `
+          <div style="padding:12px;background:#1a1d29;border-radius:8px;font-size:12px;line-height:1.8;">
+            <div>🤖 <strong>Modèle:</strong> ${CONFIG.HF_MODEL}</div>
+            <div>🔗 <strong>Serveur:</strong> sagitaimage.onrender.com</div>
+            <div>🔑 <strong>Token:</strong> ${CONFIG.HF_TOKEN ? '✅ Configuré' : '❌ Non configuré'}</div>
+            <div>📊 <strong>Détections:</strong> ${AIManager.history.length}</div>
+          </div>`;
+      }
+    }
+
+    function updateSlider(id, val, unit) {
+      const el = document.getElementById(id + 'Val');
+      if (el) el.textContent = val + unit;
+    }
+
+    function saveSettings() {
+      const dev = Object.values(State.devices || {})
+        .find(d => d.type === 'agriculture' && d.active);
+      if (!dev) { showAlert('warning', '⚠️ Connectez un ESP32'); return; }
+      const s = {
+        tempMin: document.getElementById('tempMin')?.value,
+        tempMax: document.getElementById('tempMax')?.value,
+        humMin:  document.getElementById('humidMin')?.value,
+        humMax:  document.getElementById('humidMax')?.value
+      };
+      Utils.fetchWithTimeout(
+        Utils.buildUrl(dev.ip, 'settings'),
+        { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+          body:`tempMin=${s.tempMin}&tempMax=${s.tempMax}&humMin=${s.humMin}&humMax=${s.humMax}` }
+      ).then(() => showAlert('success', '💾 Paramètres enregistrés'))
+       .catch(() => showAlert('warning', '⚠️ Erreur d\'envoi'));
+    }
+
+    /* ── Helper navigation interne ── */
+    function _hideAll() {
+      ['dashboard','cameraView','aiPanel','deviceManager'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    }
+    function _setActiveTab(fnName) {
+      const btn = document.querySelector(`.tab-btn[onclick*="${fnName}"]`);
+      if (btn) btn.classList.add('active');
+    }
+
+    /* ── Surcharger showDashboard / showDeviceManager / showAIPanel
+          pour gérer aussi la tab active ── */
+    const _origShowDashboard     = typeof showDashboard     !== 'undefined' ? showDashboard     : null;
+    const _origShowDeviceManager = typeof showDeviceManager !== 'undefined' ? showDeviceManager : null;
+    const _origShowAIPanel       = typeof showAIPanel       !== 'undefined' ? showAIPanel       : null;
+
+    // Ces fonctions sont définies dans app.js — on les surcharge ici
+    // pour ajouter la gestion de tab active proprement
+    window.showDashboard = function() {
+      _hideAll();
+      document.getElementById('dashboard').style.display = 'block';
+      _setActiveTab('showDashboard');
+      if (typeof DashboardManager !== 'undefined') DashboardManager.render();
+    };
+    window.showDeviceManager = function() {
+      _hideAll();
+      document.getElementById('deviceManager').style.display = 'block';
+      _setActiveTab('showDeviceManager');
+      if (typeof renderDevicesList === 'function') renderDevicesList();
+    };
+    window.showAIPanel = function() {
+      _hideAll();
+      document.getElementById('aiPanel').style.display = 'block';
+      _setActiveTab('showAIPanel');
+    };
+
+    /* ── Init PWA ── */
     let deferredPrompt;
-    
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', async () => {
         try {
-          const registration = await navigator.serviceWorker.register('sw.js');
+          await navigator.serviceWorker.register('sw.js');
           console.log('✅ Service Worker enregistré');
         } catch (err) {
           console.error('❌ Erreur SW:', err);
@@ -535,22 +777,16 @@
       });
     }
 
-    // Détection online/offline
     window.addEventListener('online', () => {
       document.getElementById('offlineIndicator').style.display = 'none';
-      if (typeof showAlert === 'function') {
-        showAlert('success', '✅ Connexion rétablie');
-      }
+      if (typeof showAlert === 'function') showAlert('success', '✅ Connexion rétablie');
     });
 
     window.addEventListener('offline', () => {
       document.getElementById('offlineIndicator').style.display = 'block';
-      if (typeof showAlert === 'function') {
-        showAlert('warning', '⚠️ Mode hors-ligne');
-      }
+      if (typeof showAlert === 'function') showAlert('warning', '⚠️ Mode hors-ligne');
     });
 
-    // Prompt d'installation
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
@@ -559,17 +795,10 @@
 
     document.getElementById('installBtn')?.addEventListener('click', async () => {
       if (!deferredPrompt) return;
-      
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      
-      if (outcome === 'accepted') {
-        console.log('✅ PWA installée');
-        if (typeof showAlert === 'function') {
-          showAlert('success', '🎉 PRIVA installée !');
-        }
-      }
-      
+      if (outcome === 'accepted' && typeof showAlert === 'function')
+        showAlert('success', '🎉 PRIVA installée !');
       deferredPrompt = null;
       document.getElementById('installPrompt').style.display = 'none';
     });
@@ -578,10 +807,13 @@
       document.getElementById('installPrompt').style.display = 'none';
     });
 
-    // Détection si installée
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      console.log('🚀 PWA en mode standalone');
-    }
+    /* ── Init IA après chargement ── */
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        if (typeof initAI === 'function') { initAI(); console.log('✅ Module IA initialisé'); }
+      }, 1000);
+    });
   </script>
+
 </body>
 </html>
