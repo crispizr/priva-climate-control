@@ -8,314 +8,256 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="PRIVA">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
   <title>Sagitarius-Nova</title>
-  <link rel="stylesheet" href="styles.css?v=A17">
+  <link rel="stylesheet" href="styles.css?v=A18">
 
   <style>
-    /* ================================================
-       DASHBOARD MULTI-MODULES — PRIVA v6.0
-       ================================================ */
+    /* ════════════════════════════════════════════════
+       PRIVA v7.0 — Styles dashboard + service builder
+       ════════════════════════════════════════════════ */
 
-    /* ── Section par type d'appareil ── */
-    .dashboard-section {
-      margin-bottom: 32px;
-    }
+    /* ── Dashboard cards ── */
+    .dashboard-section { margin-bottom: 32px; }
     .dashboard-section-title {
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: #667eea;
-      padding: 0 4px 10px;
-      border-bottom: 1px solid #2d3142;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      font-size: 13px; font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; color: #667eea;
+      padding: 0 4px 10px; border-bottom: 1px solid #2d3142;
+      margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
     }
     .dashboard-section-title .badge {
-      background: #667eea;
-      color: white;
-      border-radius: 20px;
-      padding: 2px 10px;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0;
+      background: #667eea; color: white; border-radius: 20px;
+      padding: 2px 10px; font-size: 11px; font-weight: 600; letter-spacing: 0;
     }
-
-    /* ── Rangée de cartes ── */
-    .dashboard-cards-row {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    /* ── Carte appareil individuelle ── */
+    .dashboard-cards-row { display: flex; gap: 16px; flex-wrap: wrap; }
     .dash-card {
-      flex: 1;
-      min-width: 300px;
-      max-width: 100%;
-      background: #161929;
-      border-radius: 14px;
-      border: 1px solid #2d3142;
-      overflow: hidden;
-      transition: box-shadow 0.2s, border-color 0.2s;
+      flex: 1; min-width: 300px; background: #161929;
+      border-radius: 14px; border: 1px solid #2d3142; overflow: hidden;
+      transition: box-shadow 0.2s;
     }
-    .dash-card:hover {
-      box-shadow: 0 8px 32px rgba(102,126,234,0.15);
-    }
+    .dash-card:hover { box-shadow: 0 8px 32px rgba(102,126,234,0.15); }
     .dash-card-agri  { border-top: 3px solid #27ae60; }
     .dash-card-sec   { border-top: 3px solid #667eea; }
     .dash-card-inactive { opacity: 0.55; filter: grayscale(0.4); }
-
-    /* ── En-tête de carte ── */
     .dash-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px 16px 10px;
-      background: #1a1d2e;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 16px 10px; background: #1a1d2e;
     }
     .dash-card-header > div:first-child {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      color: #e8e8f0;
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 600; color: #e8e8f0;
     }
-    .dash-card-icon { font-size: 18px; }
-
-    /* ── Métriques résumées ── */
-    .dash-metrics {
-      display: flex;
-      gap: 0;
-      border-bottom: 1px solid #2d3142;
-    }
+    .dash-metrics { display: flex; border-bottom: 1px solid #2d3142; }
     .dash-metric {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 12px 6px 10px;
-      border-right: 1px solid #2d3142;
-      transition: background 0.15s;
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      padding: 12px 6px 10px; border-right: 1px solid #2d3142; transition: background 0.15s;
     }
     .dash-metric:last-child { border-right: none; }
     .dash-metric:hover { background: rgba(102,126,234,0.07); }
     .metric-icon { font-size: 18px; margin-bottom: 4px; }
-    .metric-val  { font-size: 20px; font-weight: 700; color: #ffffff; line-height: 1; }
-    .metric-val.metric-small { font-size: 13px; font-weight: 600; }
+    .metric-val  { font-size: 20px; font-weight: 700; color: #fff; line-height: 1; }
+    .metric-val.metric-small { font-size: 13px; }
     .metric-unit { font-size: 10px; color: #7a7fa8; margin-top: 2px; }
-
-    /* ── Indicateur de statut (point) ── */
-    .dash-status-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
-      transition: background 0.3s;
-    }
-    .dot-active   { background: #27ae60; box-shadow: 0 0 6px #27ae60; animation: pulse-dot 2s infinite; }
+    .dash-status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-active   { background: #27ae60; animation: pdot 2s infinite; }
     .dot-inactive { background: #e63946; }
-    @keyframes pulse-dot {
+    @keyframes pdot {
       0%,100% { box-shadow: 0 0 4px #27ae60; }
-      50%      { box-shadow: 0 0 10px #27ae60, 0 0 20px rgba(39,174,96,0.3); }
+      50%      { box-shadow: 0 0 10px #27ae60; }
     }
-
-    /* ── Pied de carte ── */
     .dash-card-footer {
-      padding: 8px 16px;
-      font-size: 11px;
-      color: #5a5f7a;
-      background: #0f1117;
-      border-top: 1px solid #1e2240;
+      padding: 8px 16px; font-size: 11px;
+      color: #5a5f7a; background: #0f1117; border-top: 1px solid #1e2240;
     }
-
-    /* ── Panneau expandable ── */
     .dash-panel {
-      padding: 16px;
-      background: #0f1117;
-      border-top: 1px solid #2d3142;
-      animation: slideDown 0.2s ease;
+      padding: 16px; background: #0f1117;
+      border-top: 1px solid #2d3142; animation: sdown 0.2s ease;
     }
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-8px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ── Contenu du panneau ── */
+    @keyframes sdown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
     .module-panel { display: flex; flex-direction: column; gap: 14px; }
-
     .panel-ip-row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      background: #161929;
-      padding: 8px;
-      border-radius: 8px;
-      border: 1px solid #2d3142;
+      display: flex; gap: 8px; align-items: center;
+      background: #161929; padding: 8px; border-radius: 8px; border: 1px solid #2d3142;
     }
-
     .panel-section-title {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: #667eea;
-      padding-top: 4px;
+      font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: #667eea; padding-top: 4px;
     }
-
-    /* ── Grille actionneurs mini ── */
     .actuators-grid-mini {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-      gap: 8px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(80px,1fr)); gap: 8px;
     }
     .actuator-mini {
-      background: #1a1d2e;
-      border: 1px solid #2d3142;
-      border-radius: 10px;
-      padding: 10px 6px 8px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      color: #9ca3af;
-      text-align: center;
-      transition: all 0.2s;
+      background: #1a1d2e; border: 1px solid #2d3142; border-radius: 10px;
+      padding: 10px 6px 8px; display: flex; flex-direction: column;
+      align-items: center; gap: 4px; font-size: 11px; color: #9ca3af; text-align: center;
     }
     .actuator-mini > span:first-child { font-size: 22px; }
-    .actuator-mini.active {
-      background: rgba(39,174,96,0.15);
-      border-color: #27ae60;
-      color: #27ae60;
-    }
+    .actuator-mini.active { background: rgba(39,174,96,0.15); border-color: #27ae60; color: #27ae60; }
     .actuator-btn {
-      width: 100%;
-      padding: 3px 0;
-      border: 1px solid #3d4162;
-      border-radius: 5px;
-      background: #0f1117;
-      color: #7a7fa8;
-      font-size: 9px;
-      cursor: pointer;
-      transition: all 0.15s;
+      width: 100%; padding: 3px 0; border: 1px solid #3d4162; border-radius: 5px;
+      background: #0f1117; color: #7a7fa8; font-size: 9px; cursor: pointer;
     }
-    .actuator-btn:hover { background: #667eea; color: white; border-color: #667eea; }
-
-    /* ── Mini graphique ── */
+    .actuator-btn:hover { background: #667eea; color: white; }
     .mini-chart-wrap {
-      height: 120px;
-      position: relative;
-      background: #161929;
-      border-radius: 8px;
-      padding: 8px;
-      border: 1px solid #2d3142;
+      height: 120px; position: relative; background: #161929;
+      border-radius: 8px; padding: 8px; border: 1px solid #2d3142;
     }
-
-    /* ── Section caméras mini ── */
-    .dashboard-cameras-mini {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
+    .dashboard-cameras-mini { display: flex; gap: 12px; flex-wrap: wrap; }
     .mini-cam-card {
-      position: relative;
-      width: 180px;
-      height: 120px;
-      border-radius: 10px;
-      overflow: hidden;
-      cursor: pointer;
-      border: 2px solid #2d3142;
-      background: #0f1117;
-      transition: border-color 0.2s, transform 0.2s;
-      flex-shrink: 0;
+      position: relative; width: 180px; height: 120px; border-radius: 10px;
+      overflow: hidden; cursor: pointer; border: 2px solid #2d3142;
+      background: #0f1117; transition: border-color 0.2s, transform 0.2s; flex-shrink: 0;
     }
     .mini-cam-card:hover { border-color: #667eea; transform: scale(1.02); }
     .mini-cam-overlay {
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      padding: 6px 8px;
+      position: absolute; top:0; left:0; right:0; padding: 6px 8px;
       background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      z-index: 2;
-      color: white;
-      font-size: 11px;
+      display: flex; align-items: center; gap: 6px; z-index: 2; color: white; font-size: 11px;
     }
-    .mini-cam-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: #7a7fa8;
-      flex-shrink: 0;
-    }
+    .mini-cam-dot { width: 7px; height: 7px; border-radius: 50%; background: #7a7fa8; flex-shrink: 0; }
     .mini-cam-buttons {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      display: flex;
-      gap: 4px;
-      padding: 5px;
+      position: absolute; bottom:0; left:0; right:0;
+      display: flex; gap: 4px; padding: 5px;
       background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
-      justify-content: center;
-      z-index: 2;
-      opacity: 0;
-      transition: opacity 0.2s;
+      justify-content: center; z-index: 2; opacity: 0; transition: opacity 0.2s;
     }
     .mini-cam-card:hover .mini-cam-buttons { opacity: 1; }
     .mini-cam-buttons button {
-      padding: 3px 8px;
-      font-size: 12px;
-      border: 1px solid rgba(255,255,255,0.3);
-      border-radius: 5px;
-      background: rgba(0,0,0,0.5);
-      color: white;
-      cursor: pointer;
-      backdrop-filter: blur(4px);
+      padding: 3px 8px; font-size: 12px; border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 5px; background: rgba(0,0,0,0.5); color: white; cursor: pointer;
     }
-    .mini-cam-buttons button:hover { background: #667eea; border-color: #667eea; }
-
-    /* ── Vide dashboard ── */
-    .dashboard-empty {
-      text-align: center;
-      padding: 60px 20px;
-      color: #5a5f7a;
-    }
+    .mini-cam-buttons button:hover { background: #667eea; }
+    .dashboard-empty { text-align: center; padding: 60px 20px; color: #5a5f7a; }
     .dashboard-empty h3 { color: #9ca3af; margin-bottom: 8px; }
 
-    /* ── Vue caméra plein écran ── */
-    #cameraView {
-      display: none;
+    /* ── Service Builder ── */
+    #serviceBuilder, #aiPanel, #cameraView { display: none; }
+    .sb-block-library {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); gap: 8px;
+    }
+    .sb-block {
+      border: 1px solid #2d3142; border-radius: 10px; padding: 12px 8px;
+      text-align: center; cursor: pointer; background: #161929; transition: all 0.15s;
+      position: relative; user-select: none;
+    }
+    .sb-block:hover  { border-color: #667eea44; background: #1a1d29; }
+    .sb-block.sel    { border: 2px solid #667eea; background: #1a1d29; }
+    .sb-block-icon   { font-size: 24px; margin-bottom: 6px; }
+    .sb-block-name   { font-size: 12px; font-weight: 600; color: #d5d5ee; }
+    .sb-block-ref    { font-size: 10px; color: #7a7fa8; margin-top: 2px; font-family: monospace; }
+    .sb-block-caps   { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; margin-top: 4px; }
+    .sb-cap          { font-size: 9px; padding: 1px 5px; border-radius: 6px; }
+    .sb-check        {
+      display: none; position: absolute; top: 5px; right: 5px;
+      width: 16px; height: 16px; border-radius: 50%; background: #667eea;
+      align-items: center; justify-content: center;
+    }
+    .sb-block.sel .sb-check { display: flex; }
+    .sb-check::after {
+      content: ''; display: block; width: 8px; height: 8px;
+      background: #fff; clip-path: polygon(14% 44%,0 65%,50% 100%,100% 16%,80% 0%,43% 62%);
+    }
+    .sb-cat-filter { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .sb-cat-btn {
+      padding: 4px 12px; border-radius: 20px; border: 1px solid #2d3142;
+      background: #161929; color: #7a7fa8; font-size: 12px; cursor: pointer;
+    }
+    .sb-cat-btn.active { background: #667eea; color: white; border-color: #667eea; }
+    .sb-selected-list { display: flex; flex-direction: column; gap: 6px; }
+    .sb-sel-item {
+      display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+      background: #0f1117; border-radius: 6px; font-size: 12px;
+    }
+    .sb-step-indicator {
+      display: flex; gap: 0; border: 1px solid #2d3142; border-radius: 8px;
+      overflow: hidden; margin-bottom: 16px;
+    }
+    .sb-step {
+      flex: 1; padding: 8px 4px; text-align: center; font-size: 12px;
+      color: #7a7fa8; background: #161929; border-right: 1px solid #2d3142; cursor: pointer;
+    }
+    .sb-step:last-child { border-right: none; }
+    .sb-step.active { background: #0f1117; color: #fff; font-weight: 600; }
+    .sb-step.done   { color: #27ae60; }
+    .sb-sn {
+      display: inline-flex; width: 16px; height: 16px; border-radius: 50%;
+      background: #2d3142; color: #7a7fa8; font-size: 10px;
+      align-items: center; justify-content: center; margin-right: 3px;
+    }
+    .sb-step.active .sb-sn { background: #667eea; color: #fff; }
+    .sb-step.done   .sb-sn { background: #27ae60; color: #fff; }
+    .sb-view { display: none; }
+    .sb-view.active { display: block; }
+    .sb-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .sb-icon-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .sb-icon-opt {
+      width: 36px; height: 36px; border-radius: 8px; border: 1px solid #2d3142;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; cursor: pointer; background: #161929;
+    }
+    .sb-icon-opt.sel { border: 2px solid #667eea; background: #1a1d29; }
+    .sb-color-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .sb-color { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
+    .sb-color.sel { border-color: #d5d5ee; transform: scale(1.15); }
+    .sb-preview {
+      border: 2px solid #667eea; border-radius: 12px; overflow: hidden; margin-top: 12px;
+    }
+    .sb-preview-header {
+      padding: 14px 16px; display: flex; align-items: center; gap: 10px; background: #1a1d29;
+    }
+    .sb-preview-blocks { padding: 10px 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .sb-pb {
+      display: flex; align-items: center; gap: 5px; padding: 5px 10px;
+      border-radius: 8px; background: #0f1117; border: 1px solid #2d3142;
+      font-size: 11px; color: #d5d5ee;
+    }
+    .sb-example {
+      padding: 10px 12px; border: 1px solid #2d3142; border-radius: 8px;
+      cursor: pointer; background: #161929; transition: background 0.15s; margin-bottom: 8px;
+    }
+    .sb-example:hover { background: #1a1d29; }
+    .sb-count {
+      font-size: 11px; padding: 5px 12px; background: #161929;
+      border: 1px solid #2d3142; border-radius: 8px; color: #7a7fa8;
+    }
+    .sb-count strong { color: #667eea; }
+    .sb-custom-form {
+      background: #0f1117; border: 1px solid #2d3142; border-radius: 10px; padding: 14px; margin-top: 10px;
     }
 
-    /* ── Onglet IA ── */
-    #aiPanel { display: none; }
-
-    /* ── Animation spin ── */
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(360deg); }
+    /* ── Modal Pin Manager ── */
+    .pm-modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      z-index: 5000; align-items: center; justify-content: center; padding: 20px;
     }
+    .pm-modal-overlay.active { display: flex; }
+    .pm-modal {
+      background: #0f1117; border: 1px solid #2d3142; border-radius: 16px;
+      width: 100%; max-width: 820px; max-height: 90vh; overflow-y: auto;
+      padding: 24px;
+    }
+    .pm-modal-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+    }
+    .pm-modal-title { font-size: 18px; font-weight: 600; color: #d5d5ee; }
+
+    /* ── Spin animation ── */
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
     /* ── Responsive ── */
     @media (max-width: 640px) {
       .dash-card { min-width: 100%; }
       .mini-cam-card { width: 140px; height: 90px; }
-      .actuators-grid-mini { grid-template-columns: repeat(3, 1fr); }
+      .sb-grid2 { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
-  <!-- ========================================= -->
-  <!-- PAGE D'ACCUEIL                            -->
-  <!-- ========================================= -->
+  <!-- ═══════════════════════════════════════
+       PAGE D'ACCUEIL
+       ═══════════════════════════════════════ -->
   <div id="homepage" class="homepage">
     <div class="home-background-image"></div>
     <div class="home-overlay"></div>
@@ -328,9 +270,9 @@
     </div>
   </div>
 
-  <!-- ========================================= -->
-  <!-- PLATEFORME PRINCIPALE                     -->
-  <!-- ========================================= -->
+  <!-- ═══════════════════════════════════════
+       PLATEFORME PRINCIPALE
+       ═══════════════════════════════════════ -->
   <div id="platform" style="display:none;">
     <div class="header">
       <div class="header-content">
@@ -339,7 +281,6 @@
           <h1>Sagitarius-Nova</h1>
         </div>
 
-        <!-- Barre de statut globale -->
         <div class="status-bar">
           <div class="status-item">
             <div class="status-dot connected" id="connectionStatus"></div>
@@ -353,12 +294,13 @@
           </div>
         </div>
 
-        <!-- Navigation principale — v6.0 : Dashboard central -->
+        <!-- Navigation v7.0 -->
         <div class="tabs">
-          <button class="tab-btn active" onclick="showDashboard()">🏠 Dashboard</button>
-          <button class="tab-btn" onclick="showCameraView()">📹 Caméras</button>
-          <button class="tab-btn" onclick="showAIPanel()">🤖 IA</button>
-          <button class="tab-btn" onclick="showDeviceManager()">🎛️ Appareils</button>
+          <button class="tab-btn active"  onclick="showDashboard()">🏠 Dashboard</button>
+          <button class="tab-btn"         onclick="showCameraView()">📹 Caméras</button>
+          <button class="tab-btn"         onclick="showAIPanel()">🤖 IA</button>
+          <button class="tab-btn"         onclick="showServiceBuilder()">🧩 Services</button>
+          <button class="tab-btn"         onclick="showDeviceManager()">🎛️ Appareils</button>
         </div>
       </div>
     </div>
@@ -366,171 +308,366 @@
     <div class="container">
       <div id="alertContainer"></div>
 
-      <!-- =========================================
-           VUE 1 : DASHBOARD MULTI-MODULES
-           ========================================= -->
+      <!-- ══════════════════════════════════
+           VUE 1 : DASHBOARD
+           ══════════════════════════════════ -->
       <div id="dashboard">
-        <!-- En-tête dashboard -->
-        <div style="display:flex; justify-content:space-between; align-items:center;
-                    margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;
+                    margin-bottom:24px;flex-wrap:wrap;gap:12px;">
           <div>
-            <h2 style="margin:0; font-size:20px; color:#e8e8f0;">Tableau de bord</h2>
-            <p style="margin:4px 0 0; font-size:12px; color:#5a5f7a;">
+            <h2 style="margin:0;font-size:20px;color:#e8e8f0;">Tableau de bord</h2>
+            <p style="margin:4px 0 0;font-size:12px;color:#5a5f7a;">
               Tous vos appareils actifs — mise à jour toutes les 3 secondes
             </p>
           </div>
-          <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <button class="btn btn-success btn-small" onclick="showDeviceManager()">
-              ➕ Ajouter appareil
-            </button>
-            <button class="btn btn-primary btn-small" onclick="openAddCameraModal()">
-              📹 Ajouter caméra
-            </button>
-            <button class="btn btn-primary btn-small" onclick="DashboardManager.render()">
-              🔄 Rafraîchir
-            </button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-success btn-small" onclick="showDeviceManager()">➕ Appareil</button>
+            <button class="btn btn-primary btn-small" onclick="openAddCameraModal()">📹 Caméra</button>
+            <button class="btn btn-primary btn-small" onclick="showServiceBuilder()">🧩 Nouveau service</button>
+            <button class="btn btn-primary btn-small" onclick="DashboardManager.render()">🔄</button>
           </div>
         </div>
 
-        <!-- Cartes modules — générées par DashboardManager.render() -->
         <div id="dashboard-modules">
           <div class="dashboard-empty">
-            <div style="font-size:60px; margin-bottom:20px;">📡</div>
+            <div style="font-size:60px;margin-bottom:20px;">📡</div>
             <h3>Aucun appareil configuré</h3>
-            <p>Ajoutez votre premier ESP32 pour commencer</p>
-            <button class="btn btn-primary" style="margin-top:12px;"
-                    onclick="showDeviceManager()">➕ Ajouter un appareil</button>
+            <p>Ajoutez un ESP32 ou créez votre premier service</p>
+            <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap;">
+              <button class="btn btn-primary" onclick="showDeviceManager()">➕ Ajouter un appareil</button>
+              <button class="btn btn-success" onclick="showServiceBuilder()">🧩 Créer un service</button>
+            </div>
           </div>
         </div>
 
-        <!-- Tableau données agriculture (global, depuis Google Sheets) -->
         <div class="card" style="margin-top:24px;">
           <div class="card-header">
-            <div class="card-title">📋 Dernières mesures Agriculture (Google Sheets)</div>
+            <div class="card-title">📋 Mesures Agriculture (Google Sheets)</div>
           </div>
           <table>
             <thead><tr><th>Date</th><th>Temp</th><th>Humid</th><th>CO2</th><th>DC</th></tr></thead>
             <tbody id="dataTable">
-              <tr><td colspan="5" style="text-align:center; opacity:0.5;">Chargement...</td></tr>
+              <tr><td colspan="5" style="text-align:center;opacity:.5;">Chargement...</td></tr>
             </tbody>
           </table>
         </div>
 
-        <!-- Tableau données sécurité (global) -->
         <div class="card" style="margin-top:16px;">
           <div class="card-header">
-            <div class="card-title">📋 Derniers événements Sécurité (Google Sheets)</div>
+            <div class="card-title">📋 Événements Sécurité (Google Sheets)</div>
           </div>
           <table>
-            <thead>
-              <tr><th>Date</th><th>Badge</th><th>Porte</th><th>Mouvement</th><th>Auth</th><th>Action</th></tr>
-            </thead>
+            <thead><tr><th>Date</th><th>Badge</th><th>Porte</th><th>Mouvement</th><th>Auth</th><th>Action</th></tr></thead>
             <tbody id="securityTable">
-              <tr><td colspan="6" style="text-align:center; opacity:0.5;">Chargement...</td></tr>
+              <tr><td colspan="6" style="text-align:center;opacity:.5;">Chargement...</td></tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- =========================================
-           VUE 2 : CAMÉRAS (vue dédiée)
-           ========================================= -->
+      <!-- ══════════════════════════════════
+           VUE 2 : CAMÉRAS
+           ══════════════════════════════════ -->
       <div id="cameraView" style="display:none;">
-        <div class="card" style="background:linear-gradient(135deg,#1a1d29,#252836); border:2px solid #667eea;">
+        <div class="card" style="background:linear-gradient(135deg,#1a1d29,#252836);border:2px solid #667eea;">
           <div class="card-header" style="border-bottom:2px solid #667eea;">
             <div class="card-title">📹 Caméras de Surveillance</div>
-            <div style="display:flex; gap:8px;">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
               <button class="btn btn-success btn-small" onclick="openAddCameraModal()">➕ Caméra</button>
               <button class="btn btn-primary btn-small" onclick="setCameraView('grid')">🔲 Grille</button>
               <button class="btn btn-primary btn-small" onclick="setCameraView('single')">📺 Simple</button>
               <button class="btn btn-small btn-success" onclick="refreshAllCameras()">🔄</button>
-              <button class="btn btn-small btn-danger" onclick="captureAllCameras()">📸 Tout</button>
+              <button class="btn btn-small btn-danger"  onclick="captureAllCameras()">📸 Tout</button>
             </div>
           </div>
           <div id="security-cameras-grid" class="cameras-grid">
-            <div style="text-align:center; padding:40px; opacity:0.6;">
-              Aucune caméra configurée. Cliquez sur "➕ Caméra"
-            </div>
+            <div style="text-align:center;padding:40px;opacity:.6;">Aucune caméra configurée.</div>
           </div>
         </div>
-
-        <!-- Galerie des captures -->
         <div class="card">
           <div class="card-header">
             <div class="card-title">📸 Captures Récentes</div>
             <button class="btn btn-small btn-danger" onclick="clearSecurityCaptures()">🗑️ Vider</button>
           </div>
           <div id="security-captures-gallery" class="capture-gallery">
-            <div style="text-align:center; padding:20px; opacity:0.6;">Aucune capture</div>
+            <div style="text-align:center;padding:20px;opacity:.6;">Aucune capture</div>
           </div>
         </div>
       </div>
 
-      <!-- =========================================
+      <!-- ══════════════════════════════════
            VUE 3 : PANNEAU IA
-           ========================================= -->
+           ══════════════════════════════════ -->
       <div id="aiPanel" style="display:none;">
-        <div class="card" style="background:linear-gradient(135deg,#1a1d29,#252836); border:2px solid #667eea;">
+        <div class="card" style="background:linear-gradient(135deg,#1a1d29,#252836);border:2px solid #667eea;">
           <div class="card-header" style="border-bottom:2px solid #667eea;">
             <div class="card-title">🤖 Intelligence Artificielle — SagitaImage</div>
           </div>
-
-          <!-- Token HF -->
-          <div style="margin:15px 0; padding:15px; background:#0f1117; border-radius:8px;">
-            <label style="display:block; font-size:11px; letter-spacing:2px;
-                          text-transform:uppercase; color:#8a7f72;
-                          font-family:monospace; margin-bottom:8px;">
+          <div style="margin:15px 0;padding:15px;background:#0f1117;border-radius:8px;">
+            <label style="display:block;font-size:11px;letter-spacing:2px;text-transform:uppercase;
+                          color:#8a7f72;font-family:monospace;margin-bottom:8px;">
               🔑 Token Hugging Face
             </label>
-            <div style="display:flex; gap:10px;">
-              <input type="password" id="hf-token-input"
-                     placeholder="hf_..."
-                     style="flex:1; padding:10px; background:#1a1d29;
-                            border:1px solid #2d3142; border-radius:5px;
-                            color:white; font-family:monospace; font-size:13px;">
-              <button class="btn btn-success btn-small" onclick="sauvegarderToken()">💾 Sauvegarder</button>
+            <div style="display:flex;gap:10px;">
+              <input type="password" id="hf-token-input" placeholder="hf_..."
+                     style="flex:1;padding:10px;background:#1a1d29;border:1px solid #2d3142;
+                            border-radius:5px;color:white;font-family:monospace;font-size:13px;">
+              <button class="btn btn-success btn-small" onclick="sauvegarderToken()">💾</button>
             </div>
-            <small style="color:#8a7f72; font-family:monospace; margin-top:5px; display:block;">
+            <small style="color:#8a7f72;font-family:monospace;margin-top:5px;display:block;">
               Token gratuit sur huggingface.co/settings/tokens
             </small>
           </div>
-
-          <!-- Actions IA -->
-          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:15px;">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px;">
             <button id="toggle-auto-detect-btn" class="btn btn-secondary btn-small"
                     onclick="toggleAutoDetect()">🤖 Auto: OFF</button>
             <button class="btn btn-primary btn-small" onclick="testAIServer()">🔍 Tester Serveur</button>
-            <button class="btn btn-danger btn-small" onclick="AIManager.clearHistory()">🗑️ Vider Historique</button>
+            <button class="btn btn-danger  btn-small" onclick="AIManager.clearHistory()">🗑️ Vider</button>
           </div>
-
-          <!-- Statistiques IA -->
           <div id="ai-stats">
-            <div style="text-align:center; padding:20px; opacity:0.6;">Aucune détection pour le moment</div>
+            <div style="text-align:center;padding:20px;opacity:.6;">Aucune détection pour le moment</div>
           </div>
-
-          <!-- Résultats IA en temps réel -->
           <div id="ai-results-container"></div>
         </div>
       </div>
 
-      <!-- =========================================
-           VUE 4 : GESTIONNAIRE D'APPAREILS
-           ========================================= -->
+      <!-- ══════════════════════════════════
+           VUE 4 : SERVICE BUILDER
+           ══════════════════════════════════ -->
+      <div id="serviceBuilder" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+          <div>
+            <h2 style="margin:0;font-size:20px;color:#e8e8f0;">🧩 Constructeur de services</h2>
+            <p style="margin:4px 0 0;font-size:12px;color:#5a5f7a;">
+              Assemblez vos composants physiques pour créer un service sur mesure
+            </p>
+          </div>
+        </div>
+
+        <!-- Étapes -->
+        <div class="sb-step-indicator">
+          <div class="sb-step active" id="sb-st-0" onclick="SB.goStep(0)"><span class="sb-sn">1</span>Identité</div>
+          <div class="sb-step"        id="sb-st-1" onclick="SB.goStep(1)"><span class="sb-sn">2</span>Blocs</div>
+          <div class="sb-step"        id="sb-st-2" onclick="SB.goStep(2)"><span class="sb-sn">3</span>Appareil</div>
+          <div class="sb-step"        id="sb-st-3" onclick="SB.goStep(3)"><span class="sb-sn">4</span>Pins</div>
+          <div class="sb-step"        id="sb-st-4" onclick="SB.goStep(4)"><span class="sb-sn">5</span>Aperçu</div>
+        </div>
+
+        <!-- Étape 0 : Identité -->
+        <div class="sb-view active" id="sb-v-0">
+          <div class="sb-grid2">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Informations du service</div></div>
+              <div class="input-group">
+                <label>Nom</label>
+                <input type="text" id="sb-name" placeholder="Ex: Dispensaire Kaya, Ruche B3…"
+                       oninput="SB.updatePreview()">
+              </div>
+              <div class="input-group">
+                <label>Description</label>
+                <input type="text" id="sb-desc" placeholder="Ex: Surveillance chaîne du froid">
+              </div>
+              <label style="font-size:12px;color:#7a7fa8;margin-bottom:6px;display:block;">Icône</label>
+              <div class="sb-icon-grid" id="sb-icon-grid">
+                <div class="sb-icon-opt sel" data-ic="🏥" onclick="SB.selIcon(this)">🏥</div>
+                <div class="sb-icon-opt" data-ic="🏫" onclick="SB.selIcon(this)">🏫</div>
+                <div class="sb-icon-opt" data-ic="🌾" onclick="SB.selIcon(this)">🌾</div>
+                <div class="sb-icon-opt" data-ic="🏭" onclick="SB.selIcon(this)">🏭</div>
+                <div class="sb-icon-opt" data-ic="🐝" onclick="SB.selIcon(this)">🐝</div>
+                <div class="sb-icon-opt" data-ic="⚡" onclick="SB.selIcon(this)">⚡</div>
+                <div class="sb-icon-opt" data-ic="🔬" onclick="SB.selIcon(this)">🔬</div>
+                <div class="sb-icon-opt" data-ic="🏗️" onclick="SB.selIcon(this)">🏗️</div>
+                <input type="text" id="sb-custom-icon" placeholder="emoji…"
+                       style="width:80px;padding:4px 8px;font-size:14px;border:1px solid #2d3142;
+                              border-radius:6px;background:#0f1117;color:#d5d5ee;"
+                       oninput="SB.setCustomIcon(this.value)">
+              </div>
+              <label style="font-size:12px;color:#7a7fa8;margin:8px 0 6px;display:block;">Couleur</label>
+              <div class="sb-color-row" id="sb-color-row">
+                <div class="sb-color sel" style="background:#534AB7" data-col="#534AB7" onclick="SB.selColor(this)"></div>
+                <div class="sb-color" style="background:#27AE60" data-col="#27AE60" onclick="SB.selColor(this)"></div>
+                <div class="sb-color" style="background:#D85A30" data-col="#D85A30" onclick="SB.selColor(this)"></div>
+                <div class="sb-color" style="background:#D4537E" data-col="#D4537E" onclick="SB.selColor(this)"></div>
+                <div class="sb-color" style="background:#378ADD" data-col="#378ADD" onclick="SB.selColor(this)"></div>
+                <div class="sb-color" style="background:#BA7517" data-col="#BA7517" onclick="SB.selColor(this)"></div>
+                <div class="sb-color" style="background:#E24B4A" data-col="#E24B4A" onclick="SB.selColor(this)"></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Exemples</div></div>
+              <div class="sb-example" onclick="SB.fillEx('Dispensaire médical','Chaîne du froid + accès','🏥','#D85A30',['DHT22','REED_SWITCH','BUZZER','RFID_RC522','ESP32CAM'])">
+                <div style="font-size:13px;font-weight:600;color:#d5d5ee">🏥 Dispensaire médical</div>
+                <div style="font-size:11px;color:#7a7fa8;margin-top:2px">Température · accès · caméra · IA</div>
+              </div>
+              <div class="sb-example" onclick="SB.fillEx('Salle de classe','Confort + présence + sonnerie','🏫','#378ADD',['DHT22','BH1750','PIR_HCSR501','BUZZER','LCD_I2C','BUTTON'])">
+                <div style="font-size:13px;font-weight:600;color:#d5d5ee">🏫 Salle de classe</div>
+                <div style="font-size:11px;color:#7a7fa8;margin-top:2px">Confort · présence · sonnerie auto</div>
+              </div>
+              <div class="sb-example" onclick="SB.fillEx('Station solaire Sahel','Énergie + stockage + LoRa','⚡','#BA7517',['SOLAR_CELL','ACS712','BATTERY_LIPO','RELAY_1CH','LORA_SX1276','LCD_I2C'])">
+                <div style="font-size:13px;font-weight:600;color:#d5d5ee">⚡ Station solaire</div>
+                <div style="font-size:11px;color:#7a7fa8;margin-top:2px">Panneau · courant · batterie · LoRa</div>
+              </div>
+              <div class="sb-example" onclick="SB.fillEx('Ruche apicole B3','Poids + température + alerte','🐝','#BA7517',['HX711','DS18B20','BUZZER','BATTERY_LIPO','LORA_SX1276'])">
+                <div style="font-size:13px;font-weight:600;color:#d5d5ee">🐝 Ruche apicole</div>
+                <div style="font-size:11px;color:#7a7fa8;margin-top:2px">Poids · température · LoRa longue portée</div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+            <button class="btn btn-primary" onclick="SB.goStep(1)">Choisir les blocs →</button>
+          </div>
+        </div>
+
+        <!-- Étape 1 : Blocs -->
+        <div class="sb-view" id="sb-v-1">
+          <div class="sb-grid2">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Bibliothèque de composants</div>
+              </div>
+              <div class="sb-cat-filter" id="sb-cats">
+                <button class="sb-cat-btn active" onclick="SB.filterCat('all',this)">Tous</button>
+                <button class="sb-cat-btn" onclick="SB.filterCat('mcu',this)">🧠 MCU</button>
+                <button class="sb-cat-btn" onclick="SB.filterCat('capteur',this)">🌡️ Capteurs</button>
+                <button class="sb-cat-btn" onclick="SB.filterCat('actionneur',this)">⚙️ Actionneurs</button>
+                <button class="sb-cat-btn" onclick="SB.filterCat('affichage',this)">🖥️ Affichage</button>
+                <button class="sb-cat-btn" onclick="SB.filterCat('communication',this)">📡 Comm.</button>
+                <button class="sb-cat-btn" onclick="SB.filterCat('custom',this)">⭐ Mes blocs</button>
+              </div>
+              <div class="sb-block-library" id="sb-block-grid"></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+                <span class="sb-count">Sélectionnés : <strong id="sb-sel-count">0</strong></span>
+                <button class="btn btn-small btn-primary" onclick="SB.toggleCustomForm()">+ Bloc custom</button>
+              </div>
+              <!-- Formulaire bloc custom -->
+              <div class="sb-custom-form" id="sb-custom-form" style="display:none;">
+                <div style="font-size:12px;font-weight:600;color:#d5d5ee;margin-bottom:10px;">Nouveau bloc personnalisé</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                  <div>
+                    <label style="font-size:11px;color:#7a7fa8;">Icône</label>
+                    <input type="text" id="cb-icon" placeholder="🔋"
+                           style="width:100%;padding:6px;background:#161929;border:1px solid #2d3142;border-radius:5px;color:#d5d5ee;">
+                  </div>
+                  <div>
+                    <label style="font-size:11px;color:#7a7fa8;">Nom</label>
+                    <input type="text" id="cb-name" placeholder="Capteur pH maison"
+                           style="width:100%;padding:6px;background:#161929;border:1px solid #2d3142;border-radius:5px;color:#d5d5ee;">
+                  </div>
+                  <div>
+                    <label style="font-size:11px;color:#7a7fa8;">Référence</label>
+                    <input type="text" id="cb-ref" placeholder="SEN0161"
+                           style="width:100%;padding:6px;background:#161929;border:1px solid #2d3142;border-radius:5px;color:#d5d5ee;">
+                  </div>
+                  <div>
+                    <label style="font-size:11px;color:#7a7fa8;">Endpoint ESP32</label>
+                    <input type="text" id="cb-endpoint" placeholder="/custom"
+                           style="width:100%;padding:6px;background:#161929;border:1px solid #2d3142;border-radius:5px;color:#d5d5ee;font-family:monospace;">
+                  </div>
+                </div>
+                <button class="btn btn-success btn-small" style="margin-top:10px;width:100%;"
+                        onclick="SB.addCustomBlock()">Ajouter à la bibliothèque</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Blocs sélectionnés</div></div>
+              <div id="sb-sel-list">
+                <div style="text-align:center;padding:30px;opacity:.5;font-size:13px;">
+                  Cliquez sur un composant pour l'ajouter
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:14px;">
+            <button class="btn" onclick="SB.goStep(0)">← Retour</button>
+            <button class="btn btn-primary" onclick="SB.goStep(2)">Choisir l'appareil →</button>
+          </div>
+        </div>
+
+        <!-- Étape 2 : Appareil ESP32 -->
+        <div class="sb-view" id="sb-v-2">
+          <div class="sb-grid2">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Appareils disponibles</div></div>
+              <div id="sb-esp-list">
+                <div style="text-align:center;padding:30px;opacity:.5;font-size:13px;">
+                  Aucun appareil enregistré
+                </div>
+              </div>
+              <button class="btn btn-small btn-primary" style="width:100%;margin-top:10px;"
+                      onclick="showDeviceManager()">➕ Ajouter un appareil</button>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Appareil sélectionné</div></div>
+              <div id="sb-esp-selected">
+                <div style="text-align:center;padding:30px;opacity:.5;font-size:13px;">
+                  Sélectionnez un ESP32
+                </div>
+              </div>
+              <div style="margin-top:12px;padding:10px;background:#0f1117;border-radius:6px;font-size:12px;color:#7a7fa8;">
+                L'ESP32 sélectionné sera utilisé pour la détection automatique des pins et la génération du firmware.
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:14px;">
+            <button class="btn" onclick="SB.goStep(1)">← Retour</button>
+            <button class="btn btn-primary" onclick="SB.goToPins()">Configurer les pins →</button>
+          </div>
+        </div>
+
+        <!-- Étape 3 : Pins (rendu par PinManager) -->
+        <div class="sb-view" id="sb-v-3">
+          <div id="pm-container"></div>
+          <div style="display:flex;justify-content:space-between;margin-top:14px;">
+            <button class="btn" onclick="SB.goStep(2)">← Retour</button>
+            <button class="btn btn-primary" onclick="SB.goStep(4)">Aperçu final →</button>
+          </div>
+        </div>
+
+        <!-- Étape 4 : Aperçu & sauvegarde -->
+        <div class="sb-view" id="sb-v-4">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Aperçu du service</div></div>
+            <div class="sb-preview" id="sb-preview-card" style="border-color:#534AB7;">
+              <div class="sb-preview-header" id="sb-prev-header">
+                <div id="sb-prev-icon" style="font-size:28px;width:44px;height:44px;border-radius:10px;
+                     display:flex;align-items:center;justify-content:center;background:#534AB711;">🏥</div>
+                <div>
+                  <div id="sb-prev-name" style="font-size:16px;font-weight:600;color:#d5d5ee;">Nom du service</div>
+                  <div id="sb-prev-desc" style="font-size:12px;color:#7a7fa8;margin-top:2px;">Description</div>
+                </div>
+              </div>
+              <div style="padding:0 16px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#7a7fa8;font-weight:600;">Blocs</div>
+              <div class="sb-preview-blocks" id="sb-prev-blocks"></div>
+              <div style="padding:0 16px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#7a7fa8;font-weight:600;">Appareil</div>
+              <div style="padding:0 16px 16px;font-size:12px;color:#7a7fa8;" id="sb-prev-esp">—</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+            <button class="btn" onclick="SB.goStep(3)">← Modifier les pins</button>
+            <button class="btn btn-success" onclick="SB.saveService()">💾 Sauvegarder le service</button>
+            <button class="btn btn-primary" onclick="PinManager.downloadFirmware()">⬇ Télécharger firmware</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════
+           VUE 5 : GESTIONNAIRE D'APPAREILS
+           ══════════════════════════════════ -->
       <div class="card" id="deviceManager" style="display:none;">
         <div class="card-header">
           <div class="card-title">🎛️ Gestionnaire d'Appareils ESP32</div>
           <button class="btn btn-success" onclick="openAddDeviceModal()">➕ Ajouter</button>
         </div>
         <div id="devicesList">
-          <div style="text-align:center; padding:40px; opacity:0.6;">Aucun appareil.</div>
+          <div style="text-align:center;padding:40px;opacity:.6;">Aucun appareil.</div>
         </div>
       </div>
 
     </div><!-- /container -->
 
-    <!-- =========================================
+    <!-- ══════════════════════════════════
          MODALS
-         ========================================= -->
+         ══════════════════════════════════ -->
 
     <!-- Modal Ajout Appareil -->
     <div id="addDeviceModal" class="modal">
@@ -559,7 +696,7 @@
           <label>📍 Lieu:</label>
           <input type="text" id="newDeviceLocation" placeholder="Zone A" style="flex:2;">
         </div>
-        <button class="btn btn-success" onclick="addDevice()" style="width:100%; margin-top:15px;">💾 Ajouter</button>
+        <button class="btn btn-success" onclick="addDevice()" style="width:100%;margin-top:15px;">💾 Ajouter</button>
       </div>
     </div>
 
@@ -582,7 +719,7 @@
           <label>📍 Position:</label>
           <input type="text" id="newCameraLocation" placeholder="Entrée principale" style="flex:2;">
         </div>
-        <button class="btn btn-success" onclick="addSecurityCamera()" style="width:100%; margin-top:15px;">
+        <button class="btn btn-success" onclick="addSecurityCamera()" style="width:100%;margin-top:15px;">
           💾 Ajouter Caméra
         </button>
       </div>
@@ -590,14 +727,13 @@
 
     <!-- Modal Plein Écran Caméra -->
     <div id="cameraFullscreenModal" class="modal">
-      <div class="modal-content" style="max-width:95%; max-height:95vh; padding:15px;">
+      <div class="modal-content" style="max-width:95%;max-height:95vh;padding:15px;">
         <div class="card-header">
           <h2 style="margin:0;" id="fullscreen-camera-name">📹 Caméra</h2>
           <button class="btn btn-danger btn-small" onclick="closeCameraFullscreen()">✖ Fermer</button>
         </div>
-        <img id="fullscreen-camera-img"
-             style="width:100%; height:auto; border-radius:10px; margin-top:15px;">
-        <div style="margin-top:15px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+        <img id="fullscreen-camera-img" style="width:100%;height:auto;border-radius:10px;margin-top:15px;">
+        <div style="margin-top:15px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
           <button class="btn btn-success" onclick="captureFromFullscreen()">📸 Capturer</button>
           <button class="btn btn-primary" onclick="toggleFlashFullscreen()">💡 Flash</button>
           <button class="btn btn-primary" onclick="downloadCapture()">⬇️ Télécharger</button>
@@ -607,214 +743,417 @@
 
   </div><!-- /platform -->
 
-  <!-- =========================================
+  <!-- ══════════════════════════════════
        INDICATEURS PWA
-       ========================================= -->
-
-  <div id="installPrompt" style="display:none; position:fixed; bottom:0; left:0; right:0;
-       background:linear-gradient(135deg,#667eea,#764ba2); color:white; padding:20px;
-       z-index:10000; box-shadow:0 -4px 20px rgba(0,0,0,0.3);">
-    <div style="display:flex; align-items:center; gap:15px; max-width:900px; margin:0 auto;">
+       ══════════════════════════════════ -->
+  <div id="installPrompt" style="display:none;position:fixed;bottom:0;left:0;right:0;
+       background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:20px;
+       z-index:10000;box-shadow:0 -4px 20px rgba(0,0,0,.3);">
+    <div style="display:flex;align-items:center;gap:15px;max-width:900px;margin:0 auto;">
       <div style="font-size:48px;">📱</div>
       <div style="flex:1;">
-        <strong style="display:block; font-size:18px;">Installer PRIVA</strong>
-        <p style="margin:5px 0 0; opacity:0.9;">Ajoutez l'app à votre écran d'accueil</p>
+        <strong style="display:block;font-size:18px;">Installer PRIVA</strong>
+        <p style="margin:5px 0 0;opacity:.9;">Ajoutez l'app à votre écran d'accueil</p>
       </div>
       <button id="installBtn" class="btn btn-success">Installer</button>
-      <button id="dismissBtn" class="btn btn-secondary" style="background:rgba(255,255,255,0.2);">Plus tard</button>
+      <button id="dismissBtn" class="btn btn-secondary" style="background:rgba(255,255,255,.2);">Plus tard</button>
     </div>
   </div>
 
-  <div id="offlineIndicator" style="display:none; position:fixed; top:0; left:0; right:0;
-       background:#f77f00; color:white; padding:10px; text-align:center;
-       font-weight:bold; z-index:9999;">
+  <div id="offlineIndicator" style="display:none;position:fixed;top:0;left:0;right:0;
+       background:#f77f00;color:white;padding:10px;text-align:center;font-weight:bold;z-index:9999;">
     📡 Mode hors-ligne
   </div>
 
-  <!-- =========================================
-       SCRIPTS
-       ========================================= -->
-  <script src="firmware-generator.js"></script>
-<script src="pin-manager.js"></script>
+  <!-- ══════════════════════════════════
+       SCRIPTS — ordre impératif
+       ══════════════════════════════════ -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-  <script src="app.js?v=A17"></script>
+  <script src="firmware-generator.js?v=A18"></script>
+  <script src="pin-manager.js?v=A18"></script>
+  <script src="app.js?v=A18"></script>
 
   <script>
-    /* ── Navigation ── */
-    function enterPlatform() {
-      document.getElementById('homepage').style.display = 'none';
-      document.getElementById('platform').style.display = 'block';
-      if (typeof init === 'function') init();
-    }
+  /* ════════════════════════════════════════════════════
+     SERVICE BUILDER (SB) — orchestrateur du constructeur
+     ════════════════════════════════════════════════════ */
+  const SB = {
+    icon:     '🏥',
+    color:    '#534AB7',
+    blocks:   [],
+    espId:    null,
+    customBlocks: [],
+    currentCat: 'all',
 
-    function returnHome() {
-      if (confirm('Retourner à l\'accueil ?')) {
-        document.getElementById('platform').style.display = 'none';
-        document.getElementById('homepage').style.display = 'flex';
-      }
-    }
-
-    /* ── showCameraView : ouvre la vue caméras dédiée ── */
-    function showCameraView() {
-      _hideAll();
-      document.getElementById('cameraView').style.display = 'block';
-      _setActiveTab('showCameraView');
-      setTimeout(() => initSecurityCameras(), 100);
-    }
-
-    /* ── captureFromFullscreen / toggleFlashFullscreen ── */
-    function captureFromFullscreen() {
-      const img = document.getElementById('fullscreen-camera-img');
-      if (!img?.src) return;
-      const cam = Object.entries(State.securityCameras || {})
-        .find(([id, c]) => img.src.includes(c.ip));
-      if (cam) captureCamera(cam[0], cam[1].name, cam[1].ip);
-    }
-    function toggleFlashFullscreen() {
-      const img = document.getElementById('fullscreen-camera-img');
-      if (!img?.src) return;
-      const cam = Object.entries(State.securityCameras || {})
-        .find(([id, c]) => img.src.includes(c.ip));
-      if (cam) toggleFlash(cam[0], cam[1].ip);
-    }
-
-    function setCameraView(mode) {
-      const grid = document.getElementById('security-cameras-grid');
-      if (grid) grid.className = mode === 'single' ? 'cameras-single' : 'cameras-grid';
-    }
-
-    function refreshAllCameras() {
-      Object.entries(State.securityCameras || {})
-        .filter(([,c]) => c.active)
-        .forEach(([id, cam]) => StreamManager.restart(id, cam.ip));
-      showAlert('success', '🔄 Caméras redémarrées');
-    }
-
-    function getAIModelInfo() {
-      const infoDiv = document.getElementById('ai-model-info');
-      if (infoDiv) {
-        infoDiv.innerHTML = `
-          <div style="padding:12px;background:#1a1d29;border-radius:8px;font-size:12px;line-height:1.8;">
-            <div>🤖 <strong>Modèle:</strong> ${CONFIG.HF_MODEL}</div>
-            <div>🔗 <strong>Serveur:</strong> sagitaimage.onrender.com</div>
-            <div>🔑 <strong>Token:</strong> ${CONFIG.HF_TOKEN ? '✅ Configuré' : '❌ Non configuré'}</div>
-            <div>📊 <strong>Détections:</strong> ${AIManager.history.length}</div>
-          </div>`;
-      }
-    }
-
-    function updateSlider(id, val, unit) {
-      const el = document.getElementById(id + 'Val');
-      if (el) el.textContent = val + unit;
-    }
-
-    function saveSettings() {
-      const dev = Object.values(State.devices || {})
-        .find(d => d.type === 'agriculture' && d.active);
-      if (!dev) { showAlert('warning', '⚠️ Connectez un ESP32'); return; }
-      const s = {
-        tempMin: document.getElementById('tempMin')?.value,
-        tempMax: document.getElementById('tempMax')?.value,
-        humMin:  document.getElementById('humidMin')?.value,
-        humMax:  document.getElementById('humidMax')?.value
-      };
-      Utils.fetchWithTimeout(
-        Utils.buildUrl(dev.ip, 'settings'),
-        { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
-          body:`tempMin=${s.tempMin}&tempMax=${s.tempMax}&humMin=${s.humMin}&humMax=${s.humMax}` }
-      ).then(() => showAlert('success', '💾 Paramètres enregistrés'))
-       .catch(() => showAlert('warning', '⚠️ Erreur d\'envoi'));
-    }
-
-    /* ── Helper navigation interne ── */
-    function _hideAll() {
-      ['dashboard','cameraView','aiPanel','deviceManager'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = 'none';
+    // ── Navigation étapes ──────────────────────────────
+    goStep(n) {
+      document.querySelectorAll('.sb-step').forEach((s,i) => {
+        s.classList.toggle('active', i === n);
+        s.classList.toggle('done',   i < n);
       });
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    }
-    function _setActiveTab(fnName) {
-      const btn = document.querySelector(`.tab-btn[onclick*="${fnName}"]`);
-      if (btn) btn.classList.add('active');
-    }
+      document.querySelectorAll('.sb-view').forEach((v,i) =>
+        v.classList.toggle('active', i === n));
+      if (n === 1) this.renderBlocks();
+      if (n === 2) this.renderEspList();
+      if (n === 4) this.renderPreview();
+    },
 
-    /* ── Surcharger showDashboard / showDeviceManager / showAIPanel
-          pour gérer aussi la tab active ── */
-    const _origShowDashboard     = typeof showDashboard     !== 'undefined' ? showDashboard     : null;
-    const _origShowDeviceManager = typeof showDeviceManager !== 'undefined' ? showDeviceManager : null;
-    const _origShowAIPanel       = typeof showAIPanel       !== 'undefined' ? showAIPanel       : null;
-
-    // Ces fonctions sont définies dans app.js — on les surcharge ici
-    // pour ajouter la gestion de tab active proprement
-    window.showDashboard = function() {
-      _hideAll();
-      document.getElementById('dashboard').style.display = 'block';
-      _setActiveTab('showDashboard');
-      if (typeof DashboardManager !== 'undefined') DashboardManager.render();
-    };
-    window.showDeviceManager = function() {
-      _hideAll();
-      document.getElementById('deviceManager').style.display = 'block';
-      _setActiveTab('showDeviceManager');
-      if (typeof renderDevicesList === 'function') renderDevicesList();
-    };
-    window.showAIPanel = function() {
-      _hideAll();
-      document.getElementById('aiPanel').style.display = 'block';
-      _setActiveTab('showAIPanel');
-    };
-
-    /* ── Init PWA ── */
-    let deferredPrompt;
-
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', async () => {
-        try {
-          await navigator.serviceWorker.register('sw.js');
-          console.log('✅ Service Worker enregistré');
-        } catch (err) {
-          console.error('❌ Erreur SW:', err);
-        }
-      });
-    }
-
-    window.addEventListener('online', () => {
-      document.getElementById('offlineIndicator').style.display = 'none';
-      if (typeof showAlert === 'function') showAlert('success', '✅ Connexion rétablie');
-    });
-
-    window.addEventListener('offline', () => {
-      document.getElementById('offlineIndicator').style.display = 'block';
-      if (typeof showAlert === 'function') showAlert('warning', '⚠️ Mode hors-ligne');
-    });
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      document.getElementById('installPrompt').style.display = 'block';
-    });
-
-    document.getElementById('installBtn')?.addEventListener('click', async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted' && typeof showAlert === 'function')
-        showAlert('success', '🎉 PRIVA installée !');
-      deferredPrompt = null;
-      document.getElementById('installPrompt').style.display = 'none';
-    });
-
-    document.getElementById('dismissBtn')?.addEventListener('click', () => {
-      document.getElementById('installPrompt').style.display = 'none';
-    });
-
-    /* ── Init IA après chargement ── */
-    document.addEventListener('DOMContentLoaded', () => {
+    goToPins() {
+      if (!this.blocks.length) { showAlert('warning','⚠️ Sélectionnez au moins un bloc'); return; }
+      const dev = this.espId ? State.devices[this.espId] : null;
+      if (!dev) { showAlert('warning','⚠️ Sélectionnez un appareil ESP32'); return; }
+      this.goStep(3);
+      // Initialiser PinManager avec le service et l'appareil
       setTimeout(() => {
-        if (typeof initAI === 'function') { initAI(); console.log('✅ Module IA initialisé'); }
-      }, 1000);
+        PinManager.init(
+          { name: document.getElementById('sb-name')?.value || 'Service',
+            icon: this.icon, color: this.color,
+            blocks: this.blocks },
+          dev.ip
+        );
+      }, 50);
+    },
+
+    // ── Identité ──────────────────────────────────────
+    selIcon(el) {
+      document.querySelectorAll('.sb-icon-opt').forEach(e => e.classList.remove('sel'));
+      el.classList.add('sel');
+      this.icon = el.dataset.ic;
+      this.updatePreview();
+    },
+    setCustomIcon(v) {
+      if (!v) return;
+      document.querySelectorAll('.sb-icon-opt').forEach(e => e.classList.remove('sel'));
+      this.icon = v;
+      this.updatePreview();
+    },
+    selColor(el) {
+      document.querySelectorAll('.sb-color').forEach(e => e.classList.remove('sel'));
+      el.classList.add('sel');
+      this.color = el.dataset.col;
+      const card = document.getElementById('sb-preview-card');
+      if (card) card.style.borderColor = this.color;
+      this.updatePreview();
+    },
+    updatePreview() {
+      const name = document.getElementById('sb-name')?.value || 'Mon service';
+      const el = document.getElementById('sb-prev-name');
+      if (el) el.textContent = name;
+      const icEl = document.getElementById('sb-prev-icon');
+      if (icEl) { icEl.textContent = this.icon; icEl.style.background = this.color + '22'; }
+    },
+    fillEx(name, desc, icon, color, blocks) {
+      const n = document.getElementById('sb-name'); if (n) n.value = name;
+      const d = document.getElementById('sb-desc'); if (d) d.value = desc;
+      document.querySelectorAll('.sb-icon-opt').forEach(e =>
+        e.classList.toggle('sel', e.dataset.ic === icon));
+      document.querySelectorAll('.sb-color').forEach(e =>
+        e.classList.toggle('sel', e.dataset.col === color));
+      this.icon = icon; this.color = color;
+      this.blocks = [...new Set(blocks)];
+      const card = document.getElementById('sb-preview-card');
+      if (card) card.style.borderColor = color;
+    },
+
+    // ── Blocs ─────────────────────────────────────────
+    filterCat(cat, btn) {
+      this.currentCat = cat;
+      document.querySelectorAll('.sb-cat-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      this.renderBlocks();
+    },
+
+    renderBlocks() {
+      const lib  = typeof FirmwareGenerator !== 'undefined' ? FirmwareGenerator.BLOCK_LIBRARY : {};
+      const all  = [...Object.values(lib), ...this.customBlocks];
+      const filt = this.currentCat === 'all' ? all : all.filter(b => b.family === this.currentCat);
+
+      const catColors = {
+        mcu:'#1a2d3d', capteur:'#1a3d2b', actionneur:'#1d1a3d',
+        affichage:'#2d1a3d', communication:'#2d2a1a', custom:'#2d2a2d'
+      };
+
+      const grid = document.getElementById('sb-block-grid');
+      if (grid) grid.innerHTML = filt.map(b => `
+        <div class="sb-block ${this.blocks.includes(b.id)?'sel':''}"
+             onclick="SB.toggleBlock('${b.id}')">
+          <div class="sb-check"></div>
+          <div class="sb-block-icon">${b.icon||'🔧'}</div>
+          <div class="sb-block-name">${b.name}</div>
+          <div class="sb-block-ref">${b.ref||''}</div>
+          <div class="sb-block-caps">
+            ${(b.provides||[]).slice(0,2).map(p =>
+              `<span class="sb-cap" style="background:${catColors[b.family]||'#1a1d29'};color:#9ca3af">${p}</span>`
+            ).join('')}
+          </div>
+        </div>`).join('') || '<div style="opacity:.5;padding:20px;text-align:center;font-size:12px">Aucun bloc</div>';
+
+      document.getElementById('sb-sel-count').textContent = this.blocks.length;
+      this.renderSelList();
+    },
+
+    toggleBlock(id) {
+      const idx = this.blocks.indexOf(id);
+      if (idx > -1) this.blocks.splice(idx, 1);
+      else this.blocks.push(id);
+      this.renderBlocks();
+    },
+
+    renderSelList() {
+      const lib = typeof FirmwareGenerator !== 'undefined' ? FirmwareGenerator.BLOCK_LIBRARY : {};
+      const all = [...Object.values(lib), ...this.customBlocks];
+      const el  = document.getElementById('sb-sel-list');
+      if (!el) return;
+      if (!this.blocks.length) {
+        el.innerHTML = '<div style="text-align:center;padding:30px;opacity:.5;font-size:13px;">Cliquez sur un composant pour l\'ajouter</div>';
+        return;
+      }
+      el.innerHTML = `<div class="sb-selected-list">` + this.blocks.map(id => {
+        const b = all.find(x => x.id === id);
+        return b ? `<div class="sb-sel-item">
+          <span style="font-size:18px">${b.icon||'🔧'}</span>
+          <span style="flex:1;color:#d5d5ee">${b.name}</span>
+          <span style="font-size:10px;color:#7a7fa8">${b.family}</span>
+          <button onclick="SB.toggleBlock('${id}')"
+                  style="border:none;background:transparent;color:#e63946;cursor:pointer;font-size:14px;">✕</button>
+        </div>` : '';
+      }).join('') + '</div>';
+    },
+
+    toggleCustomForm() {
+      const f = document.getElementById('sb-custom-form');
+      if (f) f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    },
+
+    addCustomBlock() {
+      const icon = document.getElementById('cb-icon')?.value || '🔧';
+      const name = document.getElementById('cb-name')?.value.trim();
+      const ref  = document.getElementById('cb-ref')?.value.trim();
+      const ep   = document.getElementById('cb-endpoint')?.value.trim();
+      if (!name) { showAlert('warning','⚠️ Nom requis'); return; }
+      const id = 'CUSTOM_' + Date.now();
+      this.customBlocks.push({
+        id, name, icon, ref: ref||'Custom', family:'custom',
+        provides: ['custom'], requires: ep ? ['SIG'] : [],
+        libs: [], domains: ['all'], isCustom: true,
+        include:'', setupCode:()=>'', readCode:()=>'',
+      });
+      this.blocks.push(id);
+      ['cb-icon','cb-name','cb-ref','cb-endpoint'].forEach(i => {
+        const el = document.getElementById(i); if (el) el.value = '';
+      });
+      document.getElementById('sb-custom-form').style.display = 'none';
+      this.filterCat('custom', document.querySelector('.sb-cat-btn:last-child'));
+      showAlert('success','✅ Bloc custom ajouté');
+    },
+
+    // ── ESP32 ──────────────────────────────────────────
+    renderEspList() {
+      const el = document.getElementById('sb-esp-list');
+      if (!el) return;
+      const devs = Object.entries(State.devices || {});
+      if (!devs.length) {
+        el.innerHTML = '<div style="text-align:center;padding:30px;opacity:.5;font-size:13px;">Aucun appareil</div>';
+        return;
+      }
+      el.innerHTML = devs.map(([id, dev]) => `
+        <div onclick="SB.selEsp('${id}')"
+             style="display:flex;align-items:center;gap:10px;padding:10px;margin-bottom:6px;
+                    border:2px solid ${this.espId===id?'#667eea':'#2d3142'};border-radius:8px;
+                    background:${this.espId===id?'#1a1d29':'#161929'};cursor:pointer;">
+          <div style="width:8px;height:8px;border-radius:50%;background:${dev.active?'#27ae60':'#e63946'}"></div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;color:#d5d5ee">${dev.name}</div>
+            <div style="font-size:11px;color:#7a7fa8">${dev.ip} · ${dev.type}</div>
+          </div>
+          ${this.espId===id ? '<span style="color:#667eea;font-size:12px">✓ Sélectionné</span>' : ''}
+        </div>`).join('');
+    },
+
+    selEsp(id) {
+      this.espId = id;
+      const dev = State.devices[id];
+      const el  = document.getElementById('sb-esp-selected');
+      if (el && dev) el.innerHTML = `
+        <div style="padding:12px;background:#0f1117;border-radius:8px;">
+          <div style="font-size:14px;font-weight:600;color:#d5d5ee">${dev.name}</div>
+          <div style="font-size:11px;color:#667eea;font-family:monospace;margin-top:4px">${dev.ip}</div>
+          <div style="font-size:11px;color:#7a7fa8;margin-top:4px">📍 ${dev.location}</div>
+        </div>`;
+      // Mettre à jour preview
+      const espEl = document.getElementById('sb-prev-esp');
+      if (espEl) espEl.innerHTML = `<span style="background:#1a1d29;padding:3px 10px;border-radius:8px;
+                                     border:1px solid #2d3142;color:#d5d5ee">${dev.name} — ${dev.ip}</span>`;
+      this.renderEspList();
+    },
+
+    // ── Aperçu final ───────────────────────────────────
+    renderPreview() {
+      const lib  = typeof FirmwareGenerator !== 'undefined' ? FirmwareGenerator.BLOCK_LIBRARY : {};
+      const all  = [...Object.values(lib), ...this.customBlocks];
+      const name = document.getElementById('sb-name')?.value || 'Service';
+      const desc = document.getElementById('sb-desc')?.value || '';
+      const el   = document.getElementById('sb-prev-blocks');
+      if (el) el.innerHTML = this.blocks.map(id => {
+        const b = all.find(x => x.id === id);
+        return b ? `<div class="sb-pb"><span style="font-size:14px">${b.icon||'🔧'}</span>${b.name}</div>` : '';
+      }).join('');
+      document.getElementById('sb-prev-name').textContent = name;
+      const dEl = document.getElementById('sb-prev-desc'); if (dEl) dEl.textContent = desc;
+      document.getElementById('sb-prev-icon').textContent = this.icon;
+      document.getElementById('sb-prev-icon').style.background = this.color + '22';
+      document.getElementById('sb-preview-card').style.borderColor = this.color;
+    },
+
+    // ── Sauvegarde ────────────────────────────────────
+    saveService() {
+      const name = document.getElementById('sb-name')?.value.trim();
+      if (!name) { showAlert('warning','⚠️ Donnez un nom au service'); return; }
+      if (!this.blocks.length) { showAlert('warning','⚠️ Sélectionnez au moins un bloc'); return; }
+
+      const services = Utils.loadFromLocalStorage('priva_services', {});
+      const id = 'svc_' + Date.now();
+      services[id] = {
+        id, name, icon: this.icon, color: this.color,
+        blocks: this.blocks, espId: this.espId,
+        desc: document.getElementById('sb-desc')?.value || '',
+        createdAt: new Date().toISOString(),
+        pinConfig: PinManager._state.pinConfig,
+      };
+      Utils.saveToLocalStorage('priva_services', services);
+      showAlert('success', `✅ Service "${name}" sauvegardé !`);
+      DashboardManager.render();
+      setTimeout(() => showDashboard(), 800);
+    },
+  };
+
+  /* ═══════════════════════════════════════════
+     NAVIGATION PRINCIPALE
+     ═══════════════════════════════════════════ */
+  function enterPlatform() {
+    document.getElementById('homepage').style.display = 'none';
+    document.getElementById('platform').style.display = 'block';
+    if (typeof init === 'function') init();
+  }
+
+  function returnHome() {
+    if (confirm('Retourner à l\'accueil ?')) {
+      document.getElementById('platform').style.display = 'none';
+      document.getElementById('homepage').style.display = 'flex';
+    }
+  }
+
+  function _hideAll() {
+    ['dashboard','cameraView','aiPanel','serviceBuilder','deviceManager'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
     });
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  }
+  function _setTab(fn) {
+    const btn = document.querySelector(`.tab-btn[onclick*="${fn}"]`);
+    if (btn) btn.classList.add('active');
+  }
+
+  window.showDashboard = function() {
+    _hideAll();
+    document.getElementById('dashboard').style.display = 'block';
+    _setTab('showDashboard');
+    if (typeof DashboardManager !== 'undefined') DashboardManager.render();
+  };
+  window.showCameraView = function() {
+    _hideAll();
+    document.getElementById('cameraView').style.display = 'block';
+    _setTab('showCameraView');
+    setTimeout(() => initSecurityCameras(), 100);
+  };
+  window.showAIPanel = function() {
+    _hideAll();
+    document.getElementById('aiPanel').style.display = 'block';
+    _setTab('showAIPanel');
+  };
+  window.showServiceBuilder = function() {
+    _hideAll();
+    document.getElementById('serviceBuilder').style.display = 'block';
+    _setTab('showServiceBuilder');
+    SB.goStep(0);
+    SB.renderBlocks();
+  };
+  window.showDeviceManager = function() {
+    _hideAll();
+    document.getElementById('deviceManager').style.display = 'block';
+    _setTab('showDeviceManager');
+    if (typeof renderDevicesList === 'function') renderDevicesList();
+  };
+
+  /* ── Helpers caméra ── */
+  function setCameraView(mode) {
+    const g = document.getElementById('security-cameras-grid');
+    if (g) g.className = mode === 'single' ? 'cameras-single' : 'cameras-grid';
+  }
+  function refreshAllCameras() {
+    Object.entries(State.securityCameras || {})
+      .filter(([,c]) => c.active)
+      .forEach(([id, cam]) => StreamManager.restart(id, cam.ip));
+    showAlert('success','🔄 Caméras redémarrées');
+  }
+  function captureFromFullscreen() {
+    const img = document.getElementById('fullscreen-camera-img');
+    if (!img?.src) return;
+    const cam = Object.entries(State.securityCameras||{}).find(([,c]) => img.src.includes(c.ip));
+    if (cam) captureCamera(cam[0], cam[1].name, cam[1].ip);
+  }
+  function toggleFlashFullscreen() {
+    const img = document.getElementById('fullscreen-camera-img');
+    if (!img?.src) return;
+    const cam = Object.entries(State.securityCameras||{}).find(([,c]) => img.src.includes(c.ip));
+    if (cam) toggleFlash(cam[0], cam[1].ip);
+  }
+
+  /* ── Helpers slider ── */
+  function updateSlider(id, val, unit) {
+    const el = document.getElementById(id + 'Val'); if (el) el.textContent = val + unit;
+  }
+  function saveSettings() {
+    const dev = Object.values(State.devices||{}).find(d => d.type==='agriculture'&&d.active);
+    if (!dev) { showAlert('warning','⚠️ Connectez un ESP32'); return; }
+    const s = {
+      tempMin: document.getElementById('tempMin')?.value,
+      tempMax: document.getElementById('tempMax')?.value,
+      humMin:  document.getElementById('humidMin')?.value,
+      humMax:  document.getElementById('humidMax')?.value,
+    };
+    Utils.fetchWithTimeout(Utils.buildUrl(dev.ip,'settings'),
+      {method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+       body:`tempMin=${s.tempMin}&tempMax=${s.tempMax}&humMin=${s.humMin}&humMax=${s.humMax}`})
+      .then(() => showAlert('success','💾 Paramètres enregistrés'))
+      .catch(() => showAlert('warning','⚠️ Erreur'));
+  }
+
+  /* ── PWA ── */
+  let deferredPrompt;
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', async () => {
+      try { await navigator.serviceWorker.register('sw.js'); }
+      catch (e) { console.error('SW:', e); }
+    });
+  }
+  window.addEventListener('online',  () => { document.getElementById('offlineIndicator').style.display='none';  if(typeof showAlert==='function') showAlert('success','✅ Connexion rétablie'); });
+  window.addEventListener('offline', () => { document.getElementById('offlineIndicator').style.display='block'; if(typeof showAlert==='function') showAlert('warning','⚠️ Mode hors-ligne'); });
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt=e; document.getElementById('installPrompt').style.display='block'; });
+  document.getElementById('installBtn')?.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const {outcome} = await deferredPrompt.userChoice;
+    if (outcome==='accepted' && typeof showAlert==='function') showAlert('success','🎉 PRIVA installée !');
+    deferredPrompt=null; document.getElementById('installPrompt').style.display='none';
+  });
+  document.getElementById('dismissBtn')?.addEventListener('click', () => document.getElementById('installPrompt').style.display='none');
+
+  /* ── Init IA ── */
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => { if (typeof initAI==='function') initAI(); }, 1000);
+  });
   </script>
 
 </body>
