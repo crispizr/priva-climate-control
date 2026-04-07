@@ -13,6 +13,7 @@ const BLOCK_LIBRARY = {
   // ── MICROCONTRÔLEURS ─────────────────────────────────────
   ESP32CAM: {
     id: 'ESP32CAM', name: 'ESP32-CAM', family: 'mcu',
+    icon: '📷',
     ref: 'AI-Thinker', protocol: 'WIFI',
     provides: ['wifi','camera','gpio','stream','capture'],
     requires: [], libs: ['ESP32Camera','WebServer','ArduinoJson'],
@@ -27,6 +28,7 @@ const BLOCK_LIBRARY = {
 
   ESP32WROOM: {
     id: 'ESP32WROOM', name: 'ESP32 WROOM-32', family: 'mcu',
+    icon: '⚡',
     ref: 'WROOM-32', protocol: 'WIFI',
     provides: ['wifi','gpio','ble'],
     requires: [], libs: ['WebServer','ArduinoJson'],
@@ -39,6 +41,7 @@ const BLOCK_LIBRARY = {
 
   ESP8266: {
     id: 'ESP8266', name: 'ESP8266 NodeMCU', family: 'mcu',
+    icon: '📡',
     ref: 'NodeMCU v3', protocol: 'WIFI',
     provides: ['wifi','gpio'],
     requires: [], libs: ['ESP8266WebServer','ArduinoJson'],
@@ -51,6 +54,7 @@ const BLOCK_LIBRARY = {
 
   ARDUINO_NANO: {
     id: 'ARDUINO_NANO', name: 'Arduino Nano', family: 'mcu',
+    icon: '🔵',
     ref: 'ATmega328P', protocol: 'UART',
     provides: ['gpio','analog','uart'],
     requires: [], libs: [],
@@ -64,6 +68,7 @@ const BLOCK_LIBRARY = {
 
   SIM7600: {
     id: 'SIM7600', name: 'Module 4G SIM7600', family: 'mcu',
+    icon: '📶',
     ref: 'SIM7600E', protocol: 'UART',
     provides: ['4g','sms','gps','call'],
     requires: ['TX','RX'],
@@ -79,6 +84,7 @@ const BLOCK_LIBRARY = {
   // ── CAPTEURS TEMPÉRATURE / HUMIDITÉ ──────────────────────
   DHT22: {
     id: 'DHT22', name: 'DHT22', family: 'capteur',
+    icon: '🌡️',
     ref: 'AM2302', protocol: 'DIGITAL_1WIRE',
     provides: ['temperature','humidity'],
     requires: ['DATA'],
@@ -99,6 +105,7 @@ const BLOCK_LIBRARY = {
 
   DS18B20: {
     id: 'DS18B20', name: 'DS18B20', family: 'capteur',
+    icon: '🌡️',
     ref: '1-Wire étanche', protocol: 'ONEWIRE',
     provides: ['temperature_precise','water_temp'],
     requires: ['DATA'],
@@ -119,6 +126,7 @@ const BLOCK_LIBRARY = {
 
   BMP280: {
     id: 'BMP280', name: 'BMP280', family: 'capteur',
+    icon: '🌤️',
     ref: 'I2C 0x76', protocol: 'I2C',
     provides: ['temperature','pressure','altitude'],
     requires: ['SDA','SCL'],
@@ -138,6 +146,7 @@ const BLOCK_LIBRARY = {
 
   SHT31: {
     id: 'SHT31', name: 'SHT31', family: 'capteur',
+    icon: '💧',
     ref: 'I2C haute précision', protocol: 'I2C',
     provides: ['temperature','humidity'],
     requires: ['SDA','SCL'],
@@ -157,6 +166,7 @@ const BLOCK_LIBRARY = {
   // ── CAPTEURS SOL / EAU / AIR ─────────────────────────────
   SOIL_HUMIDITY: {
     id: 'SOIL_HUMIDITY', name: 'Hygromètre sol', family: 'capteur',
+    icon: '🌱',
     ref: 'Capacitif v1.2', protocol: 'ANALOG',
     provides: ['soil_moisture'],
     requires: ['AOUT'],
@@ -175,6 +185,7 @@ const BLOCK_LIBRARY = {
 
   MQ135: {
     id: 'MQ135', name: 'MQ-135', family: 'capteur',
+    icon: '💨',
     ref: 'Qualité air', protocol: 'ANALOG',
     provides: ['co2','air_quality'],
     requires: ['AOUT'],
@@ -192,6 +203,7 @@ const BLOCK_LIBRARY = {
 
   MQ2: {
     id: 'MQ2', name: 'MQ-2', family: 'capteur',
+    icon: '🔥',
     ref: 'Gaz / Fumée', protocol: 'ANALOG',
     provides: ['smoke','gas_lpg','gas_co'],
     requires: ['AOUT','DOUT'],
@@ -209,6 +221,7 @@ const BLOCK_LIBRARY = {
 
   BH1750: {
     id: 'BH1750', name: 'BH1750', family: 'capteur',
+    icon: '☀️',
     ref: 'Luminosité I2C', protocol: 'I2C',
     provides: ['light_lux'],
     requires: ['SDA','SCL'],
@@ -226,6 +239,7 @@ const BLOCK_LIBRARY = {
 
   HCSR04: {
     id: 'HCSR04', name: 'HC-SR04', family: 'capteur',
+    icon: '📏',
     ref: 'Ultrason', protocol: 'DIGITAL',
     provides: ['distance','water_level'],
     requires: ['TRIG','ECHO'],
@@ -248,6 +262,7 @@ const BLOCK_LIBRARY = {
   // ── CAPTEURS MÉDICAUX ────────────────────────────────────
   MAX30102: {
     id: 'MAX30102', name: 'MAX30102', family: 'capteur',
+    icon: '💓',
     ref: 'SpO2 / BPM I2C', protocol: 'I2C',
     provides: ['spo2','heart_rate','bpm'],
     requires: ['SDA','SCL'],
@@ -275,6 +290,7 @@ const BLOCK_LIBRARY = {
 
   MPU6050: {
     id: 'MPU6050', name: 'MPU-6050', family: 'capteur',
+    icon: '🏃',
     ref: 'Accéléromètre I2C', protocol: 'I2C',
     provides: ['acceleration','gyroscope','fall_detection','tilt'],
     requires: ['SDA','SCL'],
@@ -302,6 +318,7 @@ const BLOCK_LIBRARY = {
   // ── CAPTEURS ÉNERGIE / POIDS ─────────────────────────────
   HX711: {
     id: 'HX711', name: 'HX711', family: 'capteur',
+    icon: '⚖️',
     ref: 'Cellule de charge', protocol: 'DIGITAL',
     provides: ['weight','mass'],
     requires: ['DOUT','SCK'],
@@ -322,6 +339,7 @@ const BLOCK_LIBRARY = {
 
   ACS712: {
     id: 'ACS712', name: 'ACS712', family: 'capteur',
+    icon: '⚡',
     ref: 'Capteur courant', protocol: 'ANALOG',
     provides: ['current','power'],
     requires: ['AOUT'],
@@ -340,6 +358,7 @@ const BLOCK_LIBRARY = {
   // ── CAPTEURS ACCÈS / SÉCURITÉ ────────────────────────────
   RFID_RC522: {
     id: 'RFID_RC522', name: 'RFID RC522', family: 'capteur',
+    icon: '🔑',
     ref: '13.56 MHz SPI', protocol: 'SPI',
     provides: ['badge_id','access_control'],
     requires: ['SDA','SCK','MOSI','MISO','RST'],
@@ -367,6 +386,7 @@ const BLOCK_LIBRARY = {
 
   REED_SWITCH: {
     id: 'REED_SWITCH', name: 'Reed switch', family: 'capteur',
+    icon: '🚪',
     ref: 'Magnétique NO/NC', protocol: 'DIGITAL',
     provides: ['door_state','window_state'],
     requires: ['SIG'],
@@ -383,6 +403,7 @@ const BLOCK_LIBRARY = {
 
   PIR_HCSR501: {
     id: 'PIR_HCSR501', name: 'PIR HC-SR501', family: 'capteur',
+    icon: '👁️',
     ref: 'Infrarouge passif', protocol: 'DIGITAL',
     provides: ['motion','presence'],
     requires: ['OUT'],
@@ -399,6 +420,7 @@ const BLOCK_LIBRARY = {
 
   SW420: {
     id: 'SW420', name: 'Capteur vibration SW-420', family: 'capteur',
+    icon: '📳',
     ref: 'Digital', protocol: 'DIGITAL',
     provides: ['vibration','shock'],
     requires: ['DO'],
@@ -415,6 +437,7 @@ const BLOCK_LIBRARY = {
 
   RAIN_SENSOR: {
     id: 'RAIN_SENSOR', name: 'Détecteur de pluie', family: 'capteur',
+    icon: '🌧️',
     ref: 'YL-83', protocol: 'ANALOG',
     provides: ['rain','rain_intensity'],
     requires: ['AO'],
@@ -431,6 +454,7 @@ const BLOCK_LIBRARY = {
 
   PH_SENSOR: {
     id: 'PH_SENSOR', name: 'Capteur pH', family: 'capteur',
+    icon: '🧪',
     ref: 'SEN0161', protocol: 'ANALOG',
     provides: ['ph_value','water_quality'],
     requires: ['AO'],
@@ -448,6 +472,7 @@ const BLOCK_LIBRARY = {
 
   FLOW_SENSOR: {
     id: 'FLOW_SENSOR', name: 'Capteur débit eau', family: 'capteur',
+    icon: '💦',
     ref: 'YF-S201', protocol: 'DIGITAL',
     provides: ['flow_rate','volume'],
     requires: ['SIG'],
@@ -468,6 +493,7 @@ const BLOCK_LIBRARY = {
 
   TURBIDITY: {
     id: 'TURBIDITY', name: 'Capteur turbidité', family: 'capteur',
+    icon: '🫧',
     ref: 'SEN0189', protocol: 'ANALOG',
     provides: ['turbidity','water_clarity'],
     requires: ['AO'],
@@ -485,6 +511,7 @@ const BLOCK_LIBRARY = {
 
   MICROPHONE: {
     id: 'MICROPHONE', name: 'Microphone', family: 'capteur',
+    icon: '🎤',
     ref: 'KY-038', protocol: 'ANALOG',
     provides: ['sound_level','noise'],
     requires: ['AO'],
@@ -501,6 +528,7 @@ const BLOCK_LIBRARY = {
 
   VOLTAGE_DIVIDER: {
     id: 'VOLTAGE_DIVIDER', name: 'Diviseur de tension', family: 'capteur',
+    icon: '🔋',
     ref: 'ADC résistif', protocol: 'ANALOG',
     provides: ['voltage','battery_level'],
     requires: ['AO'],
@@ -517,6 +545,7 @@ const BLOCK_LIBRARY = {
 
   SOLAR_CELL: {
     id: 'SOLAR_CELL', name: 'Cellule solaire', family: 'capteur',
+    icon: '☀️',
     ref: 'ADC + diviseur', protocol: 'ANALOG',
     provides: ['solar_voltage','solar_power'],
     requires: ['AO'],
@@ -535,6 +564,7 @@ const BLOCK_LIBRARY = {
   // ── ACTIONNEURS ──────────────────────────────────────────
   RELAY_1CH: {
     id: 'RELAY_1CH', name: 'Relais 1 canal', family: 'actionneur',
+    icon: '🔌',
     ref: '5V 10A', protocol: 'DIGITAL',
     provides: ['switch_ac','switch_dc'],
     requires: ['IN'],
@@ -552,6 +582,7 @@ const BLOCK_LIBRARY = {
 
   RELAY_4CH: {
     id: 'RELAY_4CH', name: 'Relais 4 canaux', family: 'actionneur',
+    icon: '🔌',
     ref: '5V', protocol: 'DIGITAL',
     provides: ['switch_4x'],
     requires: ['IN1','IN2','IN3','IN4'],
@@ -573,6 +604,7 @@ const BLOCK_LIBRARY = {
 
   BUZZER: {
     id: 'BUZZER', name: 'Buzzer actif', family: 'actionneur',
+    icon: '🔔',
     ref: '5V actif', protocol: 'DIGITAL',
     provides: ['alarm','alert_sound'],
     requires: ['SIG'],
@@ -588,6 +620,7 @@ const BLOCK_LIBRARY = {
 
   SERVO: {
     id: 'SERVO', name: 'Servo moteur', family: 'actionneur',
+    icon: '🎯',
     ref: 'SG90 / MG996', protocol: 'PWM',
     provides: ['angle_control','valve_control'],
     requires: ['SIG'],
@@ -604,6 +637,7 @@ const BLOCK_LIBRARY = {
 
   MOTOR_DC: {
     id: 'MOTOR_DC', name: 'Moteur DC', family: 'actionneur',
+    icon: '🏎️',
     ref: 'L298N / L293D', protocol: 'PWM',
     provides: ['motor_speed','motor_direction'],
     requires: ['ENA','IN1','IN2'],
@@ -626,6 +660,7 @@ const BLOCK_LIBRARY = {
 
   LED_RGB: {
     id: 'LED_RGB', name: 'LED RGB', family: 'actionneur',
+    icon: '💡',
     ref: 'Anode commune', protocol: 'PWM',
     provides: ['color_light','status_indicator'],
     requires: ['R','G','B'],
@@ -642,6 +677,7 @@ const BLOCK_LIBRARY = {
 
   LED_STRIP_WS2812: {
     id: 'LED_STRIP_WS2812', name: 'Strip LED WS2812B', family: 'actionneur',
+    icon: '🌈',
     ref: 'NeoPixel 5V', protocol: 'DIGITAL',
     provides: ['rgb_strip','animation','status_display'],
     requires: ['DIN'],
@@ -657,6 +693,7 @@ const BLOCK_LIBRARY = {
 
   DFPLAYER: {
     id: 'DFPLAYER', name: 'DFPlayer Mini', family: 'actionneur',
+    icon: '🔊',
     ref: 'MP3 UART', protocol: 'UART',
     provides: ['audio_alert','voice_message'],
     requires: ['TX','RX'],
@@ -672,6 +709,7 @@ const BLOCK_LIBRARY = {
   // ── AFFICHAGE ─────────────────────────────────────────────
   OLED_SSD1306: {
     id: 'OLED_SSD1306', name: 'Écran OLED SSD1306', family: 'affichage',
+    icon: '📺',
     ref: 'I2C 128x64', protocol: 'I2C',
     provides: ['local_display','text_display'],
     requires: ['SDA','SCL'],
@@ -698,6 +736,7 @@ const BLOCK_LIBRARY = {
 
   LCD_I2C: {
     id: 'LCD_I2C', name: 'LCD 16x2 I2C', family: 'affichage',
+    icon: '📟',
     ref: 'PCF8574 0x27', protocol: 'I2C',
     provides: ['local_display','text_16x2'],
     requires: ['SDA','SCL'],
@@ -717,6 +756,7 @@ const BLOCK_LIBRARY = {
 
   TM1637: {
     id: 'TM1637', name: 'Afficheur 7 segments', family: 'affichage',
+    icon: '🔢',
     ref: 'TM1637 4 digits', protocol: 'DIGITAL',
     provides: ['number_display','clock_display'],
     requires: ['CLK','DIO'],
@@ -732,6 +772,7 @@ const BLOCK_LIBRARY = {
 
   BUTTON: {
     id: 'BUTTON', name: 'Bouton poussoir', family: 'affichage',
+    icon: '🖲️',
     ref: 'NO momentané', protocol: 'DIGITAL',
     provides: ['user_input','trigger'],
     requires: ['SIG'],
@@ -748,6 +789,7 @@ const BLOCK_LIBRARY = {
 
   KEYPAD_4X4: {
     id: 'KEYPAD_4X4', name: 'Clavier 4x4', family: 'affichage',
+    icon: '🎮',
     ref: 'Matriciel', protocol: 'DIGITAL',
     provides: ['pin_code','keypad_input'],
     requires: ['R1','R2','R3','R4','C1','C2','C3','C4'],
@@ -775,6 +817,7 @@ Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);`,
   // ── COMMUNICATION / CONNECTIVITÉ ─────────────────────────
   LORA_SX1276: {
     id: 'LORA_SX1276', name: 'Module LoRa SX1276', family: 'communication',
+    icon: '📻',
     ref: '433/868/915 MHz SPI', protocol: 'SPI',
     provides: ['lora_tx','lora_rx','long_range'],
     requires: ['SCK','MOSI','MISO','NSS','RST','DIO0'],
@@ -798,6 +841,7 @@ Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);`,
 
   GPS_NEO6M: {
     id: 'GPS_NEO6M', name: 'Module GPS NEO-6M', family: 'communication',
+    icon: '🛰️',
     ref: 'UART 9600', protocol: 'UART',
     provides: ['latitude','longitude','gps_speed','altitude'],
     requires: ['TX','RX'],
@@ -822,6 +866,7 @@ Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);`,
 
   RTC_DS3231: {
     id: 'RTC_DS3231', name: 'Horloge RTC DS3231', family: 'communication',
+    icon: '⏱️',
     ref: 'I2C ±2ppm', protocol: 'I2C',
     provides: ['precise_time','date','alarm_clock'],
     requires: ['SDA','SCL'],
@@ -844,6 +889,7 @@ Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);`,
 
   SD_CARD: {
     id: 'SD_CARD', name: 'Carte SD', family: 'communication',
+    icon: '💾',
     ref: 'SPI', protocol: 'SPI',
     provides: ['local_storage','data_logging','offline_storage'],
     requires: ['CS'],
@@ -865,6 +911,7 @@ Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);`,
 
   BATTERY_LIPO: {
     id: 'BATTERY_LIPO', name: 'Batterie LiPo/18650', family: 'communication',
+    icon: '🔋',
     ref: '3.7V avec BMS', protocol: 'ANALOG',
     provides: ['battery_level','autonomous_power'],
     requires: ['VBAT'],
