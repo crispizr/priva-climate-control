@@ -133,37 +133,82 @@
 
     /* ── Service Builder ── */
     #serviceBuilder, #aiPanel, #cameraView { display: none; }
-    .sb-block-library {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); gap: 8px;
+
+    /* ── Accordéon familles ── */
+    .sb-accordion { display: flex; flex-direction: column; gap: 6px; }
+    .sb-fam {
+      border: 1px solid #2d3142; border-radius: 10px; overflow: hidden;
+      background: #0f1117;
+    }
+    .sb-fam-header {
+      display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+      cursor: pointer; user-select: none; transition: background 0.15s;
+      background: #161929;
+    }
+    .sb-fam-header:hover { background: #1a1d29; }
+    .sb-fam.open .sb-fam-header { background: #1a1d29; }
+    .sb-fam-icon  { font-size: 18px; flex-shrink: 0; }
+    .sb-fam-title { font-size: 13px; font-weight: 600; color: #d5d5ee; flex: 1; }
+    .sb-fam-meta  { display: flex; align-items: center; gap: 8px; }
+    .sb-fam-count {
+      font-size: 11px; padding: 2px 8px; border-radius: 10px;
+      background: #2d3142; color: #7a7fa8; font-weight: 500;
+    }
+    .sb-fam.open .sb-fam-count { background: #667eea22; color: #667eea; }
+    .sb-fam-sel-count {
+      font-size: 11px; padding: 2px 8px; border-radius: 10px;
+      background: #1a3d2b; color: #27ae60; font-weight: 600;
+      display: none;
+    }
+    .sb-fam-sel-count.visible { display: inline-block; }
+    .sb-fam-arrow {
+      font-size: 11px; color: #7a7fa8; transition: transform 0.2s; flex-shrink: 0;
+    }
+    .sb-fam.open .sb-fam-arrow { transform: rotate(90deg); color: #667eea; }
+
+    /* ── Grille de blocs dans l'accordéon ── */
+    .sb-fam-body {
+      display: none; padding: 10px 12px 14px;
+      border-top: 1px solid #2d3142;
+    }
+    .sb-fam.open .sb-fam-body { display: block; }
+    .sb-block-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 8px;
     }
     .sb-block {
-      border: 1px solid #2d3142; border-radius: 10px; padding: 12px 8px;
-      text-align: center; cursor: pointer; background: #161929; transition: all 0.15s;
-      position: relative; user-select: none;
+      border: 1px solid #2d3142; border-radius: 10px; padding: 10px 6px 8px;
+      text-align: center; cursor: pointer; background: #161929;
+      transition: all 0.15s; position: relative; user-select: none;
     }
-    .sb-block:hover  { border-color: #667eea44; background: #1a1d29; }
+    .sb-block:hover  { border-color: #667eea66; background: #1a1d29; transform: translateY(-1px); }
     .sb-block.sel    { border: 2px solid #667eea; background: #1a1d29; }
-    .sb-block-icon   { font-size: 24px; margin-bottom: 6px; }
-    .sb-block-name   { font-size: 12px; font-weight: 600; color: #d5d5ee; }
+    .sb-block-icon   { font-size: 22px; margin-bottom: 5px; }
+    .sb-block-name   { font-size: 11px; font-weight: 600; color: #d5d5ee; line-height: 1.3; }
     .sb-block-ref    { font-size: 10px; color: #7a7fa8; margin-top: 2px; font-family: monospace; }
-    .sb-block-caps   { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; margin-top: 4px; }
-    .sb-cap          { font-size: 9px; padding: 1px 5px; border-radius: 6px; }
-    .sb-check        {
-      display: none; position: absolute; top: 5px; right: 5px;
-      width: 16px; height: 16px; border-radius: 50%; background: #667eea;
+    .sb-block-caps   { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; margin-top: 4px; }
+    .sb-cap          { font-size: 9px; padding: 1px 5px; border-radius: 5px; }
+    .sb-check {
+      display: none; position: absolute; top: 4px; right: 4px;
+      width: 15px; height: 15px; border-radius: 50%; background: #667eea;
       align-items: center; justify-content: center;
     }
     .sb-block.sel .sb-check { display: flex; }
     .sb-check::after {
-      content: ''; display: block; width: 8px; height: 8px;
+      content: ''; display: block; width: 7px; height: 7px;
       background: #fff; clip-path: polygon(14% 44%,0 65%,50% 100%,100% 16%,80% 0%,43% 62%);
     }
-    .sb-cat-filter { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
-    .sb-cat-btn {
-      padding: 4px 12px; border-radius: 20px; border: 1px solid #2d3142;
-      background: #161929; color: #7a7fa8; font-size: 12px; cursor: pointer;
+
+    /* ── Barre de recherche blocs ── */
+    .sb-search {
+      width: 100%; padding: 8px 12px; margin-bottom: 10px;
+      background: #0f1117; border: 1px solid #2d3142; border-radius: 8px;
+      color: #d5d5ee; font-size: 13px; font-family: inherit;
+      outline: none;
     }
-    .sb-cat-btn.active { background: #667eea; color: white; border-color: #667eea; }
+    .sb-search:focus { border-color: #667eea; }
+
     .sb-selected-list { display: flex; flex-direction: column; gap: 6px; }
     .sb-sel-item {
       display: flex; align-items: center; gap: 8px; padding: 8px 10px;
@@ -525,17 +570,14 @@
               <div class="card-header">
                 <div class="card-title">Bibliothèque de composants</div>
               </div>
-              <div class="sb-cat-filter" id="sb-cats">
-                <button class="sb-cat-btn active" onclick="SB.filterCat('all',this)">Tous</button>
-                <button class="sb-cat-btn" onclick="SB.filterCat('mcu',this)">🧠 MCU</button>
-                <button class="sb-cat-btn" onclick="SB.filterCat('capteur',this)">🌡️ Capteurs</button>
-                <button class="sb-cat-btn" onclick="SB.filterCat('actionneur',this)">⚙️ Actionneurs</button>
-                <button class="sb-cat-btn" onclick="SB.filterCat('affichage',this)">🖥️ Affichage</button>
-                <button class="sb-cat-btn" onclick="SB.filterCat('communication',this)">📡 Comm.</button>
-                <button class="sb-cat-btn" onclick="SB.filterCat('custom',this)">⭐ Mes blocs</button>
-              </div>
-              <div class="sb-block-library" id="sb-block-grid"></div>
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+              <!-- Recherche -->
+              <input type="text" class="sb-search" id="sb-search"
+                     placeholder="🔍  Rechercher un composant…"
+                     oninput="SB.search(this.value)">
+              <!-- Accordéon familles -->
+              <div class="sb-accordion" id="sb-accordion"></div>
+              <!-- Bas de carte -->
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid #2d3142;">
                 <span class="sb-count">Sélectionnés : <strong id="sb-sel-count">0</strong></span>
                 <button class="btn btn-small btn-primary" onclick="SB.toggleCustomForm()">+ Bloc custom</button>
               </div>
@@ -783,7 +825,6 @@
     blocks:   [],
     espId:    null,
     customBlocks: [],
-    currentCat: 'all',
 
     // ── Navigation étapes ──────────────────────────────
     goStep(n) {
@@ -851,52 +892,150 @@
         e.classList.toggle('sel', e.dataset.col === color));
       this.icon = icon; this.color = color;
       this.blocks = [...new Set(blocks)];
+      // Ouvrir les familles qui ont des blocs sélectionnés
+      const lib = typeof FirmwareGenerator !== 'undefined' ? FirmwareGenerator.BLOCK_LIBRARY : {};
+      this._openFams = new Set();
+      blocks.forEach(id => {
+        const b = lib[id]; if (b) this._openFams.add(b.family);
+      });
       const card = document.getElementById('sb-preview-card');
       if (card) card.style.borderColor = color;
     },
 
-    // ── Blocs ─────────────────────────────────────────
-    filterCat(cat, btn) {
-      this.currentCat = cat;
-      document.querySelectorAll('.sb-cat-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      this.renderBlocks();
+    // ── Config familles accordéon ─────────────────────
+    FAMILIES: [
+      { id:'mcu',           label:'Microcontrôleurs',    icon:'🧠', color:'#1a2d3d', accent:'#378ADD' },
+      { id:'capteur',       label:'Capteurs',             icon:'🌡️', color:'#1a3d2b', accent:'#27AE60' },
+      { id:'actionneur',    label:'Actionneurs',          icon:'⚙️', color:'#1d1a3d', accent:'#667eea' },
+      { id:'affichage',     label:'Affichage & Interface',icon:'🖥️', color:'#2d1a3d', accent:'#a87fd8' },
+      { id:'communication', label:'Communication',        icon:'📡', color:'#2d2a1a', accent:'#f77f00' },
+      { id:'custom',        label:'Mes blocs custom',     icon:'⭐', color:'#2d2a2d', accent:'#9ca3af' },
+    ],
+
+    // Familles ouvertes par défaut
+    _openFams: new Set(['capteur']),
+    _searchQuery: '',
+
+    // ── Recherche ───────────────────────────────────────
+    search(q) {
+      this._searchQuery = q.toLowerCase().trim();
+      if (this._searchQuery) {
+        // Ouvrir toutes les familles qui ont des résultats
+        this.FAMILIES.forEach(f => this._openFams.add(f.id));
+      }
+      this.renderAccordion();
     },
 
+    // ── Rendu accordéon complet ─────────────────────────
     renderBlocks() {
+      this.renderAccordion();
+    },
+
+    renderAccordion() {
+      const container = document.getElementById('sb-accordion');
+      if (!container) return;
+
       const lib  = typeof FirmwareGenerator !== 'undefined' ? FirmwareGenerator.BLOCK_LIBRARY : {};
       const all  = [...Object.values(lib), ...this.customBlocks];
-      const filt = this.currentCat === 'all' ? all : all.filter(b => b.family === this.currentCat);
+      const q    = this._searchQuery;
 
-      const catColors = {
-        mcu:'#1a2d3d', capteur:'#1a3d2b', actionneur:'#1d1a3d',
-        affichage:'#2d1a3d', communication:'#2d2a1a', custom:'#2d2a2d'
-      };
+      container.innerHTML = this.FAMILIES.map(fam => {
+        // Blocs de cette famille
+        let blocks = all.filter(b => b.family === fam.id);
+        // Filtrer par recherche si active
+        if (q) {
+          blocks = blocks.filter(b =>
+            b.name.toLowerCase().includes(q) ||
+            (b.ref||'').toLowerCase().includes(q) ||
+            (b.provides||[]).some(p => p.toLowerCase().includes(q))
+          );
+        }
+        if (!blocks.length && fam.id !== 'custom') return '';
 
-      const grid = document.getElementById('sb-block-grid');
-      if (grid) grid.innerHTML = filt.map(b => `
-        <div class="sb-block ${this.blocks.includes(b.id)?'sel':''}"
-             onclick="SB.toggleBlock('${b.id}')">
-          <div class="sb-check"></div>
-          <div class="sb-block-icon">${b.icon||'🔧'}</div>
-          <div class="sb-block-name">${b.name}</div>
-          <div class="sb-block-ref">${b.ref||''}</div>
-          <div class="sb-block-caps">
-            ${(b.provides||[]).slice(0,2).map(p =>
-              `<span class="sb-cap" style="background:${catColors[b.family]||'#1a1d29'};color:#9ca3af">${p}</span>`
-            ).join('')}
-          </div>
-        </div>`).join('') || '<div style="opacity:.5;padding:20px;text-align:center;font-size:12px">Aucun bloc</div>';
+        const isOpen = this._openFams.has(fam.id);
+        const selInFam = blocks.filter(b => this.blocks.includes(b.id)).length;
+
+        const blocksHtml = blocks.map(b => {
+          const isSel = this.blocks.includes(b.id);
+          const caps = (b.provides||[]).slice(0,2).map(p =>
+            `<span class="sb-cap" style="background:${fam.color};color:${fam.accent}88">${p}</span>`
+          ).join('');
+          return `<div class="sb-block ${isSel?'sel':''}" onclick="SB.toggleBlock('${b.id}')">
+            <div class="sb-check"></div>
+            <div class="sb-block-icon">${b.icon||'🔧'}</div>
+            <div class="sb-block-name">${b.name}</div>
+            <div class="sb-block-ref">${b.ref||''}</div>
+            <div class="sb-block-caps">${caps}</div>
+          </div>`;
+        }).join('');
+
+        const emptyMsg = (fam.id === 'custom' && !blocks.length)
+          ? `<div style="text-align:center;padding:20px;font-size:12px;opacity:.5;">
+               Aucun bloc custom. Cliquez sur "+ Bloc custom" pour en créer un.
+             </div>` : '';
+
+        return `
+          <div class="sb-fam ${isOpen?'open':''}" id="sb-fam-${fam.id}">
+            <div class="sb-fam-header" onclick="SB.toggleFam('${fam.id}')">
+              <span class="sb-fam-icon">${fam.icon}</span>
+              <span class="sb-fam-title">${fam.label}</span>
+              <div class="sb-fam-meta">
+                <span class="sb-fam-sel-count ${selInFam>0?'visible':''}"
+                      id="sb-fsc-${fam.id}">✓ ${selInFam}</span>
+                <span class="sb-fam-count" id="sb-fc-${fam.id}">${blocks.length}</span>
+                <span class="sb-fam-arrow">▶</span>
+              </div>
+            </div>
+            <div class="sb-fam-body">
+              ${emptyMsg}
+              <div class="sb-block-grid">${blocksHtml}</div>
+            </div>
+          </div>`;
+      }).join('');
 
       document.getElementById('sb-sel-count').textContent = this.blocks.length;
       this.renderSelList();
+    },
+
+    toggleFam(famId) {
+      if (this._openFams.has(famId)) this._openFams.delete(famId);
+      else this._openFams.add(famId);
+      const el = document.getElementById('sb-fam-' + famId);
+      if (el) el.classList.toggle('open', this._openFams.has(famId));
     },
 
     toggleBlock(id) {
       const idx = this.blocks.indexOf(id);
       if (idx > -1) this.blocks.splice(idx, 1);
       else this.blocks.push(id);
-      this.renderBlocks();
+
+      // Mettre à jour la carte visuelle sans tout redessiner
+      const lib = typeof FirmwareGenerator !== 'undefined' ? FirmwareGenerator.BLOCK_LIBRARY : {};
+      const all = [...Object.values(lib), ...this.customBlocks];
+      const b   = all.find(x => x.id === id);
+      const isSel = this.blocks.includes(id);
+
+      // Basculer la classe sur le bloc cliqué
+      document.querySelectorAll('.sb-block').forEach(el => {
+        if (el.getAttribute('onclick') === `SB.toggleBlock('${id}')`) {
+          el.classList.toggle('sel', isSel);
+        }
+      });
+
+      // Mettre à jour le compteur de la famille
+      if (b) {
+        const famBlocks = all.filter(x => x.family === b.family && this.blocks.includes(x.id)).length;
+        const sc = document.getElementById('sb-fsc-' + b.family);
+        if (sc) {
+          sc.textContent = '✓ ' + famBlocks;
+          sc.classList.toggle('visible', famBlocks > 0);
+        }
+      }
+
+      // Mettre à jour le compteur global et la liste sélectionnée
+      const cEl = document.getElementById('sb-sel-count');
+      if (cEl) cEl.textContent = this.blocks.length;
+      this.renderSelList();
     },
 
     renderSelList() {
@@ -943,7 +1082,8 @@
         const el = document.getElementById(i); if (el) el.value = '';
       });
       document.getElementById('sb-custom-form').style.display = 'none';
-      this.filterCat('custom', document.querySelector('.sb-cat-btn:last-child'));
+      this._openFams.add('custom');
+      this.renderAccordion();
       showAlert('success','✅ Bloc custom ajouté');
     },
 
