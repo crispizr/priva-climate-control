@@ -1,5 +1,5 @@
 // ============================================
-// PRIVA Platform - JavaScript v6.0
+// PRIVA Platform - JavaScript v7.0
 // Dashboard multi-modules simultanés
 // ============================================
 
