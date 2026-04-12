@@ -1,5 +1,5 @@
 // ============================================
-// PRIVA Platform - JavaScript v7.0
+// PRIVA Platform - JavaScript v6.0
 // Dashboard multi-modules simultanés
 // ============================================
 
@@ -8,7 +8,11 @@ const CONFIG = {
   COMMAND_API_URL: 'https://script.google.com/macros/s/AKfycbwA53tJWrpVpd6WeoAA09FYVe63aFvwy-liD_rQgb2gr_HZ2bYHC1sKajJ4wzwshMC6aA/exec',
   AGRICULTURE_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwJjy2KpJJ5X--C87zVuPjykAg9Fyc79zIxpdk1Dt0FvrxYw1Onfzt5wSHOVagvLry9uyyohzeN3h4/pub?output=csv",
   SECURITY_CSV_URL: "https://docs.google.com/spreadsheets/d/12x5LRuFBaKeAfkSxc53uR-6Q3Xcu-OxZt2plY0GZSko/export?format=csv&gid=2127989880",
-  PROXY: 'https://api.allorigins.win/raw?url=',
+  PROXIES: [
+    'https://corsproxy.io/?',
+    'https://api.allorigins.win/raw?url=',
+    'https://thingproxy.freeboard.io/fetch/',
+  ],
   RENDER_URL: 'https://sagitaimage.onrender.com/analyser',
   HF_TOKEN: '',
   HF_MODEL: 'google/vit-base-patch16-224',
@@ -881,10 +885,31 @@ function openCameraView() {
 }
 
 // ==================== DONNÉES FEUILLES ====================
+
+// Fetch CSV avec fallback automatique sur plusieurs proxies
+async function fetchCSVWithFallback(csvUrl) {
+  const proxies = CONFIG.PROXIES;
+  for (let i = 0; i < proxies.length; i++) {
+    const proxyUrl = proxies[i] + encodeURIComponent(csvUrl);
+    try {
+      const res = await Utils.fetchWithTimeout(proxyUrl, {}, 6000);
+      if (res.ok) {
+        const text = await res.text();
+        if (text && !text.trim().startsWith('<') && text.includes(',')) {
+          console.log('[CSV] Proxy ' + (i+1) + ' OK');
+          return text;
+        }
+      }
+    } catch (e) {
+      console.warn('[CSV] Proxy ' + (i+1) + ' echoue:', e.message);
+    }
+  }
+  throw new Error('Tous les proxies ont echoue');
+}
+
 async function loadAgricultureData() {
   try {
-    const res = await Utils.fetchWithTimeout(CONFIG.PROXY + encodeURIComponent(CONFIG.AGRICULTURE_CSV_URL));
-    const csv = await res.text();
+    const csv = await fetchCSVWithFallback(CONFIG.AGRICULTURE_CSV_URL);
     const rows = csv.trim().split('\n').map(r => r.split(',').map(c => c.trim()));
     State.allAgriData = rows.slice(1).filter(r => r.length >= 3);
     if (State.allAgriData.length > 0) {
@@ -892,17 +917,16 @@ async function loadAgricultureData() {
       const el = document.getElementById('dataCount');
       if (el) el.textContent = State.allAgriData.length;
     }
-  } catch (e) { console.error('Erreur agriculture CSV:', e); }
+  } catch (e) { console.error('[CSV] Agriculture impossible a charger:', e.message); }
 }
 
 async function loadSecurityData() {
   try {
-    const res = await Utils.fetchWithTimeout(CONFIG.PROXY + encodeURIComponent(CONFIG.SECURITY_CSV_URL));
-    const csv = await res.text();
+    const csv = await fetchCSVWithFallback(CONFIG.SECURITY_CSV_URL);
     const rows = csv.trim().split('\n').map(r => r.split(',').map(c => c.trim()));
     State.allSecurityData = rows.slice(1).filter(r => r.length >= 3);
     if (State.allSecurityData.length > 0) updateSecurityTable();
-  } catch (e) { console.error('Erreur sécurité CSV:', e); }
+  } catch (e) { console.error('[CSV] Securite impossible a charger:', e.message); }
 }
 
 function updateAgricultureTable() {
