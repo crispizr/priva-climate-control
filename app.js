@@ -845,7 +845,7 @@ function init() {
   State.dataUpdateInterval = setInterval(() => { loadAgricultureData(); loadSecurityData(); }, 10000);
   DashboardManager.render();
   State.isInitialized = true;
-  showAlert('success', '✅ PRIVA v6.0 initialisé');
+  showAlert('success', '✅ PRIVA v8.0 initialisé');
 }
 
 function initAI() { AIManager.loadHistory(); chargerToken(); }
