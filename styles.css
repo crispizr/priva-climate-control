@@ -195,6 +195,146 @@ body {
 }
 
 /* ============================================ */
+/* PAGE D'ACCUEIL — GRILLE 4 CASES (v9.0)        */
+/* ============================================ */
+
+.home-title-brand {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  margin-bottom: 36px;
+  animation: fadeInHome 1.2s ease-out;
+}
+.home-title-brand .brand-icon {
+  font-size: 54px;
+  display: block;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.4));
+  animation: floatIcon 3s ease-in-out infinite;
+}
+.home-title-brand h1 {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 4px 20px rgba(102,126,234,0.8);
+}
+
+.home-grid {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(150px, 220px));
+  grid-template-rows: repeat(2, minmax(150px, 220px));
+  gap: 22px;
+  animation: fadeInHome 1.5s ease-out;
+}
+
+.home-case {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(22, 25, 41, 0.75);
+  backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(102, 126, 234, 0.35);
+  border-radius: 26px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  box-shadow: 0 0 24px rgba(102,126,234,0.18), inset 0 0 20px rgba(255,255,255,0.03);
+}
+
+.home-case::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(102,126,234,0.25), rgba(118,75,162,0.25));
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.home-case:hover {
+  transform: translateY(-6px) scale(1.04);
+  border-color: rgba(102, 126, 234, 0.9);
+  box-shadow: 0 12px 40px rgba(102,126,234,0.5), inset 0 0 30px rgba(255,255,255,0.06);
+}
+.home-case:hover::before { opacity: 1; }
+.home-case:active { transform: translateY(-2px) scale(1.01); }
+
+.home-case-icon {
+  position: relative;
+  z-index: 2;
+  font-size: 46px;
+  filter: drop-shadow(0 6px 12px rgba(0,0,0,0.35));
+  transition: transform 0.35s ease;
+}
+.home-case:hover .home-case-icon { transform: scale(1.15) translateY(-4px); }
+
+.home-case-title {
+  position: relative;
+  z-index: 2;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #d5d5ee;
+  text-align: center;
+  transition: color 0.3s ease;
+}
+.home-case:hover .home-case-title { color: #fff; }
+
+.home-case-plateforme { border-color: rgba(39, 174, 96, 0.4); }
+.home-case-plateforme:hover { border-color: rgba(39, 174, 96, 0.9); box-shadow: 0 12px 40px rgba(39,174,96,0.5); }
+.home-case-plateforme::before { background: linear-gradient(135deg, rgba(39,174,96,0.28), rgba(102,126,234,0.2)); }
+
+@media (max-width: 520px) {
+  .home-grid {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+    grid-template-rows: repeat(2, minmax(120px, 1fr));
+    gap: 14px;
+    max-width: 320px;
+  }
+  .home-case-icon { font-size: 34px; }
+  .home-case-title { font-size: 11px; }
+  .home-title-brand h1 { font-size: 22px; }
+}
+
+/* ── Sections placeholder (Service / Nos produits / Conseil) ── */
+.placeholder-section {
+  min-height: 100vh;
+  background: #0a0e27;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+}
+.placeholder-back-btn {
+  position: absolute;
+  top: 20px; left: 20px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(102,126,234,0.4);
+  color: #d5d5ee;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.placeholder-back-btn:hover { background: rgba(102,126,234,0.25); border-color: #667eea; }
+.placeholder-icon { font-size: 70px; margin-bottom: 20px; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.4)); }
+.placeholder-section h2 {
+  font-size: 26px; color: #fff; letter-spacing: 1px; margin-bottom: 10px;
+}
+.placeholder-section p { color: #7a7fa8; font-size: 14px; max-width: 400px; }
+
+/* ============================================ */
 /* PLATEFORME PRINCIPALE */
 /* ============================================ */
 
