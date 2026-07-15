@@ -306,13 +306,70 @@
   <div id="homepage" class="homepage">
     <div class="home-background-image"></div>
     <div class="home-overlay"></div>
-    <div class="home-container">
-      <button class="home-button" onclick="enterPlatform()">
-        <span class="home-icon">🌍</span>
-        <span class="home-button-text">Accéder à la Plateforme</span>
-        <div class="button-glow"></div>
-      </button>
+    <div class="home-container" style="display:flex;flex-direction:column;align-items:center;">
+
+      <div class="home-title-brand">
+        <span class="brand-icon">🌍</span>
+        <h1>Sagitarius-Nova</h1>
+      </div>
+
+      <div class="home-grid">
+        <!-- Haut-gauche : Service -->
+        <div class="home-case" onclick="showServiceSection()">
+          <span class="home-case-icon">🧩</span>
+          <span class="home-case-title">Service</span>
+        </div>
+
+        <!-- Haut-droite : Plateforme (contenu déjà existant, fonction inchangée) -->
+        <div class="home-case home-case-plateforme" onclick="enterPlatform()">
+          <span class="home-case-icon">🌍</span>
+          <span class="home-case-title">Plateforme</span>
+        </div>
+
+        <!-- Bas-gauche : Conseil -->
+        <div class="home-case" onclick="showConseilSection()">
+          <span class="home-case-icon">💡</span>
+          <span class="home-case-title">Conseil</span>
+        </div>
+
+        <!-- Bas-droite : Nos produits -->
+        <div class="home-case" onclick="showProduitsSection()">
+          <span class="home-case-icon">🛒</span>
+          <span class="home-case-title">Nos produits</span>
+        </div>
+      </div>
+
     </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SECTION : SERVICE
+       ═══════════════════════════════════════ -->
+  <div id="serviceSection" class="placeholder-section" style="display:none;position:relative;">
+    <button class="placeholder-back-btn" onclick="backToHome()">← Retour à l'accueil</button>
+    <span class="placeholder-icon">🧩</span>
+    <h2>Service</h2>
+    <p>Cette section est prête à accueillir vos contenus. Dites-moi ce que vous voulez y afficher et je la remplis.</p>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SECTION : NOS PRODUITS
+       ═══════════════════════════════════════ -->
+  <div id="produitsSection" class="placeholder-section" style="display:none;position:relative;">
+    <button class="placeholder-back-btn" onclick="backToHome()">← Retour à l'accueil</button>
+    <span class="placeholder-icon">🛒</span>
+    <h2>Nos produits</h2>
+    <p>Cette section est prête à accueillir votre catalogue. Dites-moi ce que vous voulez y afficher et je la remplis.</p>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SECTION : CONSEIL
+       ═══════════════════════════════════════ -->
+  <div id="conseilSection" class="placeholder-section" style="display:none;position:relative;">
+    <button class="placeholder-back-btn" onclick="backToHome()">← Retour à l'accueil</button>
+    <span class="placeholder-icon">💡</span>
+    <h2>Conseil</h2>
+    <p>Cette section est prête à accueillir vos conseils. Dites-moi ce que vous voulez y afficher et je la remplis.</p>
   </div>
 
   <!-- ═══════════════════════════════════════
@@ -1182,6 +1239,32 @@
       document.getElementById('homepage').style.display = 'flex';
     }
   }
+
+  /* ── Nouvelles sections de la page d'accueil (v9.0) ──
+     Ces fonctions gèrent uniquement l'affichage/masquage.
+     Elles ne modifient aucune fonction existante. */
+  function _hideHomeSections() {
+    ['homepage','serviceSection','produitsSection','conseilSection'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  }
+  window.showServiceSection = function() {
+    _hideHomeSections();
+    document.getElementById('serviceSection').style.display = 'flex';
+  };
+  window.showProduitsSection = function() {
+    _hideHomeSections();
+    document.getElementById('produitsSection').style.display = 'flex';
+  };
+  window.showConseilSection = function() {
+    _hideHomeSections();
+    document.getElementById('conseilSection').style.display = 'flex';
+  };
+  window.backToHome = function() {
+    _hideHomeSections();
+    document.getElementById('homepage').style.display = 'flex';
+  };
 
   function _hideAll() {
     ['dashboard','cameraView','aiPanel','serviceBuilder','deviceManager'].forEach(id => {
