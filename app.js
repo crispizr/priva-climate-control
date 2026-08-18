@@ -940,6 +940,133 @@ async function emergencyStop(deviceId) {
   showAlert('danger', '🛑 ARRÊT D\'URGENCE ACTIVÉ');
 }
 
+// ==================== GESTION DES APPAREILS ====================
+// (fonctions manquantes, appelées depuis index.html mais jamais définies)
+
+function openAddDeviceModal() {
+  document.getElementById('addDeviceModal')?.classList.add('active');
+}
+
+function closeAddDeviceModal() {
+  document.getElementById('addDeviceModal')?.classList.remove('active');
+  ['newDeviceName', 'newDeviceIP', 'newDeviceLocation'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+}
+
+function addDevice() {
+  const name = document.getElementById('newDeviceName')?.value.trim();
+  const ip = document.getElementById('newDeviceIP')?.value.trim();
+  const type = document.getElementById('newDeviceType')?.value || 'agriculture';
+  const location = document.getElementById('newDeviceLocation')?.value.trim();
+
+  if (!name) { showAlert('warning', '⚠️ Donnez un nom à l\'appareil'); return; }
+  if (!Utils.validateIP(ip)) { showAlert('warning', '⚠️ IP/URL invalide'); return; }
+
+  const id = 'dev_' + Date.now();
+  State.devices[id] = {
+    name, ip, type,
+    location: location || '',
+    active: true,
+    createdAt: new Date().toISOString()
+  };
+
+  Utils.saveToLocalStorage('priva_devices', State.devices);
+  showAlert('success', `✅ Appareil "${name}" ajouté !`);
+  closeAddDeviceModal();
+  renderDevicesList();
+  DashboardManager.render();
+}
+
+function deleteDevice(deviceId) {
+  const dev = State.devices[deviceId];
+  if (!dev) return;
+  if (!confirm(`Supprimer l'appareil "${dev.name}" ?`)) return;
+
+  delete State.devices[deviceId];
+  Utils.saveToLocalStorage('priva_devices', State.devices);
+  showAlert('success', '🗑️ Appareil supprimé');
+  renderDevicesList();
+  DashboardManager.render();
+}
+
+function renderDevicesList() {
+  const container = document.getElementById('devicesList');
+  if (!container) return;
+
+  const devices = Object.entries(State.devices);
+  if (!devices.length) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;opacity:.6;">Aucun appareil.</div>';
+    return;
+  }
+
+  const typeIcons = { agriculture: '🌱', security: '🔒', custom: '⚙️' };
+
+  container.innerHTML = devices.map(([id, dev]) => `
+    <div class="device-item">
+      <div class="device-info">
+        <strong>${typeIcons[dev.type] || '⚙️'} ${dev.name}</strong><br>
+        <span style="font-size:12px;color:#7a7fa8;">
+          ${dev.ip}${dev.location ? ' · ' + dev.location : ''}
+        </span>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-small btn-primary" onclick="testDeviceConnectionDash('${id}')">🔌 Tester</button>
+        <button class="btn btn-small btn-danger" onclick="deleteDevice('${id}')">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ==================== GESTION DES CAMÉRAS DE SÉCURITÉ ====================
+// (fonctions manquantes, appelées depuis index.html mais jamais définies)
+
+function openAddCameraModal() {
+  document.getElementById('addCameraModal')?.classList.add('active');
+}
+
+function closeAddCameraModal() {
+  document.getElementById('addCameraModal')?.classList.remove('active');
+  ['newCameraName', 'newCameraIP', 'newCameraLocation'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+}
+
+function addSecurityCamera() {
+  const name = document.getElementById('newCameraName')?.value.trim();
+  const ip = document.getElementById('newCameraIP')?.value.trim();
+  const location = document.getElementById('newCameraLocation')?.value.trim();
+
+  if (!name) { showAlert('warning', '⚠️ Donnez un nom à la caméra'); return; }
+  if (!Utils.validateIP(ip)) { showAlert('warning', '⚠️ IP/URL invalide'); return; }
+
+  const id = 'cam_' + Date.now();
+  State.securityCameras[id] = {
+    name, ip,
+    location: location || '',
+    active: true,
+    createdAt: new Date().toISOString()
+  };
+
+  Utils.saveToLocalStorage('priva_security_cameras', State.securityCameras);
+  showAlert('success', `✅ Caméra "${name}" ajoutée !`);
+  closeAddCameraModal();
+  DashboardManager.render();
+}
+
+function deleteSecurityCamera(camId) {
+  const cam = State.securityCameras[camId];
+  if (!cam) return;
+  if (!confirm(`Supprimer la caméra "${cam.name}" ?`)) return;
+
+  delete State.securityCameras[camId];
+  Utils.saveToLocalStorage('priva_security_cameras', State.securityCameras);
+  showAlert('success', '🗑️ Caméra supprimée');
+  DashboardManager.render();
+}
+
 // ==================== ALERTES ====================
 
 function showAlert(type, msg) {
@@ -1081,6 +1208,7 @@ function showDeviceManager() {
   document.getElementById('aiPanel')?.style.setProperty('display', 'none');
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('.tab-btn[onclick*="showDeviceManager"]')?.classList.add('active');
+  renderDevicesList();
 }
 
 function showAIPanel() {
